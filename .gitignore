@@ -3,3 +3,4 @@ nbproject/private/
 *.class
 *.log.
 src/main/liberty/config/lib/*.jar
+/nbproject/

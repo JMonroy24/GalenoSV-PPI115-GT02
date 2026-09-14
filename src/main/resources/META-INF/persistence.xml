@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="3.2" xmlns="https://jakarta.ee/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_2.xsd">
+  <persistence-unit name="GalenoSV_PU" transaction-type="JTA">
+    <jta-data-source>jdbc/galenoSV</jta-data-source>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.MedioContacto</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Documento</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ExamenResultado</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPasoSecuencia</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPaso</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoDocumento</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.UUIDConverter</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimientoPaso</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExamen</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Examen</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimiento</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoExamen</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoMedioContacto</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ExamenTipoExamen</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPasoExamen</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRol</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona</class>
+    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Procedimiento</class>
+    <exclude-unlisted-classes>false</exclude-unlisted-classes>
+    <properties>
+      <property name="jakarta.persistence.schema-generation.database.action" value="none"/>
+    </properties>
+  </persistence-unit>
+</persistence>
