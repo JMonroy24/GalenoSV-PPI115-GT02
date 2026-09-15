@@ -125,7 +125,14 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
      * @param detalle   descripción detallada
      */
     protected void agregarMensaje(FacesMessage.Severity severidad, String titulo, String detalle) {
-        FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(severidad, titulo, detalle));
+        try {
+            FacesContext facesContext = FacesContext.getCurrentInstance();
+            if (facesContext != null) {
+                facesContext.addMessage(null, new FacesMessage(severidad, titulo, detalle));
+            }
+        } catch (Throwable t) {
+            LOGGER.log(Level.FINE, "FacesContext no disponible para mensaje: {0} - {1}", new Object[]{titulo, detalle});
+        }
     }
 
     /** @return {@code true} si el estado actual es {@link Estado#CREAR} */
