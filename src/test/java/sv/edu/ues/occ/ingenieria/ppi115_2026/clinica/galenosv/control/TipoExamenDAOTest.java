@@ -13,13 +13,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Documento;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoExamen;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class DocumentoDAOTest {
+class TipoExamenDAOTest {
 
     @Mock
     private EntityManager em;
@@ -28,83 +28,92 @@ class DocumentoDAOTest {
     private CriteriaBuilder cb;
 
     @Mock
-    private CriteriaQuery<Documento> cq;
+    private CriteriaQuery<TipoExamen> cq;
 
     @Mock
     private CriteriaQuery<Long> cqLong;
 
     @Mock
-    private Root<Documento> root;
+    private Root<TipoExamen> root;
 
     @Mock
-    private TypedQuery<Documento> query;
+    private TypedQuery<TipoExamen> query;
 
     @Mock
     private TypedQuery<Long> queryLong;
 
     @InjectMocks
-    private DocumentoDAO dao;
+    private TipoExamenDAO dao;
 
     @BeforeEach
     void setUp() {
-        dao = new DocumentoDAO(em);
+        dao = new TipoExamenDAO();
+        dao.setEntityManager(em);
     }
 
     @Test
     void testConstructorsAndGetEntityManager() {
-        DocumentoDAO defaultDao = new DocumentoDAO();
+        TipoExamenDAO defaultDao = new TipoExamenDAO();
         assertNull(defaultDao.getEntityManager());
 
-        assertEquals(em, dao.getEntityManager());
+        defaultDao.setEntityManager(em);
+        assertEquals(em, defaultDao.getEntityManager());
+    }
+
+    @Test
+    void testSetEntityManager() {
+        TipoExamenDAO localDao = new TipoExamenDAO();
+        localDao.setEntityManager(em);
+        assertEquals(em, localDao.getEntityManager());
     }
 
     @Test
     void testCreate() {
-        Documento documento = new Documento(UUID.randomUUID());
-        dao.create(documento);
-        verify(em, times(1)).persist(documento);
+        TipoExamen tipoExamen = new TipoExamen(UUID.randomUUID());
+        dao.create(tipoExamen);
+        verify(em, times(1)).persist(tipoExamen);
     }
 
     @Test
     void testUpdate() {
-        Documento documento = new Documento(UUID.randomUUID());
-        dao.update(documento);
-        verify(em, times(1)).merge(documento);
+        TipoExamen tipoExamen = new TipoExamen(UUID.randomUUID());
+        dao.update(tipoExamen);
+        verify(em, times(1)).merge(tipoExamen);
     }
 
     @Test
     void testDelete() {
-        Documento documento = new Documento(UUID.randomUUID());
-        when(em.merge(documento)).thenReturn(documento);
+        TipoExamen tipoExamen = new TipoExamen(UUID.randomUUID());
+        when(em.merge(tipoExamen)).thenReturn(tipoExamen);
 
-        dao.delete(documento);
+        dao.delete(tipoExamen);
 
-        verify(em, times(1)).merge(documento);
-        verify(em, times(1)).remove(documento);
+        verify(em, times(1)).merge(tipoExamen);
+        verify(em, times(1)).remove(tipoExamen);
     }
 
     @Test
     void testFindById() {
         UUID id = UUID.randomUUID();
-        Documento expected = new Documento(id);
-        when(em.find(Documento.class, id)).thenReturn(expected);
+        TipoExamen expected = new TipoExamen(id);
+        when(em.find(TipoExamen.class, id)).thenReturn(expected);
 
-        Documento actual = dao.findById(id);
+        TipoExamen actual = dao.findById(id);
 
         assertNotNull(actual);
-        assertEquals(id, actual.getIdDocumento());
-        verify(em, times(1)).find(Documento.class, id);
+        assertEquals(id, actual.getIdTipoExamen());
+        verify(em, times(1)).find(TipoExamen.class, id);
     }
 
     @Test
     void testFindAll() {
         when(em.getCriteriaBuilder()).thenReturn(cb);
-        when(cb.createQuery(Documento.class)).thenReturn(cq);
-        when(cq.from(Documento.class)).thenReturn(root);
+        when(cb.createQuery(TipoExamen.class)).thenReturn(cq);
+        when(cq.from(TipoExamen.class)).thenReturn(root);
         when(em.createQuery(cq)).thenReturn(query);
-        when(query.getResultList()).thenReturn(List.of(new Documento(UUID.randomUUID())));
+        when(query.getResultList()).thenReturn(List.of(new TipoExamen(UUID.randomUUID())));
 
-        List<Documento> result = dao.findAll();
+        List<TipoExamen> result = dao.findAll();
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -114,14 +123,14 @@ class DocumentoDAOTest {
     @Test
     void testFindRange() {
         when(em.getCriteriaBuilder()).thenReturn(cb);
-        when(cb.createQuery(Documento.class)).thenReturn(cq);
-        when(cq.from(Documento.class)).thenReturn(root);
+        when(cb.createQuery(TipoExamen.class)).thenReturn(cq);
+        when(cq.from(TipoExamen.class)).thenReturn(root);
         when(em.createQuery(cq)).thenReturn(query);
         when(query.setFirstResult(0)).thenReturn(query);
         when(query.setMaxResults(10)).thenReturn(query);
-        when(query.getResultList()).thenReturn(List.of(new Documento(UUID.randomUUID())));
+        when(query.getResultList()).thenReturn(List.of(new TipoExamen(UUID.randomUUID())));
 
-        List<Documento> result = dao.findRange(0, 10);
+        List<TipoExamen> result = dao.findRange(0, 10);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -133,7 +142,7 @@ class DocumentoDAOTest {
     void testCount() {
         when(em.getCriteriaBuilder()).thenReturn(cb);
         when(cb.createQuery(Long.class)).thenReturn(cqLong);
-        when(cqLong.from(Documento.class)).thenReturn(root);
+        when(cqLong.from(TipoExamen.class)).thenReturn(root);
         when(cb.count(root)).thenReturn(null);
         when(em.createQuery(cqLong)).thenReturn(queryLong);
         when(queryLong.getSingleResult()).thenReturn(7L);
