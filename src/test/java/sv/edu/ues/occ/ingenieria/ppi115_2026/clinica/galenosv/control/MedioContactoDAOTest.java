@@ -1,54 +1,146 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/UnitTests/JUnit5TestClass.java to edit this template
- */
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 
 import jakarta.persistence.EntityManager;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.AfterAll;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.MedioContacto;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-/**
- *
- * @author jmonroy
- */
-public class MedioContactoDAOTest {
-    
-    public MedioContactoDAOTest() {
-    }
-    
-    @BeforeAll
-    public static void setUpClass() {
-    }
-    
-    @AfterAll
-    public static void tearDownClass() {
-    }
-    
+@ExtendWith(MockitoExtension.class)
+class MedioContactoDAOTest {
+
+    @Mock
+    private EntityManager em;
+
+    @Mock
+    private CriteriaBuilder cb;
+
+    @Mock
+    private CriteriaQuery<MedioContacto> cq;
+
+    @Mock
+    private CriteriaQuery<Long> cqLong;
+
+    @Mock
+    private Root<MedioContacto> root;
+
+    @Mock
+    private TypedQuery<MedioContacto> query;
+
+    @Mock
+    private TypedQuery<Long> queryLong;
+
+    @InjectMocks
+    private MedioContactoDAO dao;
+
     @BeforeEach
-    public void setUp() {
-    }
-    
-    @AfterEach
-    public void tearDown() {
+    void setUp() {
+        dao = new MedioContactoDAO(em);
     }
 
-    /**
-     * Test of getEntityManager method, of class MedioContactoDAO.
-     */
     @Test
-    public void testGetEntityManager() {
-        System.out.println("getEntityManager");
-        MedioContactoDAO instance = new MedioContactoDAO();
-        EntityManager expResult = null;
-        EntityManager result = instance.getEntityManager();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    void testConstructorsAndGetEntityManager() {
+        MedioContactoDAO defaultDao = new MedioContactoDAO();
+        assertNull(defaultDao.getEntityManager());
+
+        assertEquals(em, dao.getEntityManager());
     }
-    
+
+    @Test
+    void testCreate() {
+        MedioContacto entity = new MedioContacto(UUID.randomUUID());
+        dao.create(entity);
+        verify(em, times(1)).persist(entity);
+    }
+
+    @Test
+    void testUpdate() {
+        MedioContacto entity = new MedioContacto(UUID.randomUUID());
+        dao.update(entity);
+        verify(em, times(1)).merge(entity);
+    }
+
+    @Test
+    void testDelete() {
+        MedioContacto entity = new MedioContacto(UUID.randomUUID());
+        when(em.merge(entity)).thenReturn(entity);
+
+        dao.delete(entity);
+
+        verify(em, times(1)).merge(entity);
+        verify(em, times(1)).remove(entity);
+    }
+
+    @Test
+    void testFindById() {
+        UUID id = UUID.randomUUID();
+        MedioContacto expected = new MedioContacto(id);
+        when(em.find(MedioContacto.class, id)).thenReturn(expected);
+
+        MedioContacto actual = dao.findById(id);
+
+        assertNotNull(actual);
+        assertEquals(id, actual.getIdMedioContacto());
+        verify(em, times(1)).find(MedioContacto.class, id);
+    }
+
+    @Test
+    void testFindAll() {
+        when(em.getCriteriaBuilder()).thenReturn(cb);
+        when(cb.createQuery(MedioContacto.class)).thenReturn(cq);
+        when(cq.from(MedioContacto.class)).thenReturn(root);
+        when(em.createQuery(cq)).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new MedioContacto(UUID.randomUUID())));
+
+        List<MedioContacto> result = dao.findAll();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(query, times(1)).getResultList();
+    }
+
+    @Test
+    void testFindRange() {
+        when(em.getCriteriaBuilder()).thenReturn(cb);
+        when(cb.createQuery(MedioContacto.class)).thenReturn(cq);
+        when(cq.from(MedioContacto.class)).thenReturn(root);
+        when(em.createQuery(cq)).thenReturn(query);
+        when(query.setFirstResult(0)).thenReturn(query);
+        when(query.setMaxResults(10)).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new MedioContacto(UUID.randomUUID())));
+
+        List<MedioContacto> result = dao.findRange(0, 10);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(query, times(1)).setFirstResult(0);
+        verify(query, times(1)).setMaxResults(10);
+    }
+
+    @Test
+    void testCount() {
+        when(em.getCriteriaBuilder()).thenReturn(cb);
+        when(cb.createQuery(Long.class)).thenReturn(cqLong);
+        when(cqLong.from(MedioContacto.class)).thenReturn(root);
+        when(cb.count(root)).thenReturn(null);
+        when(em.createQuery(cqLong)).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(3L);
+
+        long count = dao.count();
+
+        assertEquals(3L, count);
+        verify(queryLong, times(1)).getSingleResult();
+    }
 }

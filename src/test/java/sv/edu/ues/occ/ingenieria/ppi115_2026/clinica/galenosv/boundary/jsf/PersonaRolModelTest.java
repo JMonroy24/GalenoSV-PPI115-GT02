@@ -1,110 +1,116 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/UnitTests/JUnit5TestClass.java to edit this template
- */
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRol;
 
-/**
- *
- * @author jmonroy
- */
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
 public class PersonaRolModelTest {
-    
-    public PersonaRolModelTest() {
-    }
-    
-    @BeforeAll
-    public static void setUpClass() {
-    }
-    
-    @AfterAll
-    public static void tearDownClass() {
-    }
-    
+
+    @Mock
+    private PersonaRolDAO personaRolDAO;
+
+    @InjectMocks
+    private PersonaRolModel personaRolModel;
+
     @BeforeEach
     public void setUp() {
-    }
-    
-    @AfterEach
-    public void tearDown() {
+        personaRolModel.setPersonaRolDAO(personaRolDAO);
     }
 
-    /**
-     * Test of init method, of class PersonaRolModel.
-     */
     @Test
-    public void testInit() {
-        System.out.println("init");
-        PersonaRolModel instance = new PersonaRolModel();
-        instance.init();
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testInitYCargarDatos() {
+        PersonaRol pr = new PersonaRol(UUID.randomUUID());
+        when(personaRolDAO.findAll()).thenReturn(List.of(pr));
+
+        personaRolModel.init();
+
+        assertNotNull(personaRolModel.getRegistros());
+        assertEquals(1, personaRolModel.getRegistros().size());
+        verify(personaRolDAO).findAll();
     }
 
-    /**
-     * Test of getDAO method, of class PersonaRolModel.
-     */
     @Test
-    public void testGetDAO() {
-        System.out.println("getDAO");
-        PersonaRolModel instance = new PersonaRolModel();
-        DAOInterface<PersonaRol, UUID> expResult = null;
-        DAOInterface<PersonaRol, UUID> result = instance.getDAO();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testPrepararNuevo() {
+        personaRolModel.prepararNuevo();
+
+        assertNotNull(personaRolModel.getRegistroActual());
+        assertEquals(Estado.CREAR, personaRolModel.getEstado());
+        assertTrue(personaRolModel.isEstadoCrear());
     }
 
-    /**
-     * Test of crearNuevoRegistro method, of class PersonaRolModel.
-     */
     @Test
-    public void testCrearNuevoRegistro() {
-        System.out.println("crearNuevoRegistro");
-        PersonaRolModel instance = new PersonaRolModel();
-        PersonaRol expResult = null;
-        PersonaRol result = instance.crearNuevoRegistro();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testSeleccionar() {
+        PersonaRol pr = new PersonaRol(UUID.randomUUID());
+        personaRolModel.seleccionar(pr);
+
+        assertEquals(pr, personaRolModel.getRegistroActual());
+        assertEquals(Estado.MODIFICAR, personaRolModel.getEstado());
+        assertTrue(personaRolModel.isEstadoModificar());
     }
 
-    /**
-     * Test of getPersonaRolDAO method, of class PersonaRolModel.
-     */
     @Test
-    public void testGetPersonaRolDAO() {
-        System.out.println("getPersonaRolDAO");
-        PersonaRolModel instance = new PersonaRolModel();
-        PersonaRolDAO expResult = null;
-        PersonaRolDAO result = instance.getPersonaRolDAO();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testCancelar() {
+        personaRolModel.prepararNuevo();
+        personaRolModel.cancelar();
+
+        assertNull(personaRolModel.getRegistroActual());
+        assertEquals(Estado.NINGUNO, personaRolModel.getEstado());
+        assertTrue(personaRolModel.isEstadoNinguno());
     }
 
-    /**
-     * Test of setPersonaRolDAO method, of class PersonaRolModel.
-     */
     @Test
-    public void testSetPersonaRolDAO() {
-        System.out.println("setPersonaRolDAO");
-        PersonaRolDAO personaRolDAO = null;
-        PersonaRolModel instance = new PersonaRolModel();
-        instance.setPersonaRolDAO(personaRolDAO);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testGuardarCrear() {
+        when(personaRolDAO.findAll()).thenReturn(Collections.emptyList());
+
+        personaRolModel.prepararNuevo();
+
+        personaRolModel.guardar();
+
+        verify(personaRolDAO).create(any(PersonaRol.class));
+        assertEquals(Estado.NINGUNO, personaRolModel.getEstado());
+        assertNull(personaRolModel.getRegistroActual());
     }
-    
+
+    @Test
+    public void testGuardarModificar() {
+        when(personaRolDAO.findAll()).thenReturn(Collections.emptyList());
+
+        PersonaRol pr = new PersonaRol(UUID.randomUUID());
+        personaRolModel.seleccionar(pr);
+
+        personaRolModel.guardar();
+
+        verify(personaRolDAO).update(pr);
+        assertEquals(Estado.NINGUNO, personaRolModel.getEstado());
+    }
+
+    @Test
+    public void testEliminar() {
+        when(personaRolDAO.findAll()).thenReturn(Collections.emptyList());
+
+        PersonaRol pr = new PersonaRol(UUID.randomUUID());
+        personaRolModel.eliminar(pr);
+
+        verify(personaRolDAO).delete(pr);
+    }
+
+    @Test
+    public void testGettersAndSetters() {
+        assertEquals(personaRolDAO, personaRolModel.getDAO());
+        assertEquals(personaRolDAO, personaRolModel.getPersonaRolDAO());
+        assertNotNull(personaRolModel.crearNuevoRegistro());
+    }
 }
