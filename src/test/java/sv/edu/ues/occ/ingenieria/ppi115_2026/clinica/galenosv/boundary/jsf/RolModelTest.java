@@ -1,110 +1,117 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/UnitTests/JUnit5TestClass.java to edit this template
- */
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.RolDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol;
 
-/**
- *
- * @author jmonroy
- */
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
 public class RolModelTest {
-    
-    public RolModelTest() {
-    }
-    
-    @BeforeAll
-    public static void setUpClass() {
-    }
-    
-    @AfterAll
-    public static void tearDownClass() {
-    }
-    
+
+    @Mock
+    private RolDAO rolDAO;
+
+    @InjectMocks
+    private RolModel rolModel;
+
     @BeforeEach
     public void setUp() {
-    }
-    
-    @AfterEach
-    public void tearDown() {
+        rolModel.setRolDAO(rolDAO);
     }
 
-    /**
-     * Test of init method, of class RolModel.
-     */
     @Test
-    public void testInit() {
-        System.out.println("init");
-        RolModel instance = new RolModel();
-        instance.init();
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testInitYCargarDatos() {
+        Rol r = new Rol(UUID.randomUUID());
+        when(rolDAO.findAll()).thenReturn(List.of(r));
+
+        rolModel.init();
+
+        assertNotNull(rolModel.getRegistros());
+        assertEquals(1, rolModel.getRegistros().size());
+        verify(rolDAO).findAll();
     }
 
-    /**
-     * Test of getDAO method, of class RolModel.
-     */
     @Test
-    public void testGetDAO() {
-        System.out.println("getDAO");
-        RolModel instance = new RolModel();
-        DAOInterface<Rol, UUID> expResult = null;
-        DAOInterface<Rol, UUID> result = instance.getDAO();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testPrepararNuevo() {
+        rolModel.prepararNuevo();
+
+        assertNotNull(rolModel.getRegistroActual());
+        assertEquals(Estado.CREAR, rolModel.getEstado());
+        assertTrue(rolModel.isEstadoCrear());
     }
 
-    /**
-     * Test of crearNuevoRegistro method, of class RolModel.
-     */
     @Test
-    public void testCrearNuevoRegistro() {
-        System.out.println("crearNuevoRegistro");
-        RolModel instance = new RolModel();
-        Rol expResult = null;
-        Rol result = instance.crearNuevoRegistro();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testSeleccionar() {
+        Rol r = new Rol(UUID.randomUUID());
+        rolModel.seleccionar(r);
+
+        assertEquals(r, rolModel.getRegistroActual());
+        assertEquals(Estado.MODIFICAR, rolModel.getEstado());
+        assertTrue(rolModel.isEstadoModificar());
     }
 
-    /**
-     * Test of getRolDAO method, of class RolModel.
-     */
     @Test
-    public void testGetRolDAO() {
-        System.out.println("getRolDAO");
-        RolModel instance = new RolModel();
-        RolDAO expResult = null;
-        RolDAO result = instance.getRolDAO();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testCancelar() {
+        rolModel.prepararNuevo();
+        rolModel.cancelar();
+
+        assertNull(rolModel.getRegistroActual());
+        assertEquals(Estado.NINGUNO, rolModel.getEstado());
+        assertTrue(rolModel.isEstadoNinguno());
     }
 
-    /**
-     * Test of setRolDAO method, of class RolModel.
-     */
     @Test
-    public void testSetRolDAO() {
-        System.out.println("setRolDAO");
-        RolDAO rolDAO = null;
-        RolModel instance = new RolModel();
-        instance.setRolDAO(rolDAO);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testGuardarCrear() {
+        when(rolDAO.findAll()).thenReturn(Collections.emptyList());
+
+        rolModel.prepararNuevo();
+        rolModel.getRegistroActual().setNombre("Medico");
+
+        rolModel.guardar();
+
+        verify(rolDAO).create(any(Rol.class));
+        assertEquals(Estado.NINGUNO, rolModel.getEstado());
+        assertNull(rolModel.getRegistroActual());
     }
-    
+
+    @Test
+    public void testGuardarModificar() {
+        when(rolDAO.findAll()).thenReturn(Collections.emptyList());
+
+        Rol r = new Rol(UUID.randomUUID());
+        rolModel.seleccionar(r);
+
+        rolModel.guardar();
+
+        verify(rolDAO).update(r);
+        assertEquals(Estado.NINGUNO, rolModel.getEstado());
+    }
+
+    @Test
+    public void testEliminar() {
+        when(rolDAO.findAll()).thenReturn(Collections.emptyList());
+
+        Rol r = new Rol(UUID.randomUUID());
+        rolModel.eliminar(r);
+
+        verify(rolDAO).delete(r);
+    }
+
+    @Test
+    public void testGettersAndSetters() {
+        assertEquals(rolDAO, rolModel.getDAO());
+        assertEquals(rolDAO, rolModel.getRolDAO());
+        assertNotNull(rolModel.crearNuevoRegistro());
+    }
 }

@@ -1,110 +1,116 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/UnitTests/JUnit5TestClass.java to edit this template
- */
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DocumentoDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Documento;
 
-/**
- *
- * @author jmonroy
- */
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
 public class DocumentoModelTest {
-    
-    public DocumentoModelTest() {
-    }
-    
-    @BeforeAll
-    public static void setUpClass() {
-    }
-    
-    @AfterAll
-    public static void tearDownClass() {
-    }
-    
+
+    @Mock
+    private DocumentoDAO documentoDAO;
+
+    @InjectMocks
+    private DocumentoModel documentoModel;
+
     @BeforeEach
     public void setUp() {
-    }
-    
-    @AfterEach
-    public void tearDown() {
+        documentoModel.setDocumentoDAO(documentoDAO);
     }
 
-    /**
-     * Test of init method, of class DocumentoModel.
-     */
     @Test
-    public void testInit() {
-        System.out.println("init");
-        DocumentoModel instance = new DocumentoModel();
-        instance.init();
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testInitYCargarDatos() {
+        Documento d = new Documento(UUID.randomUUID());
+        when(documentoDAO.findAll()).thenReturn(List.of(d));
+
+        documentoModel.init();
+
+        assertNotNull(documentoModel.getRegistros());
+        assertEquals(1, documentoModel.getRegistros().size());
+        verify(documentoDAO).findAll();
     }
 
-    /**
-     * Test of getDAO method, of class DocumentoModel.
-     */
     @Test
-    public void testGetDAO() {
-        System.out.println("getDAO");
-        DocumentoModel instance = new DocumentoModel();
-        DAOInterface<Documento, UUID> expResult = null;
-        DAOInterface<Documento, UUID> result = instance.getDAO();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testPrepararNuevo() {
+        documentoModel.prepararNuevo();
+
+        assertNotNull(documentoModel.getRegistroActual());
+        assertEquals(Estado.CREAR, documentoModel.getEstado());
+        assertTrue(documentoModel.isEstadoCrear());
     }
 
-    /**
-     * Test of crearNuevoRegistro method, of class DocumentoModel.
-     */
     @Test
-    public void testCrearNuevoRegistro() {
-        System.out.println("crearNuevoRegistro");
-        DocumentoModel instance = new DocumentoModel();
-        Documento expResult = null;
-        Documento result = instance.crearNuevoRegistro();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testSeleccionar() {
+        Documento d = new Documento(UUID.randomUUID());
+        documentoModel.seleccionar(d);
+
+        assertEquals(d, documentoModel.getRegistroActual());
+        assertEquals(Estado.MODIFICAR, documentoModel.getEstado());
+        assertTrue(documentoModel.isEstadoModificar());
     }
 
-    /**
-     * Test of getDocumentoDAO method, of class DocumentoModel.
-     */
     @Test
-    public void testGetDocumentoDAO() {
-        System.out.println("getDocumentoDAO");
-        DocumentoModel instance = new DocumentoModel();
-        DocumentoDAO expResult = null;
-        DocumentoDAO result = instance.getDocumentoDAO();
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testCancelar() {
+        documentoModel.prepararNuevo();
+        documentoModel.cancelar();
+
+        assertNull(documentoModel.getRegistroActual());
+        assertEquals(Estado.NINGUNO, documentoModel.getEstado());
+        assertTrue(documentoModel.isEstadoNinguno());
     }
 
-    /**
-     * Test of setDocumentoDAO method, of class DocumentoModel.
-     */
     @Test
-    public void testSetDocumentoDAO() {
-        System.out.println("setDocumentoDAO");
-        DocumentoDAO documentoDAO = null;
-        DocumentoModel instance = new DocumentoModel();
-        instance.setDocumentoDAO(documentoDAO);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    public void testGuardarCrear() {
+        when(documentoDAO.findAll()).thenReturn(Collections.emptyList());
+
+        documentoModel.prepararNuevo();
+
+        documentoModel.guardar();
+
+        verify(documentoDAO).create(any(Documento.class));
+        assertEquals(Estado.NINGUNO, documentoModel.getEstado());
+        assertNull(documentoModel.getRegistroActual());
     }
-    
+
+    @Test
+    public void testGuardarModificar() {
+        when(documentoDAO.findAll()).thenReturn(Collections.emptyList());
+
+        Documento d = new Documento(UUID.randomUUID());
+        documentoModel.seleccionar(d);
+
+        documentoModel.guardar();
+
+        verify(documentoDAO).update(d);
+        assertEquals(Estado.NINGUNO, documentoModel.getEstado());
+    }
+
+    @Test
+    public void testEliminar() {
+        when(documentoDAO.findAll()).thenReturn(Collections.emptyList());
+
+        Documento d = new Documento(UUID.randomUUID());
+        documentoModel.eliminar(d);
+
+        verify(documentoDAO).delete(d);
+    }
+
+    @Test
+    public void testGettersAndSetters() {
+        assertEquals(documentoDAO, documentoModel.getDAO());
+        assertEquals(documentoDAO, documentoModel.getDocumentoDAO());
+        assertNotNull(documentoModel.crearNuevoRegistro());
+    }
 }
