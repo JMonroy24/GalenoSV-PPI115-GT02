@@ -27,6 +27,7 @@ public class TipoExamenModelTest {
 
     @BeforeEach
     public void setUp() {
+        tipoExamenModel.setTipoExamenDAO(tipoExamenDAO);
     }
 
     @Test
@@ -110,6 +111,7 @@ public class TipoExamenModelTest {
     @Test
     public void testGettersAndSetters() {
         assertEquals(tipoExamenDAO, tipoExamenModel.getDAO());
+        assertEquals(tipoExamenDAO, tipoExamenModel.getTipoExamenDAO());
         assertNotNull(tipoExamenModel.crearNuevoRegistro());
     }
 }
