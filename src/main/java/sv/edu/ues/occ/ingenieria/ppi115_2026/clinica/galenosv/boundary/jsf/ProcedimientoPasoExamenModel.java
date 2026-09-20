@@ -11,8 +11,13 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.Procedimie
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPasoExamen;
 
 /**
- * Backing bean JSF para la gestión de la entidad
- * {@link ProcedimientoPasoExamen}.
+ * Modelo JSF encargado de administrar las asociaciones entre los pasos de los
+ * procedimientos y los exámenes clínicos.
+ *
+ * Mantiene el estado de la vista mientras el usuario consulta o modifica una
+ * asociación y delega las operaciones de persistencia a
+ * {@link ProcedimientoPasoExamenDAO}. Cada registro indica qué examen
+ * corresponde a un paso determinado dentro de un procedimiento.
  */
 @Named("procedimientoPasoExamenModel")
 @ViewScoped
