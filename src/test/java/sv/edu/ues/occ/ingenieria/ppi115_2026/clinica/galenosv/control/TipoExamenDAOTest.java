@@ -47,8 +47,7 @@ class TipoExamenDAOTest {
 
     @BeforeEach
     void setUp() {
-        dao = new TipoExamenDAO();
-        dao.setEntityManager(em);
+        dao = new TipoExamenDAO(em);
     }
 
     @Test
@@ -56,15 +55,7 @@ class TipoExamenDAOTest {
         TipoExamenDAO defaultDao = new TipoExamenDAO();
         assertNull(defaultDao.getEntityManager());
 
-        defaultDao.setEntityManager(em);
-        assertEquals(em, defaultDao.getEntityManager());
-    }
-
-    @Test
-    void testSetEntityManager() {
-        TipoExamenDAO localDao = new TipoExamenDAO();
-        localDao.setEntityManager(em);
-        assertEquals(em, localDao.getEntityManager());
+        assertEquals(em, dao.getEntityManager());
     }
 
     @Test
