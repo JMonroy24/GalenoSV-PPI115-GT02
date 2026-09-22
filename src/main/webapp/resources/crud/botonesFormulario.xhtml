@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:cc="jakarta.faces.composite">
+
+    <cc:interface>
+        <cc:attribute name="model" required="true"/>
+        <cc:attribute name="update" required="true"/>
+        <cc:attribute name="dialog" required="true"/>
+    </cc:interface>
+
+    <cc:implementation>
+        <p:commandButton value="Guardar" icon="pi pi-check"
+                         styleClass="ui-button-success"
+                         action="#{cc.attrs.model.guardar()}"
+                         update="#{cc.attrs.update}"
+                         oncomplete="if(!args.validationFailed) PF('#{cc.attrs.dialog}').hide()"/>
+        <p:commandButton value="Cancelar" icon="pi pi-times"
+                         styleClass="ui-button-secondary"
+                         action="#{cc.attrs.model.cancelar()}"
+                         process="@this"
+                         update="#{cc.attrs.update}"
+                         oncomplete="PF('#{cc.attrs.dialog}').hide()"
+                         immediate="true"/>
+    </cc:implementation>
+</html>

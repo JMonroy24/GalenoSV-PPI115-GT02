@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+    <f:view contentType="text/html">
+        <h:head>
+            <meta charset="UTF-8"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+            <title>GalenoSV — <ui:insert name="titulo">Sistema Clínico</ui:insert></title>
+            <h:outputStylesheet library="css" name="styles.css"/>
+        </h:head>
+
+        <h:body>
+            <div class="layout-wrapper">
+
+                <div class="layout-topbar">
+                    <span class="app-title">&#x2695; GalenoSV</span>
+                    <span class="app-subtitle">Sistema de Gestión Clínica</span>
+                </div>
+
+                <div class="layout-menu">
+                    <ui:include src="/WEB-INF/templates/menu.xhtml"/>
+                </div>
+
+                <p:growl id="growlGlobal" showDetail="true" life="4000"/>
+
+                <div class="layout-content">
+                    <ui:insert name="contenido">
+                     
+                    </ui:insert>
+                </div>
+
+                <div class="layout-footer">
+                    GalenoSV v1.0 &#8212; Universidad de El Salvador &#183; Facultad de Ingeniería y Arquitectura &#183; PPI-115 2026
+                </div>
+
+            </div>
+        </h:body>
+    </f:view>
+</html>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Menú principal con 3 grupos de navegación:
+      1. Catálogos       — 8 entidades, tablas simples, crudCatalogo
+      2. Personas         — 4 entidades transaccionales, crudTransaccional
+      3. Atención Clínica — Consulta como punto de entrada + drill-down
+
+    Las tablas de unión (ExamenTipoExamen, ProcedimientoPasoExamen,
+    ProcedimientoPasoSecuencia) NO aparecen en el menú; se editan como
+    sub-tablas embebidas dentro del formulario del padre.
+-->
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <h:form id="frmMenu">
+        <p:menubar>
+            <p:submenu label="Catálogos" icon="pi pi-book">
+                <p:menuitem value="Roles"
+                            outcome="/paginas/catalogo/rol"
+                            icon="pi pi-id-card"/>
+                <p:menuitem value="Tipos de Documento"
+                            outcome="/paginas/catalogo/tipoDocumento"
+                            icon="pi pi-file"/>
+                <p:menuitem value="Tipos de Medio de Contacto"
+                            outcome="/paginas/catalogo/tipoMedioContacto"
+                            icon="pi pi-phone"/>
+                <p:menuitem value="Tipos de Examen"
+                            outcome="/paginas/catalogo/tipoExamen"
+                            icon="pi pi-list"/>
+                <p:separator/>
+                <p:menuitem value="Exámenes"
+                            outcome="/paginas/catalogo/examen"
+                            icon="pi pi-search"/>
+                <p:menuitem value="Procedimientos"
+                            outcome="/paginas/catalogo/procedimiento"
+                            icon="pi pi-cog"/>
+                <p:menuitem value="Pasos de Procedimiento"
+                            outcome="/paginas/catalogo/procedimientoPaso"
+                            icon="pi pi-sort-amount-down"/>
+                <p:separator/>
+                <p:menuitem value="Clínicas"
+                            outcome="/paginas/catalogo/clinica"
+                            icon="pi pi-building"/>
+            </p:submenu>
+
+            
+            <p:submenu label="Personas" icon="pi pi-users">
+                <p:menuitem value="Personas"
+                            outcome="/paginas/persona/persona"
+                            icon="pi pi-user"/>
+                <p:menuitem value="Documentos"
+                            outcome="/paginas/persona/documento"
+                            icon="pi pi-file-edit"/>
+                <p:menuitem value="Medios de Contacto"
+                            outcome="/paginas/persona/medioContacto"
+                            icon="pi pi-envelope"/>
+                <p:menuitem value="Roles de Persona"
+                            outcome="/paginas/persona/personaRol"
+                            icon="pi pi-sitemap"/>
+            </p:submenu>
+
+
+            <p:submenu label="Atención Clínica" icon="pi pi-heart">
+                <p:menuitem value="Consultas"
+                            outcome="/paginas/clinica/consulta"
+                            icon="pi pi-calendar"/>
+            </p:submenu>
+
+        </p:menubar>
+    </h:form>
+
+</ui:composition>

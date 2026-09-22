@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Componente CRUD para entidades TRANSACCIONALES (alto volumen).
+  Paginación server-side con LazyDataModel y soporte de búsqueda global.
+
+  Uso típico:
+  <crud:crudTransaccional model="#{personaModel}" lazyModel="#{personaModel.lazyModel}" titulo="Personas">
+    <p:column headerText="Nombres">...</p:column>
+    <f:facet name="formulario">...</f:facet>
+  </crud:crudTransaccional>
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:crud="jakarta.faces.composite/crud"
+      xmlns:cc="jakarta.faces.composite"
+      xmlns:pt="jakarta.faces.passthrough">
+
+    <cc:interface>
+        <cc:attribute name="model" required="true"
+                      shortDescription="Backing bean que extiende ModelTransaccional."/>
+        <cc:attribute name="lazyModel" required="true"
+                      shortDescription="GenericLazyDataModel obtenido de model.getLazyModel()."/>
+        <cc:attribute name="titulo" required="true" type="java.lang.String"
+                      shortDescription="Título visible del CRUD (ej. 'Personas', 'Consultas')."/>
+        <cc:facet     name="formulario"
+                      shortDescription="Campos del formulario crear/editar en panelGrid 2 columnas."/>
+        <cc:facet     name="accionesExtra"
+                      shortDescription="(Opcional) Botones adicionales en la columna Acciones, ej. drill-down."/>
+    </cc:interface>
+
+    <cc:implementation>
+        <h:form id="frmCrud">
+            <p:growl id="mensajes" showDetail="true" life="3000"/>
+
+            <p:panel header="#{cc.attrs.titulo}">
+
+                <p:toolbar id="toolbarTop">
+                    <p:toolbarGroup>
+                        <crud:botonesTop model="#{cc.attrs.model}" update="frmCrud:pnlFormulario" dialog="dlgFormularioTx" />
+                    </p:toolbarGroup>
+                    <p:toolbarGroup align="right">
+                        <p:inputText id="campoBusqueda"
+                                     value="#{cc.attrs.lazyModel.filtroGlobal}"
+                                     placeholder="Buscar..."/>
+                        <p:commandButton icon="pi pi-search"
+                                         title="Buscar" pt:aria-label="Ejecutar búsqueda"
+                                         styleClass="ui-button-info"
+                                         process="campoBusqueda @this"
+                                         update="tabla"/>
+                        <p:commandButton icon="pi pi-times"
+                                         title="Limpiar búsqueda" pt:aria-label="Limpiar filtro"
+                                         styleClass="ui-button-secondary"
+                                         process="@this"
+                                         update="campoBusqueda tabla">
+                            <f:setPropertyActionListener value="#{null}"
+                                                         target="#{cc.attrs.lazyModel.filtroGlobal}"/>
+                        </p:commandButton>
+                    </p:toolbarGroup>
+                </p:toolbar>
+
+                <p:dataTable id="tabla" var="registro"
+                             value="#{cc.attrs.lazyModel}"
+                             lazy="true"
+                             emptyMessage="No se encontraron registros."
+                             rows="15"
+                             paginator="true"
+                             paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                             rowsPerPageTemplate="10,15,25,50"
+                             paginatorPosition="both"
+                             stripedRows="true"
+                             size="small"
+                             selectionMode="single"
+                             selection="#{cc.attrs.model.registroActual}"
+                             rowKey="#{registro.hashCode()}">
+                             
+                    <p:ajax event="rowSelect" update="frmCrud:toolbarTop"/>
+                    <p:ajax event="rowUnselect" update="frmCrud:toolbarTop"/>
+
+                    <cc:insertChildren/>
+
+                    <p:column headerText="Acciones" width="100"
+                              exportable="false" styleClass="col-acciones"
+                              rendered="#{not empty cc.facets.accionesExtra}">
+                        <cc:renderFacet name="accionesExtra"/>
+                    </p:column>
+                </p:dataTable>
+            </p:panel>
+
+            <p:dialog header="#{cc.attrs.model.estadoCrear ? 'Nuevo' : 'Editar'} — #{cc.attrs.titulo}"
+                      widgetVar="dlgFormularioTx"
+                      modal="true" responsive="true"
+                      width="600" closable="true">
+
+                <p:outputPanel id="pnlFormulario">
+                    <h:panelGrid columns="2" cellpadding="7"
+                                 columnClasses="ui-grid-col-4,ui-grid-col-8"
+                                 rendered="#{cc.attrs.model.registroActual != null}"
+                                 style="width:100%">
+
+                        <cc:renderFacet name="formulario"/>
+
+                    </h:panelGrid>
+
+                    <p:divider/>
+
+                    <p:toolbar>
+                        <p:toolbarGroup align="right">
+                            <crud:botonesFormulario model="#{cc.attrs.model}" update="@form" dialog="dlgFormularioTx" />
+                        </p:toolbarGroup>
+                    </p:toolbar>
+                </p:outputPanel>
+            </p:dialog>
+
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Sí" type="button"
+                                 styleClass="ui-confirmdialog-yes ui-button-danger"
+                                 icon="pi pi-check"/>
+                <p:commandButton value="No" type="button"
+                                 styleClass="ui-confirmdialog-no ui-button-secondary"
+                                 icon="pi pi-times"/>
+            </p:confirmDialog>
+
+        </h:form>
+    </cc:implementation>
+
+</html>

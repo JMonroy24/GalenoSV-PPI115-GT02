@@ -1,0 +1,88 @@
+/*
+ * Usa CSS variables de PrimeFaces (--primary-color, --surface-border, etc.)
+ * para mantener consistencia con el tema activo.
+ * Solo contiene reglas estructurales que los componentes PrimeFaces
+ * no cubren directamente.
+ */
+
+
+.layout-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+
+.layout-topbar {
+    background: var(--primary-color, #1976D2);
+    color: #ffffff;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+.layout-topbar .app-title {
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.layout-topbar .app-subtitle {
+    margin-left: 0.75rem;
+    opacity: 0.85;
+    font-size: 0.9rem;
+}
+
+
+.layout-menu {
+    border-bottom: 1px solid var(--surface-border, #dee2e6);
+    background: var(--surface-ground, #f8f9fa);
+}
+
+
+.layout-content {
+    flex: 1;
+    padding: 1.25rem 1.5rem;
+}
+
+
+.layout-footer {
+    text-align: center;
+    padding: 0.6rem;
+    font-size: 0.8rem;
+    color: var(--text-color-secondary, #6c757d);
+    border-top: 1px solid var(--surface-border, #dee2e6);
+    background: var(--surface-ground, #f8f9fa);
+}
+
+
+.busqueda-global {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.busqueda-global .ui-inputfield {
+    flex: 1;
+    max-width: 400px;
+}
+
+
+.col-acciones {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.col-acciones .ui-button {
+    margin: 0 0.15rem;
+}
+
+.texto-truncado {
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+}
