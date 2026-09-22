@@ -13,8 +13,8 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Procedimi
  *
  * Cada registro administrado identifica un paso, un paso de referencia y el
  * tipo de secuencia que los relaciona. Las operaciones de creación, consulta,
- * modificación y eliminación son heredadas de {@link DefaultDAO}, utilizando
- * un {@link UUID} como identificador.
+ * modificación y eliminación son heredadas de , utilizando
+ * un  como identificador.
  */
 @ApplicationScoped
 public class ProcedimientoPasoSecuenciaDAO

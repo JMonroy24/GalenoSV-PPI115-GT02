@@ -8,7 +8,7 @@ import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRol;
 
 /**
- * Acceso a datos para la entidad {@link PersonaRol}.
+ * Acceso a datos para la entidad .
  */
 @ApplicationScoped
 public class PersonaRolDAO extends DefaultDAO<PersonaRol, UUID> implements Serializable {

@@ -8,7 +8,7 @@ import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoExamen;
 
 /**
- * Acceso a datos para la entidad {@link TipoExamen}.
+ * Acceso a datos para la entidad .
  */
 @ApplicationScoped
 public class TipoExamenDAO extends DefaultDAO<TipoExamen, UUID> implements Serializable {

@@ -3,40 +3,43 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * Implementación abstracta base del patrón DAO genérico para entidades JPA.
  * Provee lógica CRUD reutilizable con JPA Criteria API.
- * Los métodos de escritura usan {@link Transactional} (JTA) porque los DAOs
- * son beans CDI ({@code @ApplicationScoped}), no EJBs.
+ * Los métodos de escritura usan  (JTA) porque los DAOs
+ * son beans CDI (@ApplicationScoped), no EJBs.
  *
  * @param <T>  tipo de la entidad JPA
- * @param <ID> tipo de la llave primaria; debe ser {@link Serializable}
+ * @param <ID> tipo de la llave primaria; debe ser Serializable
  *
  */
 public abstract class DefaultDAO<T, ID extends Serializable> implements DAOInterface<T, ID> {
 
-    /** Clase de la entidad JPA, usada para {@code find()} y consultas Criteria. */
+    /** Clase de la entidad JPA, usada para find() y consultas Criteria. */
     private final Class<T> entityClass;
 
     /**
-     * @param entityClass la clase de la entidad (por ejemplo, {@code TipoExamen.class})
+     * @param entityClass la clase de la entidad (por ejemplo, TipoExamen.class)
      */
     public DefaultDAO(Class<T> entityClass) {
         this.entityClass = entityClass;
     }
 
     /**
-     * Retorna el {@link EntityManager} inyectado por la subclase concreta.
+     * Retorna el  inyectado por la subclase concreta.
      *
-     * @return el {@link EntityManager} activo; nunca debe ser {@code null}
+     * @return el  activo; nunca debe ser null
      */
     public abstract EntityManager getEntityManager();
 
-    /** {@inheritDoc} */
+
     @Override
     @Transactional
     public void create(T entity) {
@@ -52,7 +55,7 @@ public abstract class DefaultDAO<T, ID extends Serializable> implements DAOInter
 
     /**
      * {@inheritDoc}
-     * Re-adjunta la entidad con {@code merge()} antes de invocar {@code remove()}.
+     * Re-adjunta la entidad con merge() antes de invocar remove().
      */
     @Override
     @Transactional
@@ -92,5 +95,71 @@ public abstract class DefaultDAO<T, ID extends Serializable> implements DAOInter
         CriteriaQuery<Long> cq = cb.createQuery(Long.class);
         cq.select(cb.count(cq.from(entityClass)));
         return getEntityManager().createQuery(cq).getSingleResult();
+    }
+
+    /**
+     * Define los atributos JPA de tipo String para la búsqueda global.
+     * Retorna lista vacía por defecto. Las subclases deben sobreescribirlo
+     * para habilitar la búsqueda (ej. return List.of("nombres", "apellidos");).
+     *
+     * @return nombres de atributos JPA filtrables
+     */
+    protected List<String> getCamposBusqueda() {
+        return Collections.emptyList();
+    }
+
+    /**
+     * {@inheritDoc}
+     * Aplica un filtro LIKE case-insensitive sobre los campos definidos en .
+     */
+    @Override
+    public List<T> findRange(int first, int max, String filtroGlobal) {
+        if (filtroGlobal == null || filtroGlobal.isBlank() || getCamposBusqueda().isEmpty()) {
+            return findRange(first, max);
+        }
+
+        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<T> cq = cb.createQuery(entityClass);
+        Root<T> root = cq.from(entityClass);
+        cq.select(root);
+
+        cq.where(construirPredicadoBusqueda(cb, root, filtroGlobal));
+
+        return getEntityManager().createQuery(cq)
+                .setFirstResult(first)
+                .setMaxResults(max)
+                .getResultList();
+    }
+
+    /**
+     * {@inheritDoc}
+     * Cuenta solo los registros que coinciden con el filtro global.
+     */
+    @Override
+    public long count(String filtroGlobal) {
+        if (filtroGlobal == null || filtroGlobal.isBlank() || getCamposBusqueda().isEmpty()) {
+            return count();
+        }
+
+        CriteriaBuilder cb = getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Long> cq = cb.createQuery(Long.class);
+        Root<T> root = cq.from(entityClass);
+        cq.select(cb.count(root));
+
+        cq.where(construirPredicadoBusqueda(cb, root, filtroGlobal));
+
+        return getEntityManager().createQuery(cq).getSingleResult();
+    }
+
+    /**
+     * Construye un predicado OR que hace LOWER(campo) LIKE %filtro%
+     * sobre cada campo retornado por .
+     */
+    private Predicate construirPredicadoBusqueda(CriteriaBuilder cb, Root<T> root, String filtroGlobal) {
+        String patron = "%" + filtroGlobal.toLowerCase() + "%";
+        Predicate[] predicados = getCamposBusqueda().stream()
+                .map(campo -> cb.like(cb.lower(root.get(campo).as(String.class)), patron))
+                .toArray(Predicate[]::new);
+        return cb.or(predicados);
     }
 }
