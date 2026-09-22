@@ -15,14 +15,14 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRo
  */
 @Named("personaRolModel")
 @ViewScoped
-public class PersonaRolModel extends Model<PersonaRol, UUID> implements Serializable {
+public class PersonaRolModel extends ModelTransaccional<PersonaRol, UUID> implements Serializable {
 
     @Inject
     protected PersonaRolDAO personaRolDAO;
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override

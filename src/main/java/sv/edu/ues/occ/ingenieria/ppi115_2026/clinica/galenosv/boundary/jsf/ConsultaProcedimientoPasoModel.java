@@ -15,14 +15,14 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaP
  */
 @Named("consultaProcedimientoPasoModel")
 @ViewScoped
-public class ConsultaProcedimientoPasoModel extends Model<ConsultaProcedimientoPaso, UUID> implements Serializable {
+public class ConsultaProcedimientoPasoModel extends ModelTransaccional<ConsultaProcedimientoPaso, UUID> implements Serializable {
 
     @Inject
     protected ConsultaProcedimientoPasoDAO consultaProcedimientoPasoDAO;
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override

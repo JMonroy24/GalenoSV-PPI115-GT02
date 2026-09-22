@@ -12,10 +12,10 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterfa
 /**
  * Backing bean abstracto y genérico para vistas JSF con operaciones CRUD.
  * Usa el patrón Template Method: las subclases solo implementan
- * {@link #getDAO()} y {@link #crearNuevoRegistro()}.
+ *  y .
  *
  * @param <T>  tipo de la entidad JPA
- * @param <ID> tipo de la llave primaria; debe ser {@link Serializable}
+ * @param <ID> tipo de la llave primaria; debe ser Serializable
  *
  */
 public abstract class Model<T, ID extends Serializable> implements Serializable {
@@ -24,7 +24,7 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
 
     /**
      * Retorna el DAO concreto para las operaciones de persistencia.
-     * @return la instancia del DAO; nunca debe ser {@code null}
+     * @return la instancia del DAO; nunca debe ser null
      */
     protected abstract DAOInterface<T, ID> getDAO();
 
@@ -37,7 +37,7 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
     /** Lista de registros cargados desde la base de datos. */
     private List<T> registros;
 
-    /** Registro seleccionado o en creación/edición; {@code null} si no hay operación activa. */
+    /** Registro seleccionado o en creación/edición; null si no hay operación activa. */
     private T registroActual;
 
     /** Estado actual de la operación CRUD. */
@@ -56,7 +56,7 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
         }
     }
 
-    /** Prepara un registro nuevo y cambia el estado a {@link Estado#CREAR}. */
+    /** Prepara un registro nuevo y cambia el estado a . */
     public void prepararNuevo() {
         registroActual = crearNuevoRegistro();
         estado = Estado.CREAR;
@@ -71,14 +71,14 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
         estado = Estado.MODIFICAR;
     }
 
-    /** Cancela la operación en curso y restablece el estado a {@link Estado#NINGUNO}. */
+    /** Cancela la operación en curso y restablece el estado a . */
     public void cancelar() {
         registroActual = null;
         estado = Estado.NINGUNO;
     }
 
     /**
-     * Persiste o actualiza el registro actual según el {@link Estado}.
+     * Persiste o actualiza el registro actual según el .
      * Recarga datos y cancela la operación al finalizar exitosamente.
      */
     public void guardar() {
@@ -94,7 +94,7 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
             cancelar(); 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error al guardar registro", e);
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Error", "Hubo un problema al guardar.");
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Error", clasificarError(e));
         }
     }
 
@@ -113,9 +113,60 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
             agregarMensaje(FacesMessage.SEVERITY_INFO, "Éxito", "Registro eliminado correctamente.");
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error al eliminar registro", e);
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo eliminar.");
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Error", clasificarError(e));
         }
     }
+
+    // ─── Manejo de errores ───────────────────────────────────────────
+
+    /**
+     * Extrae y clasifica la causa raíz de una excepción JPA/PostgreSQL
+     * para retornar un mensaje amigable al usuario.
+     *
+     * @param e excepción capturada
+     * @return mensaje descriptivo
+     */
+    protected String clasificarError(Exception e) {
+        Throwable causa = e;
+        while (causa.getCause() != null && causa.getCause() != causa) {
+            causa = causa.getCause();
+        }
+        String msg = causa.getMessage();
+        if (msg == null) {
+            return "Error inesperado. Contacte al administrador del sistema.";
+        }
+
+        String msgLower = msg.toLowerCase();
+
+        // ── Violación de restricción UNIQUE ──
+        if (msgLower.contains("unique") || msgLower.contains("duplicate key")
+                || msgLower.contains("llave duplicada") || msgLower.contains("duplicat")) {
+            return "Ya existe un registro con estos datos. Verifique los campos que deben ser únicos.";
+        }
+
+        // ── Violación de FK / integridad referencial ──
+        if (msgLower.contains("foreign key") || msgLower.contains("fk_")
+                || msgLower.contains("referential integrity") || msgLower.contains("llave foránea")
+                || msgLower.contains("is still referenced")) {
+            return "No se puede completar la operación: este registro está relacionado con otros datos.";
+        }
+
+        // ── NOT NULL ──
+        if (msgLower.contains("not-null") || msgLower.contains("not null")
+                || msgLower.contains("violates not-null") || msgLower.contains("null value")) {
+            return "Faltan campos obligatorios. Complete todos los datos requeridos.";
+        }
+
+        // ── Texto demasiado largo ──
+        if (msgLower.contains("value too long") || msgLower.contains("character varying")) {
+            return "Uno de los campos excede la longitud máxima permitida.";
+        }
+
+        // ── Genérico con detalle (truncado a 200 chars) ──
+        return "Error al procesar: " + (msg.length() > 200 ? msg.substring(0, 200) + "…" : msg);
+    }
+
+    // ─── Mensajes JSF ────────────────────────────────────────────────
 
     /**
      * Agrega un mensaje global a la cola de mensajes de JSF.
@@ -135,17 +186,21 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
         }
     }
 
-    /** @return {@code true} si el estado actual es {@link Estado#CREAR} */
+    // ─── Estado ──────────────────────────────────────────────────────
+
+    /** @return true si el estado actual es  */
     public boolean isEstadoCrear() { return estado == Estado.CREAR; }
 
-    /** @return {@code true} si el estado actual es {@link Estado#MODIFICAR} */
+    /** @return true si el estado actual es  */
     public boolean isEstadoModificar() { return estado == Estado.MODIFICAR; }
 
-    /** @return {@code true} si el estado actual es {@link Estado#ELIMINAR} */
+    /** @return true si el estado actual es  */
     public boolean isEstadoEliminar() { return estado == Estado.ELIMINAR; }
 
-    /** @return {@code true} si el estado actual es {@link Estado#NINGUNO} */
+    /** @return true si el estado actual es  */
     public boolean isEstadoNinguno() { return estado == Estado.NINGUNO; }
+
+    // ─── Accessors ───────────────────────────────────────────────────
 
     public List<T> getRegistros() { return registros; }
     public void setRegistros(List<T> registros) { this.registros = registros; }

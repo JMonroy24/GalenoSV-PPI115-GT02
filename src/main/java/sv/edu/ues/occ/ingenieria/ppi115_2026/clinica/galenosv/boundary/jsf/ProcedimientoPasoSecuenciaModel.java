@@ -17,7 +17,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Procedimi
  * Cada registro establece un paso, un paso de referencia y el tipo de
  * secuencia que los relaciona. El modelo mantiene el estado de la vista y
  * delega las operaciones de persistencia a
- * {@link ProcedimientoPasoSecuenciaDAO}.
+ * .
  */
 @Named("procedimientoPasoSecuenciaModel")
 @ViewScoped

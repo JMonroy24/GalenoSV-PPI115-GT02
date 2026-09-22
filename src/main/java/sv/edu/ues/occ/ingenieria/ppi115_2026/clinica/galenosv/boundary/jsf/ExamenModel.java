@@ -11,7 +11,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Examen;
 
 /**
- * Backing bean JSF para la gestión de la entidad {@link Examen}.
+ * Backing bean JSF para la gestión de la entidad .
  */
 @Named("examenModel")
 @ViewScoped

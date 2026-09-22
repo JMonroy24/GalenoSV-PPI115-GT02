@@ -11,7 +11,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenTipo
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ExamenTipoExamen;
 
 /**
- * Backing bean JSF para la gestión de la entidad {@link ExamenTipoExamen}.
+ * Backing bean JSF para la gestión de la entidad .
  */
 @Named("examenTipoexamenModel")
 @ViewScoped

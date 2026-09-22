@@ -11,7 +11,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.Procedimie
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPaso;
 
 /**
- * Backing bean JSF para la gestión de la entidad {@link ProcedimientoPaso}.
+ * Backing bean JSF para la gestión de la entidad .
  */
 @Named("procedimientoPasoModel")
 @ViewScoped

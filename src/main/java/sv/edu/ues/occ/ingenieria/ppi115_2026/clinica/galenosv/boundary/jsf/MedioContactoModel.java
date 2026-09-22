@@ -15,14 +15,14 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.MedioCont
  */
 @Named("medioContactoModel")
 @ViewScoped
-public class MedioContactoModel extends Model<MedioContacto, UUID> implements Serializable {
+public class MedioContactoModel extends ModelTransaccional<MedioContacto, UUID> implements Serializable {
 
     @Inject
     protected MedioContactoDAO medioContactoDAO;
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override
