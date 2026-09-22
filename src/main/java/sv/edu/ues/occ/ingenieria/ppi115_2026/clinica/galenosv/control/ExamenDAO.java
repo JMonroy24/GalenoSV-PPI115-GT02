@@ -8,9 +8,9 @@ import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Examen;
 
 /**
- * Acceso a datos para la entidad {@link Examen}.
+ * Acceso a datos para la entidad .
  *
- * Hereda las operaciones CRUD proporcionadas por {@link DefaultDAO}.
+ * Hereda las operaciones CRUD proporcionadas por .
  */
 
 @ApplicationScoped

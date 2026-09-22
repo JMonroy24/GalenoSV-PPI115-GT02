@@ -8,7 +8,7 @@ import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoMedioContacto;
 
 /**
- * Acceso a datos para la entidad {@link TipoMedioContacto}.
+ * Acceso a datos para la entidad .
  */
 @ApplicationScoped
 public class TipoMedioContactoDAO extends DefaultDAO<TipoMedioContacto, UUID> implements Serializable {

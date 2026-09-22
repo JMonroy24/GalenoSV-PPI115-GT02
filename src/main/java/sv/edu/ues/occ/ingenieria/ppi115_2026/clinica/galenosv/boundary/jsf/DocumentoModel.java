@@ -15,14 +15,17 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Documento
  */
 @Named("documentoModel")
 @ViewScoped
-public class DocumentoModel extends Model<Documento, UUID> implements Serializable {
+public class DocumentoModel extends ModelTransaccional<Documento, UUID> implements Serializable {
 
     @Inject
     protected DocumentoDAO documentoDAO;
 
+    @Inject
+    protected sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaDAO personaDAO;
+
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override
@@ -33,6 +36,13 @@ public class DocumentoModel extends Model<Documento, UUID> implements Serializab
     @Override
     protected Documento crearNuevoRegistro() {
         return new Documento();
+    }
+
+    /**
+     * Método para p:autoComplete. Busca Personas por nombres o apellidos.
+     */
+    public java.util.List<sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona> completePersona(String query) {
+        return personaDAO.findRange(0, 20, query);
     }
 
     public DocumentoDAO getDocumentoDAO() {

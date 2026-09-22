@@ -15,14 +15,14 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExam
  */
 @Named("ordenExamenModel")
 @ViewScoped
-public class OrdenExamenModel extends Model<OrdenExamen, UUID> implements Serializable {
+public class OrdenExamenModel extends ModelTransaccional<OrdenExamen, UUID> implements Serializable {
 
     @Inject
     protected OrdenExamenDAO ordenExamenDAO;
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override

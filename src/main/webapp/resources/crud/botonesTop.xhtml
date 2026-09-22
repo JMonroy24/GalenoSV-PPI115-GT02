@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:p="http://primefaces.org/ui"
+      xmlns:cc="jakarta.faces.composite">
+
+    <cc:interface>
+        <cc:attribute name="model" required="true"/>
+        <cc:attribute name="update" required="true"/>
+        <cc:attribute name="dialog" required="true"/>
+    </cc:interface>
+
+    <cc:implementation>
+        <p:commandButton value="Nuevo" icon="pi pi-plus"
+                         styleClass="ui-button-success mr-2"
+                         action="#{cc.attrs.model.prepararNuevo()}"
+                         process="@this"
+                         update="#{cc.attrs.update}"
+                         oncomplete="PF('#{cc.attrs.dialog}').show()"/>
+                         
+        <p:commandButton value="Editar" icon="pi pi-pencil"
+                         styleClass="ui-button-warning mr-2"
+                         action="#{cc.attrs.model.seleccionar(cc.attrs.model.registroActual)}"
+                         process="@this"
+                         update="#{cc.attrs.update}"
+                         oncomplete="PF('#{cc.attrs.dialog}').show()"
+                         disabled="#{cc.attrs.model.registroActual == null}"/>
+                         
+        <p:commandButton value="Eliminar" icon="pi pi-trash"
+                         styleClass="ui-button-danger"
+                         action="#{cc.attrs.model.eliminar(cc.attrs.model.registroActual)}"
+                         process="@this"
+                         update="@form"
+                         disabled="#{cc.attrs.model.registroActual == null}">
+            <p:confirm header="Confirmar eliminación"
+                       message="¿Está seguro de eliminar este registro?"
+                       icon="pi pi-exclamation-triangle"/>
+        </p:commandButton>
+    </cc:implementation>
+</html>

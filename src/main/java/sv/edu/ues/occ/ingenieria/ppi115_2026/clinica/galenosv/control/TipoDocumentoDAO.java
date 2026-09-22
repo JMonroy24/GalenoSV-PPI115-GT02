@@ -8,7 +8,7 @@ import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoDocumento;
 
 /**
- * Acceso a datos para la entidad {@link TipoDocumento}.
+ * Acceso a datos para la entidad .
  */
 @ApplicationScoped
 public class TipoDocumentoDAO extends DefaultDAO<TipoDocumento, UUID> implements Serializable {

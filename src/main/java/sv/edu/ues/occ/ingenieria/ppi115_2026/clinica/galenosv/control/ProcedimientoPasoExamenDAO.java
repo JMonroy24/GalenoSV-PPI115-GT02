@@ -13,8 +13,8 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Procedimi
  *
  * Cada registro administrado representa un examen requerido por un paso
  * específico. Las operaciones de creación, consulta, modificación y
- * eliminación son heredadas de {@link DefaultDAO}, utilizando un
- * {@link UUID} como identificador.
+ * eliminación son heredadas de , utilizando un
+ *  como identificador.
  */
 @ApplicationScoped
 public class ProcedimientoPasoExamenDAO
