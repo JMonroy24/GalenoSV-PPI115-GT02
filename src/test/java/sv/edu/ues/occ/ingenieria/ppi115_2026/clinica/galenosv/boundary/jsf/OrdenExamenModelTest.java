@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,14 +30,12 @@ public class OrdenExamenModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        OrdenExamen oe = new OrdenExamen(UUID.randomUUID());
-        when(ordenExamenDAO.findAll()).thenReturn(List.of(oe));
-
         ordenExamenModel.init();
 
-        assertNotNull(ordenExamenModel.getRegistros());
-        assertEquals(1, ordenExamenModel.getRegistros().size());
-        verify(ordenExamenDAO).findAll();
+        // ModelTransaccional inicializa un LazyDataModel en lugar de cargar
+        // todos los registros en memoria con findAll(); verificamos el lazy model.
+        assertNotNull(ordenExamenModel.getLazyModel());
+        verifyNoInteractions(ordenExamenDAO);
     }
 
     @Test
@@ -73,8 +69,6 @@ public class OrdenExamenModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(ordenExamenDAO.findAll()).thenReturn(Collections.emptyList());
-
         ordenExamenModel.prepararNuevo();
         ordenExamenModel.getRegistroActual().setIndicaciones("Realizar examen de sangre");
 
@@ -87,8 +81,6 @@ public class OrdenExamenModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(ordenExamenDAO.findAll()).thenReturn(Collections.emptyList());
-
         OrdenExamen oe = new OrdenExamen(UUID.randomUUID());
         ordenExamenModel.seleccionar(oe);
 
@@ -100,8 +92,6 @@ public class OrdenExamenModelTest {
 
     @Test
     public void testEliminar() {
-        when(ordenExamenDAO.findAll()).thenReturn(Collections.emptyList());
-
         OrdenExamen oe = new OrdenExamen(UUID.randomUUID());
         ordenExamenModel.eliminar(oe);
 
@@ -110,8 +100,10 @@ public class OrdenExamenModelTest {
 
     @Test
     public void testGettersAndSetters() {
+        ordenExamenModel.init();
         assertEquals(ordenExamenDAO, ordenExamenModel.getDAO());
         assertEquals(ordenExamenDAO, ordenExamenModel.getOrdenExamenDAO());
         assertNotNull(ordenExamenModel.crearNuevoRegistro());
+        assertNotNull(ordenExamenModel.getLazyModel());
     }
 }

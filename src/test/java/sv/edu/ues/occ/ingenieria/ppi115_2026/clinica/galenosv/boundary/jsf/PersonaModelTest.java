@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,14 +30,12 @@ public class PersonaModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        Persona p = new Persona(UUID.randomUUID());
-        when(personaDAO.findAll()).thenReturn(List.of(p));
-
         personaModel.init();
 
-        assertNotNull(personaModel.getRegistros());
-        assertEquals(1, personaModel.getRegistros().size());
-        verify(personaDAO).findAll();
+        // ModelTransaccional inicializa un LazyDataModel en lugar de cargar
+        // todos los registros en memoria con findAll(); verificamos el lazy model.
+        assertNotNull(personaModel.getLazyModel());
+        verifyNoInteractions(personaDAO);
     }
 
     @Test
@@ -73,8 +69,6 @@ public class PersonaModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(personaDAO.findAll()).thenReturn(Collections.emptyList());
-
         personaModel.prepararNuevo();
         personaModel.getRegistroActual().setNombres("Juan");
 
@@ -87,8 +81,6 @@ public class PersonaModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(personaDAO.findAll()).thenReturn(Collections.emptyList());
-
         Persona p = new Persona(UUID.randomUUID());
         personaModel.seleccionar(p);
 
@@ -100,8 +92,6 @@ public class PersonaModelTest {
 
     @Test
     public void testEliminar() {
-        when(personaDAO.findAll()).thenReturn(Collections.emptyList());
-
         Persona p = new Persona(UUID.randomUUID());
         personaModel.eliminar(p);
 
@@ -110,8 +100,10 @@ public class PersonaModelTest {
 
     @Test
     public void testGettersAndSetters() {
+        personaModel.init();
         assertEquals(personaDAO, personaModel.getDAO());
         assertEquals(personaDAO, personaModel.getPersonaDAO());
         assertNotNull(personaModel.crearNuevoRegistro());
+        assertNotNull(personaModel.getLazyModel());
     }
 }

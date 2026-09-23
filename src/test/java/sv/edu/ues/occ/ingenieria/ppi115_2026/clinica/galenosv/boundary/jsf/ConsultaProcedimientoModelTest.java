@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,14 +30,12 @@ public class ConsultaProcedimientoModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        ConsultaProcedimiento cp = new ConsultaProcedimiento(UUID.randomUUID());
-        when(consultaProcedimientoDAO.findAll()).thenReturn(List.of(cp));
-
         consultaProcedimientoModel.init();
 
-        assertNotNull(consultaProcedimientoModel.getRegistros());
-        assertEquals(1, consultaProcedimientoModel.getRegistros().size());
-        verify(consultaProcedimientoDAO).findAll();
+        // ModelTransaccional inicializa un LazyDataModel en lugar de cargar
+        // todos los registros en memoria con findAll(); verificamos el lazy model.
+        assertNotNull(consultaProcedimientoModel.getLazyModel());
+        verifyNoInteractions(consultaProcedimientoDAO);
     }
 
     @Test
@@ -73,8 +69,6 @@ public class ConsultaProcedimientoModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(consultaProcedimientoDAO.findAll()).thenReturn(Collections.emptyList());
-
         consultaProcedimientoModel.prepararNuevo();
         consultaProcedimientoModel.getRegistroActual().setObservaciones("Procedimiento de prueba");
 
@@ -87,8 +81,6 @@ public class ConsultaProcedimientoModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(consultaProcedimientoDAO.findAll()).thenReturn(Collections.emptyList());
-
         ConsultaProcedimiento cp = new ConsultaProcedimiento(UUID.randomUUID());
         consultaProcedimientoModel.seleccionar(cp);
 
@@ -100,8 +92,6 @@ public class ConsultaProcedimientoModelTest {
 
     @Test
     public void testEliminar() {
-        when(consultaProcedimientoDAO.findAll()).thenReturn(Collections.emptyList());
-
         ConsultaProcedimiento cp = new ConsultaProcedimiento(UUID.randomUUID());
         consultaProcedimientoModel.eliminar(cp);
 
@@ -110,8 +100,10 @@ public class ConsultaProcedimientoModelTest {
 
     @Test
     public void testGettersAndSetters() {
+        consultaProcedimientoModel.init();
         assertEquals(consultaProcedimientoDAO, consultaProcedimientoModel.getDAO());
         assertEquals(consultaProcedimientoDAO, consultaProcedimientoModel.getConsultaProcedimientoDAO());
         assertNotNull(consultaProcedimientoModel.crearNuevoRegistro());
+        assertNotNull(consultaProcedimientoModel.getLazyModel());
     }
 }

@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,14 +30,12 @@ public class DocumentoModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        Documento d = new Documento(UUID.randomUUID());
-        when(documentoDAO.findAll()).thenReturn(List.of(d));
-
         documentoModel.init();
 
-        assertNotNull(documentoModel.getRegistros());
-        assertEquals(1, documentoModel.getRegistros().size());
-        verify(documentoDAO).findAll();
+        // ModelTransaccional inicializa un LazyDataModel en lugar de cargar
+        // todos los registros en memoria con findAll(); verificamos el lazy model.
+        assertNotNull(documentoModel.getLazyModel());
+        verifyNoInteractions(documentoDAO);
     }
 
     @Test
@@ -73,8 +69,6 @@ public class DocumentoModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(documentoDAO.findAll()).thenReturn(Collections.emptyList());
-
         documentoModel.prepararNuevo();
 
         documentoModel.guardar();
@@ -86,8 +80,6 @@ public class DocumentoModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(documentoDAO.findAll()).thenReturn(Collections.emptyList());
-
         Documento d = new Documento(UUID.randomUUID());
         documentoModel.seleccionar(d);
 
@@ -99,8 +91,6 @@ public class DocumentoModelTest {
 
     @Test
     public void testEliminar() {
-        when(documentoDAO.findAll()).thenReturn(Collections.emptyList());
-
         Documento d = new Documento(UUID.randomUUID());
         documentoModel.eliminar(d);
 
@@ -109,8 +99,10 @@ public class DocumentoModelTest {
 
     @Test
     public void testGettersAndSetters() {
+        documentoModel.init();
         assertEquals(documentoDAO, documentoModel.getDAO());
         assertEquals(documentoDAO, documentoModel.getDocumentoDAO());
         assertNotNull(documentoModel.crearNuevoRegistro());
+        assertNotNull(documentoModel.getLazyModel());
     }
 }

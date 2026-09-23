@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,14 +30,12 @@ public class ConsultaModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        Consulta c = new Consulta(UUID.randomUUID());
-        when(consultaDAO.findAll()).thenReturn(List.of(c));
-
         consultaModel.init();
 
-        assertNotNull(consultaModel.getRegistros());
-        assertEquals(1, consultaModel.getRegistros().size());
-        verify(consultaDAO).findAll();
+        // ModelTransaccional inicializa un LazyDataModel en lugar de cargar
+        // todos los registros en memoria con findAll(); verificamos el lazy model.
+        assertNotNull(consultaModel.getLazyModel());
+        verifyNoInteractions(consultaDAO);
     }
 
     @Test
@@ -73,8 +69,6 @@ public class ConsultaModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(consultaDAO.findAll()).thenReturn(Collections.emptyList());
-
         consultaModel.prepararNuevo();
         consultaModel.getRegistroActual().setObservaciones("Consulta general");
 
@@ -87,8 +81,6 @@ public class ConsultaModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(consultaDAO.findAll()).thenReturn(Collections.emptyList());
-
         Consulta c = new Consulta(UUID.randomUUID());
         consultaModel.seleccionar(c);
 
@@ -100,8 +92,6 @@ public class ConsultaModelTest {
 
     @Test
     public void testEliminar() {
-        when(consultaDAO.findAll()).thenReturn(Collections.emptyList());
-
         Consulta c = new Consulta(UUID.randomUUID());
         consultaModel.eliminar(c);
 
@@ -110,8 +100,10 @@ public class ConsultaModelTest {
 
     @Test
     public void testGettersAndSetters() {
+        consultaModel.init();
         assertEquals(consultaDAO, consultaModel.getDAO());
         assertEquals(consultaDAO, consultaModel.getConsultaDAO());
         assertNotNull(consultaModel.crearNuevoRegistro());
+        assertNotNull(consultaModel.getLazyModel());
     }
 }

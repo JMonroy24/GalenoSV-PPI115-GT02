@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,14 +30,12 @@ public class PersonaRolModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        PersonaRol pr = new PersonaRol(UUID.randomUUID());
-        when(personaRolDAO.findAll()).thenReturn(List.of(pr));
-
         personaRolModel.init();
 
-        assertNotNull(personaRolModel.getRegistros());
-        assertEquals(1, personaRolModel.getRegistros().size());
-        verify(personaRolDAO).findAll();
+        // ModelTransaccional inicializa un LazyDataModel en lugar de cargar
+        // todos los registros en memoria con findAll(); verificamos el lazy model.
+        assertNotNull(personaRolModel.getLazyModel());
+        verifyNoInteractions(personaRolDAO);
     }
 
     @Test
@@ -73,8 +69,6 @@ public class PersonaRolModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(personaRolDAO.findAll()).thenReturn(Collections.emptyList());
-
         personaRolModel.prepararNuevo();
 
         personaRolModel.guardar();
@@ -86,8 +80,6 @@ public class PersonaRolModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(personaRolDAO.findAll()).thenReturn(Collections.emptyList());
-
         PersonaRol pr = new PersonaRol(UUID.randomUUID());
         personaRolModel.seleccionar(pr);
 
@@ -99,8 +91,6 @@ public class PersonaRolModelTest {
 
     @Test
     public void testEliminar() {
-        when(personaRolDAO.findAll()).thenReturn(Collections.emptyList());
-
         PersonaRol pr = new PersonaRol(UUID.randomUUID());
         personaRolModel.eliminar(pr);
 
@@ -109,8 +99,10 @@ public class PersonaRolModelTest {
 
     @Test
     public void testGettersAndSetters() {
+        personaRolModel.init();
         assertEquals(personaRolDAO, personaRolModel.getDAO());
         assertEquals(personaRolDAO, personaRolModel.getPersonaRolDAO());
         assertNotNull(personaRolModel.crearNuevoRegistro());
+        assertNotNull(personaRolModel.getLazyModel());
     }
 }
