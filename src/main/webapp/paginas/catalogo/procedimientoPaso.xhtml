@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition template="/WEB-INF/templates/template.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:crud="jakarta.faces.composite/crud">
+
+    <ui:define name="titulo">Pasos de Procedimiento</ui:define>
+
+    <ui:define name="contenido">
+        <crud:crudCatalogo model="#{procedimientoPasoModel}"
+                           titulo="Pasos de Procedimiento"
+                           anchoDialogo="900">
+
+            <p:column headerText="Nombre">
+                <h:outputText value="#{registro.nombre}"/>
+            </p:column>
+
+            <p:column headerText="Procedimiento">
+                <h:outputText value="#{registro.idProcedimiento.nombre}"/>
+            </p:column>
+
+            <p:column headerText="Rol">
+                <h:outputText value="#{registro.idRol.nombre}"/>
+            </p:column>
+
+            <p:column headerText="Finaliza procedimiento">
+                <h:outputText value="#{registro.indicaFin ? 'Sí' : 'No'}"/>
+            </p:column>
+
+            <f:facet name="formulario">
+                <p:outputLabel for="nombre" value="Nombre del paso:"/>
+                <p:inputText id="nombre"
+                             value="#{procedimientoPasoModel.registroActual.nombre}"
+                             required="true"
+                             requiredMessage="Ingrese el nombre del paso."
+                             maxlength="155"/>
+
+                <p:outputLabel for="idProcedimiento"
+                               value="Procedimiento:"/>
+                <p:selectOneMenu id="idProcedimiento"
+                                 value="#{procedimientoPasoModel.registroActual.idProcedimiento}"
+                                 converter="#{entityConverter}"
+                                 required="true"
+                                 requiredMessage="Seleccione un procedimiento."
+                                 filter="true">
+                    <f:selectItem itemLabel="Seleccione un procedimiento..."
+                                  itemValue="#{null}"
+                                  noSelectionOption="true"/>
+                    <f:selectItems value="#{procedimientoModel.registros}"
+                                   var="procedimiento"
+                                   itemLabel="#{procedimiento.nombre}"
+                                   itemValue="#{procedimiento}"/>
+                </p:selectOneMenu>
+
+                <p:outputLabel for="idRol" value="Rol:"/>
+                <p:selectOneMenu id="idRol"
+                                 value="#{procedimientoPasoModel.registroActual.idRol}"
+                                 converter="#{entityConverter}"
+                                 filter="true">
+                    <f:selectItem itemLabel="Sin rol asignado"
+                                  itemValue="#{null}"
+                                  noSelectionOption="true"/>
+                    <f:selectItems value="#{rolModel.registros}"
+                                   var="rol"
+                                   itemLabel="#{rol.nombre}"
+                                   itemValue="#{rol}"/>
+                </p:selectOneMenu>
+
+                <p:outputLabel for="indicaFin"
+                               value="Finaliza procedimiento:"/>
+                <p:selectBooleanCheckbox id="indicaFin"
+                                         value="#{procedimientoPasoModel.registroActual.indicaFin}"/>
+            </f:facet>
+
+            <f:facet name="relaciones">
+                <p:outputPanel rendered="#{procedimientoPasoModel.estadoModificar}">
+
+                    <p:panel header="Exámenes del paso"
+                             style="margin-top:1rem">
+                        <p:dataTable value="#{procedimientoPasoModel.examenesAsignados}"
+                                     var="asignacion"
+                                     emptyMessage="Este paso aún no tiene exámenes asignados."
+                                     size="small">
+
+                            <p:column headerText="Examen">
+                                <h:outputText value="#{asignacion.idExamen.nombre}"/>
+                            </p:column>
+
+                            <p:column headerText="Activo">
+                                <h:outputText value="#{asignacion.activo ? 'Sí' : 'No'}"/>
+                            </p:column>
+
+                            <p:column headerText="Observaciones">
+                                <h:outputText value="#{asignacion.observaciones}"/>
+                            </p:column>
+
+                            <p:column headerText="Acción">
+                                <p:commandButton icon="pi pi-trash"
+                                                 title="Quitar examen"
+                                                 styleClass="ui-button-danger"
+                                                 action="#{procedimientoPasoModel.quitarExamen(asignacion)}"
+                                                 process="@this"
+                                                 update="@form">
+                                    <p:confirm header="Quitar examen"
+                                               message="¿Desea quitar este examen del paso?"
+                                               icon="pi pi-exclamation-triangle"/>
+                                </p:commandButton>
+                            </p:column>
+                        </p:dataTable>
+
+                        <p:panelGrid columns="2"
+                                     style="width:100%; margin-top:1rem">
+                            <p:outputLabel for="examenSeleccionado"
+                                           value="Agregar examen:"/>
+                            <p:selectOneMenu id="examenSeleccionado"
+                                             value="#{procedimientoPasoModel.examenSeleccionado}"
+                                             converter="#{entityConverter}"
+                                             filter="true">
+                                <f:selectItem itemLabel="Seleccione un examen..."
+                                              itemValue="#{null}"
+                                              noSelectionOption="true"/>
+                                <f:selectItems value="#{examenModel.registros}"
+                                               var="examen"
+                                               itemLabel="#{examen.nombre}"
+                                               itemValue="#{examen}"/>
+                            </p:selectOneMenu>
+
+                            <p:outputLabel for="examenActivo"
+                                           value="Activo:"/>
+                            <p:selectBooleanCheckbox id="examenActivo"
+                                                     value="#{procedimientoPasoModel.examenActivo}"/>
+
+                            <p:outputLabel for="observacionesExamen"
+                                           value="Observaciones:"/>
+                            <p:inputTextarea id="observacionesExamen"
+                                             value="#{procedimientoPasoModel.observacionesExamen}"
+                                             rows="2"
+                                             autoResize="false"/>
+
+                            <h:outputText value=""/>
+                            <p:commandButton value="Asignar examen"
+                                             icon="pi pi-plus"
+                                             styleClass="ui-button-success"
+                                             action="#{procedimientoPasoModel.agregarExamen()}"
+                                             process="@this examenSeleccionado examenActivo observacionesExamen"
+                                             update="@form"/>
+                        </p:panelGrid>
+                    </p:panel>
+
+                    <p:panel header="Secuencias del paso"
+                             style="margin-top:1rem">
+                        <p:dataTable value="#{procedimientoPasoModel.secuencias}"
+                                     var="secuencia"
+                                     emptyMessage="Este paso aún no tiene secuencias."
+                                     size="small">
+
+                            <p:column headerText="Paso de referencia">
+                                <h:outputText value="#{procedimientoPasoModel.nombrePasoReferencia(secuencia.idProcedimientoPasoReferencia)}"/>
+                            </p:column>
+
+                            <p:column headerText="Tipo de secuencia">
+                                <h:outputText value="#{secuencia.tipoSecuencia}"/>
+                            </p:column>
+
+                            <p:column headerText="Acción">
+                                <p:commandButton icon="pi pi-trash"
+                                                 title="Quitar secuencia"
+                                                 styleClass="ui-button-danger"
+                                                 action="#{procedimientoPasoModel.quitarSecuencia(secuencia)}"
+                                                 process="@this"
+                                                 update="@form">
+                                    <p:confirm header="Quitar secuencia"
+                                               message="¿Desea quitar esta secuencia del paso?"
+                                               icon="pi pi-exclamation-triangle"/>
+                                </p:commandButton>
+                            </p:column>
+                        </p:dataTable>
+
+                        <p:panelGrid columns="2"
+                                     style="width:100%; margin-top:1rem">
+                            <p:outputLabel for="pasoReferencia"
+                                           value="Paso de referencia:"/>
+                            <p:selectOneMenu id="pasoReferencia"
+                                             value="#{procedimientoPasoModel.pasoReferenciaSeleccionado}"
+                                             converter="#{entityConverter}"
+                                             filter="true">
+                                <f:selectItem itemLabel="Seleccione otro paso..."
+                                              itemValue="#{null}"
+                                              noSelectionOption="true"/>
+                                <f:selectItems value="#{procedimientoPasoModel.pasosReferenciaDisponibles}"
+                                               var="paso"
+                                               itemLabel="#{paso.nombre}"
+                                               itemValue="#{paso}"/>
+                            </p:selectOneMenu>
+
+                            <p:outputLabel for="tipoSecuencia"
+                                           value="Tipo de secuencia:"/>
+                            <p:inputText id="tipoSecuencia"
+                                         value="#{procedimientoPasoModel.tipoSecuencia}"
+                                         maxlength="20"/>
+
+                            <h:outputText value=""/>
+                            <p:commandButton value="Agregar secuencia"
+                                             icon="pi pi-plus"
+                                             styleClass="ui-button-success"
+                                             action="#{procedimientoPasoModel.agregarSecuencia()}"
+                                             process="@this pasoReferencia tipoSecuencia"
+                                             update="@form"/>
+                        </p:panelGrid>
+                    </p:panel>
+
+                </p:outputPanel>
+            </f:facet>
+
+        </crud:crudCatalogo>
+    </ui:define>
+
+</ui:composition>

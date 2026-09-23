@@ -11,11 +11,13 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.Procedimie
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Procedimiento;
 
 /**
- * Backing bean JSF para la gestión de la entidad .
+ * Administra el catálogo de procedimientos clínicos.
+ * La gestión de los pasos se realiza desde ProcedimientoPasoModel.
  */
 @Named("procedimientoModel")
 @ViewScoped
-public class ProcedimientoModel extends Model<Procedimiento, UUID> implements Serializable {
+public class ProcedimientoModel extends Model<Procedimiento, UUID>
+        implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -32,9 +34,14 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID> implements Se
         return procedimientoDAO;
     }
 
+    /**
+     * Prepara un procedimiento con el identificador requerido por JPA.
+     *
+     * @return procedimiento nuevo con UUID asignado
+     */
     @Override
     protected Procedimiento crearNuevoRegistro() {
-        return new Procedimiento();
+        return new Procedimiento(UUID.randomUUID());
     }
 
     public ProcedimientoDAO getProcedimientoDAO() {

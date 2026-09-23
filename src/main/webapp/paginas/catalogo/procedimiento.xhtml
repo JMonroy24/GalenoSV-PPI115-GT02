@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition template="/WEB-INF/templates/template.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:crud="jakarta.faces.composite/crud">
+
+    <ui:define name="titulo">Procedimientos</ui:define>
+
+    <ui:define name="contenido">
+        <crud:crudCatalogo model="#{procedimientoModel}"
+                           titulo="Procedimientos">
+
+            <p:column headerText="Nombre">
+                <h:outputText value="#{registro.nombre}"/>
+            </p:column>
+
+            <p:column headerText="Activo">
+                <h:outputText value="#{registro.activo ? 'Sí' : 'No'}"/>
+            </p:column>
+
+            <p:column headerText="Observaciones">
+                <h:outputText value="#{registro.observaciones}"/>
+            </p:column>
+
+            <f:facet name="formulario">
+                <p:outputLabel for="nombre" value="Nombre:"/>
+                <p:inputText id="nombre"
+                             value="#{procedimientoModel.registroActual.nombre}"
+                             required="true"
+                             requiredMessage="Ingrese el nombre del procedimiento."
+                             maxlength="155"/>
+
+                <p:outputLabel for="activo" value="Activo:"/>
+                <p:selectBooleanCheckbox id="activo"
+                                         value="#{procedimientoModel.registroActual.activo}"/>
+
+                <p:outputLabel for="observaciones"
+                               value="Observaciones:"/>
+                <p:inputTextarea id="observaciones"
+                                 value="#{procedimientoModel.registroActual.observaciones}"
+                                 rows="3"
+                                 autoResize="false"/>
+            </f:facet>
+
+        </crud:crudCatalogo>
+    </ui:define>
+
+</ui:composition>
