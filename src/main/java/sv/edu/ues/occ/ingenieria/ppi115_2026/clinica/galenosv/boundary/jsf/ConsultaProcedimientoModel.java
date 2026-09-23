@@ -5,9 +5,13 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimiento;
 
 /**
@@ -19,6 +23,9 @@ public class ConsultaProcedimientoModel extends ModelTransaccional<ConsultaProce
 
     @Inject
     protected ConsultaProcedimientoDAO consultaProcedimientoDAO;
+
+    @Inject
+    protected ConsultaDAO consultaDAO;
 
     @PostConstruct
     public void init() {
@@ -32,7 +39,14 @@ public class ConsultaProcedimientoModel extends ModelTransaccional<ConsultaProce
 
     @Override
     protected ConsultaProcedimiento crearNuevoRegistro() {
-        return new ConsultaProcedimiento();
+        ConsultaProcedimiento cp = new ConsultaProcedimiento(UUID.randomUUID());
+        cp.setFechaInicio(new Date());
+        return cp;
+    }
+
+    /** Método para p:autoComplete. Busca consultas por persona o referencia. */
+    public List<Consulta> completeConsulta(String query) {
+        return consultaDAO.buscarParaAutocompletar(query, 20);
     }
 
     public ConsultaProcedimientoDAO getConsultaProcedimientoDAO() {

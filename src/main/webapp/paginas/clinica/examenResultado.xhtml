@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition template="/WEB-INF/templates/template.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:crud="jakarta.faces.composite/crud">
+
+    <ui:define name="titulo">Resultados de Examen</ui:define>
+
+    <ui:define name="contenido">
+
+        <crud:crudTransaccional model="#{examenResultadoModel}"
+                                lazyModel="#{examenResultadoModel.lazyModel}"
+                                titulo="Resultados de Examen">
+
+            <p:column headerText="Procedimiento (orden)">
+                <h:outputText value="#{registro.idOrdenExamen.idConsultaProcedimientoPaso.idConsultaProcedimiento.idProcedimiento.nombre}"/>
+            </p:column>
+
+            <p:column headerText="Fecha" width="150">
+                <h:outputText value="#{registro.fechaCreacion}">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
+                </h:outputText>
+            </p:column>
+
+            <p:column headerText="Resultado">
+                <h:outputText value="#{registro.resultado}"/>
+            </p:column>
+
+            <p:column headerText="Interpretación">
+                <h:outputText value="#{registro.interpretacion}"/>
+            </p:column>
+
+            <p:column headerText="Ruta del atestado">
+                <h:outputText value="#{registro.rutaAtestado}"/>
+            </p:column>
+
+            <f:facet name="formulario">
+
+                <p:outputLabel value="Orden de examen:" for="idOrdenExamen"/>
+                <p:autoComplete id="idOrdenExamen" value="#{examenResultadoModel.registroActual.idOrdenExamen}"
+                                completeMethod="#{examenResultadoModel.completeOrdenExamen}"
+                                var="o"
+                                itemLabel="#{o.idConsultaProcedimientoPaso.idConsultaProcedimiento.idProcedimiento.nombre}#{empty o.indicaciones ? '' : ' — '}#{o.indicaciones}"
+                                itemValue="#{o}"
+                                converter="#{entityConverter}"
+                                forceSelection="true" required="true" scrollHeight="250"
+                                placeholder="Escriba indicaciones o procedimiento..."/>
+
+                <p:outputLabel value="Resultado:" for="resultado"/>
+                <p:inputTextarea id="resultado" value="#{examenResultadoModel.registroActual.resultado}"
+                                 rows="4" autoResize="false"/>
+
+                <p:outputLabel value="Interpretación:" for="interpretacion"/>
+                <p:inputTextarea id="interpretacion" value="#{examenResultadoModel.registroActual.interpretacion}"
+                                 rows="4" autoResize="false"/>
+
+                <p:outputLabel value="Ruta del atestado:" for="rutaAtestado"/>
+                <p:inputText id="rutaAtestado" value="#{examenResultadoModel.registroActual.rutaAtestado}"/>
+
+            </f:facet>
+
+        </crud:crudTransaccional>
+
+    </ui:define>
+
+</ui:composition>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition template="/WEB-INF/templates/template.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:crud="jakarta.faces.composite/crud">
+
+    <ui:define name="titulo">Procedimientos de Consulta</ui:define>
+
+    <ui:define name="contenido">
+
+        <crud:crudTransaccional model="#{consultaProcedimientoModel}"
+                                lazyModel="#{consultaProcedimientoModel.lazyModel}"
+                                titulo="Procedimientos de Consulta">
+
+            <p:column headerText="Persona (consulta)">
+                <h:outputText value="#{registro.idConsulta.idPersonaRol.idPersona.nombres} #{registro.idConsulta.idPersonaRol.idPersona.apellidos}"/>
+            </p:column>
+
+            <p:column headerText="Procedimiento">
+                <h:outputText value="#{registro.idProcedimiento.nombre}"/>
+            </p:column>
+
+            <p:column headerText="Inicio" width="150">
+                <h:outputText value="#{registro.fechaInicio}">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
+                </h:outputText>
+            </p:column>
+
+            <p:column headerText="Fin" width="150">
+                <h:outputText value="#{registro.fechaFin}">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
+                </h:outputText>
+            </p:column>
+
+            <p:column headerText="Observaciones">
+                <h:outputText value="#{registro.observaciones}"/>
+            </p:column>
+
+            <f:facet name="formulario">
+
+                <p:outputLabel value="Consulta:" for="idConsulta"/>
+                <p:autoComplete id="idConsulta" value="#{consultaProcedimientoModel.registroActual.idConsulta}"
+                                completeMethod="#{consultaProcedimientoModel.completeConsulta}"
+                                var="c"
+                                itemLabel="#{c.idPersonaRol.idPersona.nombres} #{c.idPersonaRol.idPersona.apellidos}#{empty c.referenciaExterna ? '' : ' — '}#{c.referenciaExterna}"
+                                itemValue="#{c}"
+                                converter="#{entityConverter}"
+                                forceSelection="true" required="true" scrollHeight="250"
+                                placeholder="Escriba nombre, apellido o referencia..."/>
+
+                <p:outputLabel value="Procedimiento:" for="idProcedimiento"/>
+                <p:selectOneMenu id="idProcedimiento" value="#{consultaProcedimientoModel.registroActual.idProcedimiento}"
+                                 converter="#{entityConverter}" required="true" filter="true">
+                    <f:selectItem itemLabel="Seleccione un procedimiento..." itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{procedimientoModel.registros}" var="pr"
+                                   itemLabel="#{pr.nombre}" itemValue="#{pr}"/>
+                </p:selectOneMenu>
+
+                <p:outputLabel value="Fecha de inicio:" for="fechaInicio"/>
+                <p:datePicker id="fechaInicio" value="#{consultaProcedimientoModel.registroActual.fechaInicio}"
+                              showTime="true" showIcon="true" pattern="dd/MM/yyyy HH:mm"
+                              appendTo="@(body)"/>
+
+                <p:outputLabel value="Fecha de fin:" for="fechaFin"/>
+                <p:datePicker id="fechaFin" value="#{consultaProcedimientoModel.registroActual.fechaFin}"
+                              showTime="true" showIcon="true" pattern="dd/MM/yyyy HH:mm"
+                              appendTo="@(body)"/>
+
+                <p:outputLabel value="Observaciones:" for="observaciones"/>
+                <p:inputTextarea id="observaciones" value="#{consultaProcedimientoModel.registroActual.observaciones}"
+                                 rows="4" autoResize="false"/>
+
+            </f:facet>
+
+        </crud:crudTransaccional>
+
+    </ui:define>
+
+</ui:composition>

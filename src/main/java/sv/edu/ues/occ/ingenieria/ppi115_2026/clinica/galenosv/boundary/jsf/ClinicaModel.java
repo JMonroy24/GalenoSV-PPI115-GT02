@@ -32,7 +32,7 @@ public class ClinicaModel extends Model<Clinica, UUID> implements Serializable {
 
     @Override
     protected Clinica crearNuevoRegistro() {
-        return new Clinica();
+        return new Clinica(UUID.randomUUID());
     }
 
     public ClinicaDAO getClinicaDAO() {
