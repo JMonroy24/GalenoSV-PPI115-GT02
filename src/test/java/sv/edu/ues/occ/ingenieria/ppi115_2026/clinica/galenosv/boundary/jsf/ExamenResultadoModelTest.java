@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,14 +30,12 @@ public class ExamenResultadoModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        ExamenResultado er = new ExamenResultado(UUID.randomUUID());
-        when(examenResultadoDAO.findAll()).thenReturn(List.of(er));
-
         examenResultadoModel.init();
 
-        assertNotNull(examenResultadoModel.getRegistros());
-        assertEquals(1, examenResultadoModel.getRegistros().size());
-        verify(examenResultadoDAO).findAll();
+        // ModelTransaccional inicializa un LazyDataModel en lugar de cargar
+        // todos los registros en memoria con findAll(); verificamos el lazy model.
+        assertNotNull(examenResultadoModel.getLazyModel());
+        verifyNoInteractions(examenResultadoDAO);
     }
 
     @Test
@@ -73,8 +69,6 @@ public class ExamenResultadoModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(examenResultadoDAO.findAll()).thenReturn(Collections.emptyList());
-
         examenResultadoModel.prepararNuevo();
         examenResultadoModel.getRegistroActual().setResultado("Normal");
 
@@ -87,8 +81,6 @@ public class ExamenResultadoModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(examenResultadoDAO.findAll()).thenReturn(Collections.emptyList());
-
         ExamenResultado er = new ExamenResultado(UUID.randomUUID());
         examenResultadoModel.seleccionar(er);
 
@@ -100,8 +92,6 @@ public class ExamenResultadoModelTest {
 
     @Test
     public void testEliminar() {
-        when(examenResultadoDAO.findAll()).thenReturn(Collections.emptyList());
-
         ExamenResultado er = new ExamenResultado(UUID.randomUUID());
         examenResultadoModel.eliminar(er);
 
@@ -110,8 +100,10 @@ public class ExamenResultadoModelTest {
 
     @Test
     public void testGettersAndSetters() {
+        examenResultadoModel.init();
         assertEquals(examenResultadoDAO, examenResultadoModel.getDAO());
         assertEquals(examenResultadoDAO, examenResultadoModel.getExamenResultadoDAO());
         assertNotNull(examenResultadoModel.crearNuevoRegistro());
+        assertNotNull(examenResultadoModel.getLazyModel());
     }
 }

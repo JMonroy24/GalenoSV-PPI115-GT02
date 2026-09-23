@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,14 +30,12 @@ public class ConsultaProcedimientoPasoModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        ConsultaProcedimientoPaso cpp = new ConsultaProcedimientoPaso(UUID.randomUUID());
-        when(consultaProcedimientoPasoDAO.findAll()).thenReturn(List.of(cpp));
-
         consultaProcedimientoPasoModel.init();
 
-        assertNotNull(consultaProcedimientoPasoModel.getRegistros());
-        assertEquals(1, consultaProcedimientoPasoModel.getRegistros().size());
-        verify(consultaProcedimientoPasoDAO).findAll();
+        // ModelTransaccional inicializa un LazyDataModel en lugar de cargar
+        // todos los registros en memoria con findAll(); verificamos el lazy model.
+        assertNotNull(consultaProcedimientoPasoModel.getLazyModel());
+        verifyNoInteractions(consultaProcedimientoPasoDAO);
     }
 
     @Test
@@ -73,8 +69,6 @@ public class ConsultaProcedimientoPasoModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(consultaProcedimientoPasoDAO.findAll()).thenReturn(Collections.emptyList());
-
         consultaProcedimientoPasoModel.prepararNuevo();
         consultaProcedimientoPasoModel.getRegistroActual().setEstado("COMPLETADO");
 
@@ -87,8 +81,6 @@ public class ConsultaProcedimientoPasoModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(consultaProcedimientoPasoDAO.findAll()).thenReturn(Collections.emptyList());
-
         ConsultaProcedimientoPaso cpp = new ConsultaProcedimientoPaso(UUID.randomUUID());
         consultaProcedimientoPasoModel.seleccionar(cpp);
 
@@ -100,8 +92,6 @@ public class ConsultaProcedimientoPasoModelTest {
 
     @Test
     public void testEliminar() {
-        when(consultaProcedimientoPasoDAO.findAll()).thenReturn(Collections.emptyList());
-
         ConsultaProcedimientoPaso cpp = new ConsultaProcedimientoPaso(UUID.randomUUID());
         consultaProcedimientoPasoModel.eliminar(cpp);
 
@@ -110,8 +100,10 @@ public class ConsultaProcedimientoPasoModelTest {
 
     @Test
     public void testGettersAndSetters() {
+        consultaProcedimientoPasoModel.init();
         assertEquals(consultaProcedimientoPasoDAO, consultaProcedimientoPasoModel.getDAO());
         assertEquals(consultaProcedimientoPasoDAO, consultaProcedimientoPasoModel.getConsultaProcedimientoPasoDAO());
         assertNotNull(consultaProcedimientoPasoModel.crearNuevoRegistro());
+        assertNotNull(consultaProcedimientoPasoModel.getLazyModel());
     }
 }

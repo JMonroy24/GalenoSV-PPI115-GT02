@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,14 +30,12 @@ public class MedioContactoModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        MedioContacto mc = new MedioContacto(UUID.randomUUID());
-        when(medioContactoDAO.findAll()).thenReturn(List.of(mc));
-
         medioContactoModel.init();
 
-        assertNotNull(medioContactoModel.getRegistros());
-        assertEquals(1, medioContactoModel.getRegistros().size());
-        verify(medioContactoDAO).findAll();
+        // ModelTransaccional inicializa un LazyDataModel en lugar de cargar
+        // todos los registros en memoria con findAll(); verificamos el lazy model.
+        assertNotNull(medioContactoModel.getLazyModel());
+        verifyNoInteractions(medioContactoDAO);
     }
 
     @Test
@@ -73,8 +69,6 @@ public class MedioContactoModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(medioContactoDAO.findAll()).thenReturn(Collections.emptyList());
-
         medioContactoModel.prepararNuevo();
         medioContactoModel.getRegistroActual().setValor("test@email.com");
 
@@ -87,8 +81,6 @@ public class MedioContactoModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(medioContactoDAO.findAll()).thenReturn(Collections.emptyList());
-
         MedioContacto mc = new MedioContacto(UUID.randomUUID());
         medioContactoModel.seleccionar(mc);
 
@@ -100,8 +92,6 @@ public class MedioContactoModelTest {
 
     @Test
     public void testEliminar() {
-        when(medioContactoDAO.findAll()).thenReturn(Collections.emptyList());
-
         MedioContacto mc = new MedioContacto(UUID.randomUUID());
         medioContactoModel.eliminar(mc);
 
@@ -110,8 +100,10 @@ public class MedioContactoModelTest {
 
     @Test
     public void testGettersAndSetters() {
+        medioContactoModel.init();
         assertEquals(medioContactoDAO, medioContactoModel.getDAO());
         assertEquals(medioContactoDAO, medioContactoModel.getMedioContactoDAO());
         assertNotNull(medioContactoModel.crearNuevoRegistro());
+        assertNotNull(medioContactoModel.getLazyModel());
     }
 }
