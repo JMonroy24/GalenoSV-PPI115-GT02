@@ -1,13 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Componente CRUD para entidades de CATÁLOGO (bajo volumen).
-  Carga TODOS los registros en memoria para client-side paging.
-
-  Uso típico:
-  <crud:crudCatalogo model="#{rolModel}" titulo="Roles">
-    <p:column headerText="Nombre">...</p:column>
-    <f:facet name="formulario">...</f:facet>
-  </crud:crudCatalogo>
+  CRUD para catálogos de bajo volumen. La sección opcional "relaciones"
+  permite administrar asociaciones dentro del formulario del catálogo.
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="jakarta.faces.html"
@@ -19,11 +13,18 @@
 
     <cc:interface>
         <cc:attribute name="model" required="true"
-                      shortDescription="Backing bean que extiende Model. Debe tener registros cargados (@PostConstruct → cargarDatos)."/>
-        <cc:attribute name="titulo" required="true" type="java.lang.String"
-                      shortDescription="Título visible del CRUD (ej. 'Roles', 'Clínicas')."/>
-        <cc:facet     name="formulario"
-                      shortDescription="Campos del formulario crear/editar en grid 2 columnas (label, input)."/>
+                      shortDescription="Modelo JSF del catálogo."/>
+        <cc:attribute name="titulo" required="true"
+                      type="java.lang.String"
+                      shortDescription="Título visible del catálogo."/>
+        <cc:attribute name="anchoDialogo" default="550"
+                      type="java.lang.String"
+                      shortDescription="Ancho del formulario en píxeles."/>
+
+        <cc:facet name="formulario"
+                  shortDescription="Campos principales en dos columnas."/>
+        <cc:facet name="relaciones"
+                  shortDescription="Asociaciones mostradas a ancho completo."/>
     </cc:interface>
 
     <cc:implementation>
@@ -31,14 +32,16 @@
             <p:growl id="mensajes" showDetail="true" life="3000"/>
 
             <p:panel header="#{cc.attrs.titulo}">
-
                 <p:toolbar id="toolbarTop">
                     <p:toolbarGroup>
-                        <crud:botonesTop model="#{cc.attrs.model}" update="frmCrud:pnlFormulario" dialog="dlgFormularioCat" />
+                        <crud:botonesTop model="#{cc.attrs.model}"
+                                        update="frmCrud:pnlFormulario"
+                                        dialog="dlgFormularioCat"/>
                     </p:toolbarGroup>
                 </p:toolbar>
 
-                <p:dataTable id="tabla" var="registro"
+                <p:dataTable id="tabla"
+                             var="registro"
                              value="#{cc.attrs.model.registros}"
                              emptyMessage="No se encontraron registros."
                              rows="20"
@@ -50,19 +53,22 @@
                               selectionMode="single"
                               selection="#{cc.attrs.model.seleccion}"
                              rowKey="#{registro.hashCode()}">
-                             
-                    <p:ajax event="rowSelect" update="frmCrud:toolbarTop"/>
-                    <p:ajax event="rowUnselect" update="frmCrud:toolbarTop"/>
+
+                    <p:ajax event="rowSelect"
+                            update="frmCrud:toolbarTop"/>
+                    <p:ajax event="rowUnselect"
+                            update="frmCrud:toolbarTop"/>
 
                     <cc:insertChildren/>
-
                 </p:dataTable>
             </p:panel>
 
             <p:dialog header="#{cc.attrs.model.estadoCrear ? 'Nuevo' : 'Editar'} — #{cc.attrs.titulo}"
                       widgetVar="dlgFormularioCat"
-                      modal="true" responsive="true"
-                      width="550" closable="true">
+                      modal="true"
+                      responsive="true"
+                      width="#{cc.attrs.anchoDialogo}"
+                      closable="true">
 
                 <p:outputPanel id="pnlFormulario">
                     <h:panelGroup layout="block" id="gridForm"
@@ -73,25 +79,33 @@
 
                     </h:panelGroup>
 
+                    <cc:renderFacet name="relaciones"/>
+
                     <p:divider/>
 
                     <p:toolbar>
                         <p:toolbarGroup align="right">
-                            <crud:botonesFormulario model="#{cc.attrs.model}" update="@form" dialog="dlgFormularioCat" />
+                            <crud:botonesFormulario
+                                    model="#{cc.attrs.model}"
+                                    update="@form"
+                                    dialog="dlgFormularioCat"/>
                         </p:toolbarGroup>
                     </p:toolbar>
                 </p:outputPanel>
             </p:dialog>
 
-            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
-                <p:commandButton value="Sí" type="button"
+            <p:confirmDialog global="true"
+                             showEffect="fade"
+                             hideEffect="fade">
+                <p:commandButton value="Sí"
+                                 type="button"
                                  styleClass="ui-confirmdialog-yes ui-button-danger"
                                  icon="pi pi-check"/>
-                <p:commandButton value="No" type="button"
+                <p:commandButton value="No"
+                                 type="button"
                                  styleClass="ui-confirmdialog-no ui-button-secondary"
                                  icon="pi pi-times"/>
             </p:confirmDialog>
-
         </h:form>
     </cc:implementation>
 
