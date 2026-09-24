@@ -25,7 +25,7 @@
         <cc:attribute name="titulo" required="true" type="java.lang.String"
                       shortDescription="Título visible del CRUD (ej. 'Personas', 'Consultas')."/>
         <cc:facet     name="formulario"
-                      shortDescription="Campos del formulario crear/editar en panelGrid 2 columnas."/>
+                      shortDescription="Campos del formulario crear/editar en grid 2 columnas."/>
         <cc:facet     name="accionesExtra"
                       shortDescription="(Opcional) Botones adicionales en la columna Acciones, ej. drill-down."/>
     </cc:interface>
@@ -71,8 +71,8 @@
                              paginatorPosition="both"
                              stripedRows="true"
                              size="small"
-                             selectionMode="single"
-                             selection="#{cc.attrs.model.registroActual}"
+                              selectionMode="single"
+                              selection="#{cc.attrs.model.seleccion}"
                              rowKey="#{registro.hashCode()}">
                              
                     <p:ajax event="rowSelect" update="frmCrud:toolbarTop"/>
@@ -94,14 +94,13 @@
                       width="600" closable="true">
 
                 <p:outputPanel id="pnlFormulario">
-                    <h:panelGrid columns="2" cellpadding="7"
-                                 columnClasses="ui-grid-col-4,ui-grid-col-8"
+                    <h:panelGroup layout="block" id="gridForm"
                                  rendered="#{cc.attrs.model.registroActual != null}"
-                                 style="width:100%">
+                                 style="display:grid;grid-template-columns:160px 1fr;gap:8px 12px;align-items:center;width:100%">
 
                         <cc:renderFacet name="formulario"/>
 
-                    </h:panelGrid>
+                    </h:panelGroup>
 
                     <p:divider/>
 

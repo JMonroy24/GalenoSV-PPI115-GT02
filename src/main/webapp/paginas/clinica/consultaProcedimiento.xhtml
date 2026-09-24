@@ -48,12 +48,12 @@
                                 itemLabel="#{c.idPersonaRol.idPersona.nombres} #{c.idPersonaRol.idPersona.apellidos}#{empty c.referenciaExterna ? '' : ' — '}#{c.referenciaExterna}"
                                 itemValue="#{c}"
                                 converter="#{entityConverter}"
-                                forceSelection="true" required="true" scrollHeight="250"
+                                forceSelection="true" required="true" requiredMessage="Seleccione una consulta." scrollHeight="250"
                                 placeholder="Escriba nombre, apellido o referencia..."/>
 
                 <p:outputLabel value="Procedimiento:" for="idProcedimiento"/>
                 <p:selectOneMenu id="idProcedimiento" value="#{consultaProcedimientoModel.registroActual.idProcedimiento}"
-                                 converter="#{entityConverter}" required="true" filter="true">
+                                 converter="#{entityConverter}" required="true" requiredMessage="Seleccione un procedimiento." filter="true">
                     <f:selectItem itemLabel="Seleccione un procedimiento..." itemValue="#{null}" noSelectionOption="true"/>
                     <f:selectItems value="#{procedimientoModel.registros}" var="pr"
                                    itemLabel="#{pr.nombre}" itemValue="#{pr}"/>
@@ -62,6 +62,7 @@
                 <p:outputLabel value="Fecha de inicio:" for="fechaInicio"/>
                 <p:datePicker id="fechaInicio" value="#{consultaProcedimientoModel.registroActual.fechaInicio}"
                               showTime="true" showIcon="true" pattern="dd/MM/yyyy HH:mm"
+                              required="true" requiredMessage="La fecha de inicio es obligatoria."
                               appendTo="@(body)"/>
 
                 <p:outputLabel value="Fecha de fin:" for="fechaFin"/>
@@ -71,7 +72,7 @@
 
                 <p:outputLabel value="Observaciones:" for="observaciones"/>
                 <p:inputTextarea id="observaciones" value="#{consultaProcedimientoModel.registroActual.observaciones}"
-                                 rows="4" autoResize="false"/>
+                                 rows="4" autoResize="false" maxlength="2000"/>
 
             </f:facet>
 

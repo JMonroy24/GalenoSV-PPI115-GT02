@@ -84,6 +84,13 @@
             <scope>compile</scope>
             <classifier>jakarta</classifier>
         </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>eclipselink</artifactId>
+            <version>5.0.0</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
     
     <build>

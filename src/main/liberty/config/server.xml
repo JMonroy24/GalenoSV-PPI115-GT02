@@ -27,6 +27,8 @@
         <fileset dir="${server.config.dir}/lib" includes="postgresql-*.jar"/>
     </library>
 
-    <webApplication location="GalenoSV-1.0-SNAPSHOT.war" contextRoot="/galenoSV"/>
+    <webApplication location="GalenoSV-1.0-SNAPSHOT.war" contextRoot="/galenoSV">
+    <classloader apiTypeVisibility="spec,ibm-api,api,third-party"/>
+</webApplication>
 
 </server>

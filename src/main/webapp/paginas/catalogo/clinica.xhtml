@@ -13,15 +13,16 @@
 
         <crud:crudCatalogo model="#{clinicaModel}" titulo="Clínicas">
 
-            <p:column headerText="Nombre">
+            <!-- Columnas de la tabla -->
+            <p:column headerText="Nombre" sortBy="#{registro.nombre}" filterBy="#{registro.nombre}">
                 <h:outputText value="#{registro.nombre}"/>
             </p:column>
 
-            <p:column headerText="Tipo" width="140">
+            <p:column headerText="Tipo" width="120" sortBy="#{registro.tipo}" filterBy="#{registro.tipo}">
                 <h:outputText value="#{registro.tipo}"/>
             </p:column>
 
-            <p:column headerText="Activo" width="90">
+            <p:column headerText="Activo" width="90" style="text-align:center">
                 <h:outputText value="#{registro.activo ? 'Sí' : 'No'}"/>
             </p:column>
 
@@ -29,22 +30,33 @@
                 <h:outputText value="#{registro.comentarios}"/>
             </p:column>
 
+            <!-- Formulario crear / editar -->
             <f:facet name="formulario">
 
                 <p:outputLabel value="Nombre:" for="nombre"/>
-                <p:inputText id="nombre" value="#{clinicaModel.registroActual.nombre}"
-                             required="true" maxlength="255"/>
+                <p:inputText id="nombre"
+                             value="#{clinicaModel.registroActual.nombre}"
+                             required="true"
+                             requiredMessage="El nombre es obligatorio."
+                             maxlength="255"
+                             placeholder="Nombre de la clínica"/>
 
                 <p:outputLabel value="Tipo:" for="tipo"/>
-                <p:inputText id="tipo" value="#{clinicaModel.registroActual.tipo}"
-                             maxlength="20"/>
+                <p:inputText id="tipo"
+                             value="#{clinicaModel.registroActual.tipo}"
+                             maxlength="20"
+                             placeholder="Ej. GENERAL, ESPECIALIZADA"/>
 
                 <p:outputLabel value="Activo:" for="activo"/>
-                <p:selectBooleanCheckbox id="activo" value="#{clinicaModel.registroActual.activo}"/>
+                <p:selectBooleanCheckbox id="activo"
+                                         value="#{clinicaModel.registroActual.activo}"/>
 
                 <p:outputLabel value="Comentarios:" for="comentarios"/>
-                <p:inputTextarea id="comentarios" value="#{clinicaModel.registroActual.comentarios}"
-                                 rows="4" autoResize="false"/>
+                <p:inputTextarea id="comentarios"
+                                 value="#{clinicaModel.registroActual.comentarios}"
+                                 rows="4"
+                                 autoResize="false"
+                                 placeholder="Observaciones adicionales..."/>
 
             </f:facet>
 

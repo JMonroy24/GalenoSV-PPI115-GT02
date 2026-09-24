@@ -46,19 +46,23 @@
                                 itemLabel="#{o.idConsultaProcedimientoPaso.idConsultaProcedimiento.idProcedimiento.nombre}#{empty o.indicaciones ? '' : ' — '}#{o.indicaciones}"
                                 itemValue="#{o}"
                                 converter="#{entityConverter}"
-                                forceSelection="true" required="true" scrollHeight="250"
+                                forceSelection="true" required="true" requiredMessage="Seleccione una orden de examen." scrollHeight="250"
                                 placeholder="Escriba indicaciones o procedimiento..."/>
 
                 <p:outputLabel value="Resultado:" for="resultado"/>
                 <p:inputTextarea id="resultado" value="#{examenResultadoModel.registroActual.resultado}"
-                                 rows="4" autoResize="false"/>
+                                 rows="4" autoResize="false"
+                                 required="true" requiredMessage="El resultado es obligatorio."
+                                 maxlength="2000"/>
 
                 <p:outputLabel value="Interpretación:" for="interpretacion"/>
                 <p:inputTextarea id="interpretacion" value="#{examenResultadoModel.registroActual.interpretacion}"
-                                 rows="4" autoResize="false"/>
+                                 rows="4" autoResize="false"
+                                 required="true" requiredMessage="La interpretación es obligatoria."
+                                 maxlength="2000"/>
 
                 <p:outputLabel value="Ruta del atestado:" for="rutaAtestado"/>
-                <p:inputText id="rutaAtestado" value="#{examenResultadoModel.registroActual.rutaAtestado}"/>
+                <p:inputText id="rutaAtestado" value="#{examenResultadoModel.registroActual.rutaAtestado}" maxlength="255"/>
 
             </f:facet>
 

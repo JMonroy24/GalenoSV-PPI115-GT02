@@ -43,12 +43,14 @@
                                 itemLabel="#{cpp.idConsultaProcedimiento.idProcedimiento.nombre} — #{cpp.idPersonaRol.idPersona.nombres} #{cpp.idPersonaRol.idPersona.apellidos}#{empty cpp.estado ? '' : ' ('}#{cpp.estado}#{empty cpp.estado ? '' : ')'}"
                                 itemValue="#{cpp}"
                                 converter="#{entityConverter}"
-                                forceSelection="true" required="true" scrollHeight="250"
+                                forceSelection="true" required="true" requiredMessage="Seleccione un paso de procedimiento." scrollHeight="250"
                                 placeholder="Escriba procedimiento, persona o estado..."/>
 
                 <p:outputLabel value="Indicaciones:" for="indicaciones"/>
                 <p:inputTextarea id="indicaciones" value="#{ordenExamenModel.registroActual.indicaciones}"
-                                 rows="5" autoResize="false"/>
+                                 rows="5" autoResize="false"
+                                 required="true" requiredMessage="Las indicaciones son obligatorias."
+                                 maxlength="2000"/>
 
             </f:facet>
 

@@ -12,6 +12,7 @@
 
     <cc:implementation>
         <p:commandButton value="Guardar" icon="pi pi-check"
+                         process="@this @form:@parent:@parent"
                          styleClass="ui-button-success"
                          action="#{cc.attrs.model.guardar()}"
                          update="#{cc.attrs.update}"

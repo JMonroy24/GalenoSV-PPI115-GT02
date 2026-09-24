@@ -53,7 +53,7 @@
                                 itemLabel="#{cp.idProcedimiento.nombre} — #{cp.idConsulta.idPersonaRol.idPersona.nombres} #{cp.idConsulta.idPersonaRol.idPersona.apellidos}"
                                 itemValue="#{cp}"
                                 converter="#{entityConverter}"
-                                forceSelection="true" required="true" scrollHeight="250"
+                                forceSelection="true" required="true" requiredMessage="Seleccione un procedimiento de consulta." scrollHeight="250"
                                 placeholder="Escriba procedimiento o nombre de persona..."/>
 
                 <p:outputLabel value="Responsable (persona / rol):" for="idPersonaRol"/>
@@ -63,12 +63,13 @@
                                 itemLabel="#{pr.idPersona.nombres} #{pr.idPersona.apellidos} — #{pr.idRol.nombre}"
                                 itemValue="#{pr}"
                                 converter="#{entityConverter}"
-                                forceSelection="true" required="true" scrollHeight="250"
+                                forceSelection="true" required="true" requiredMessage="Seleccione un responsable." scrollHeight="250"
                                 placeholder="Escriba nombre, apellido, rol o clínica..."/>
 
                 <p:outputLabel value="Fecha de inicio:" for="fechaInicio"/>
                 <p:datePicker id="fechaInicio" value="#{consultaProcedimientoPasoModel.registroActual.fechaInicio}"
                               showTime="true" showIcon="true" pattern="dd/MM/yyyy HH:mm"
+                              required="true" requiredMessage="La fecha de inicio es obligatoria."
                               appendTo="@(body)"/>
 
                 <p:outputLabel value="Fecha de fin:" for="fechaFin"/>
@@ -78,6 +79,7 @@
 
                 <p:outputLabel value="Estado:" for="estado"/>
                 <p:inputText id="estado" value="#{consultaProcedimientoPasoModel.registroActual.estado}"
+                             required="true" requiredMessage="El estado es obligatorio."
                              maxlength="20" placeholder="Máximo 20 caracteres"/>
 
             </f:facet>

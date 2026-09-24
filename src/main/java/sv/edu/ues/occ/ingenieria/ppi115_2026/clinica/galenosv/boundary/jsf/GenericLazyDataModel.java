@@ -62,6 +62,38 @@ public class GenericLazyDataModel<T> extends LazyDataModel<T> {
         return dao.findRange(first, pageSize, filtroGlobal);
     }
 
+    /**
+     * Clave de fila para PrimeFaces (selection + lazy).
+     * Debe coincidir con rowKey="#{registro.hashCode()}" en los composites CRUD.
+     */
+    @Override
+    public String getRowKey(T object) {
+        if (object == null) {
+            return null;
+        }
+        return String.valueOf(object.hashCode());
+    }
+
+    /**
+     * Resuelve la entidad a partir de la clave de fila generada por getRowKey.
+     * Busca en la página actualmente cargada (wrapped data).
+     */
+    @Override
+    public T getRowData(String rowKey) {
+        if (rowKey == null || rowKey.isEmpty()) {
+            return null;
+        }
+        List<T> data = getWrappedData();
+        if (data != null) {
+            for (T item : data) {
+                if (item != null && rowKey.equals(String.valueOf(item.hashCode()))) {
+                    return item;
+                }
+            }
+        }
+        return null;
+    }
+
     // ─── Filtro global ───────────────────────────────────────────────
 
     public String getFiltroGlobal() {
