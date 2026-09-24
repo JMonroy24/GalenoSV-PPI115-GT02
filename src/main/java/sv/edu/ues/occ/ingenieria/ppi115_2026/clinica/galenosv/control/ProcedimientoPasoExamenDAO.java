@@ -3,18 +3,18 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
 import java.io.Serializable;
+import java.util.List;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPasoExamen;
 
 /**
- * Componente de acceso a datos para las asociaciones entre los pasos de un
- * procedimiento y los exámenes clínicos que deben realizarse en dichos pasos.
- *
- * Cada registro administrado representa un examen requerido por un paso
- * específico. Las operaciones de creación, consulta, modificación y
- * eliminación son heredadas de , utilizando un
- *  como identificador.
+ * Acceso a las asociaciones entre pasos de procedimiento y exámenes.
+ * Permite consultar las asociaciones de un paso con el examen cargado.
  */
 @ApplicationScoped
 public class ProcedimientoPasoExamenDAO
@@ -38,5 +38,29 @@ public class ProcedimientoPasoExamenDAO
     @Override
     public EntityManager getEntityManager() {
         return em;
+    }
+
+    /**
+     * Consulta los exámenes asociados al paso indicado.
+     *
+     * @param idPaso identificador del paso
+     * @return asociaciones del paso con sus exámenes cargados
+     */
+    public List<ProcedimientoPasoExamen> findByPaso(UUID idPaso) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<ProcedimientoPasoExamen> cq =
+                cb.createQuery(ProcedimientoPasoExamen.class);
+        Root<ProcedimientoPasoExamen> asociacion =
+                cq.from(ProcedimientoPasoExamen.class);
+
+        asociacion.fetch("idExamen", JoinType.LEFT);
+        cq.select(asociacion)
+                .where(cb.equal(
+                        asociacion.get("idProcedimientoPaso")
+                                .get("idProcedimientoPaso"),
+                        idPaso
+                ));
+
+        return em.createQuery(cq).getResultList();
     }
 }
