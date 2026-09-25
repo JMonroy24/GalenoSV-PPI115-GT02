@@ -1,14 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Componente CRUD para entidades TRANSACCIONALES (alto volumen).
-  Paginación server-side con LazyDataModel y soporte de búsqueda global.
-
-  Uso típico:
-  <crud:crudTransaccional model="#{personaModel}" lazyModel="#{personaModel.lazyModel}" titulo="Personas">
-    <p:column headerText="Nombres">...</p:column>
-    <f:facet name="formulario">...</f:facet>
-  </crud:crudTransaccional>
--->
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="jakarta.faces.html"
       xmlns:f="jakarta.faces.core"
@@ -18,16 +8,11 @@
       xmlns:pt="jakarta.faces.passthrough">
 
     <cc:interface>
-        <cc:attribute name="model" required="true"
-                      shortDescription="Backing bean que extiende ModelTransaccional."/>
-        <cc:attribute name="lazyModel" required="true"
-                      shortDescription="GenericLazyDataModel obtenido de model.getLazyModel()."/>
-        <cc:attribute name="titulo" required="true" type="java.lang.String"
-                      shortDescription="Título visible del CRUD (ej. 'Personas', 'Consultas')."/>
-        <cc:facet     name="formulario"
-                      shortDescription="Campos del formulario crear/editar en grid 2 columnas."/>
-        <cc:facet     name="accionesExtra"
-                      shortDescription="(Opcional) Botones adicionales en la columna Acciones, ej. drill-down."/>
+        <cc:attribute name="model" required="true" />
+        <cc:attribute name="lazyModel" required="true" />
+        <cc:attribute name="titulo" required="true" type="java.lang.String" />
+        <cc:facet     name="formulario" />
+        <cc:facet     name="accionesExtra" />
     </cc:interface>
 
     <cc:implementation>
@@ -35,10 +20,9 @@
             <p:growl id="mensajes" showDetail="true" life="3000"/>
 
             <p:panel header="#{cc.attrs.titulo}">
-
                 <p:toolbar id="toolbarTop">
                     <p:toolbarGroup>
-                        <crud:botonesTop model="#{cc.attrs.model}" update="frmCrud:pnlFormulario" dialog="dlgFormularioTx" />
+                        <crud:botonesTop model="#{cc.attrs.model}" update="@([id$=pnlFormulario])" dialog="dlgFormularioTx" />
                     </p:toolbarGroup>
                     <p:toolbarGroup align="right">
                         <p:inputText id="campoBusqueda"
@@ -71,12 +55,12 @@
                              paginatorPosition="both"
                              stripedRows="true"
                              size="small"
-                              selectionMode="single"
-                              selection="#{cc.attrs.model.seleccion}"
+                             selectionMode="single"
+                             selection="#{cc.attrs.model.seleccion}"
                              rowKey="#{registro.hashCode()}">
                              
-                    <p:ajax event="rowSelect" update="frmCrud:toolbarTop"/>
-                    <p:ajax event="rowUnselect" update="frmCrud:toolbarTop"/>
+                    <p:ajax event="rowSelect" update="@([id$=toolbarTop])"/>
+                    <p:ajax event="rowUnselect" update="@([id$=toolbarTop])"/>
 
                     <cc:insertChildren/>
 
@@ -87,31 +71,7 @@
                     </p:column>
                 </p:dataTable>
             </p:panel>
-
-            <p:dialog header="#{cc.attrs.model.estadoCrear ? 'Nuevo' : 'Editar'} — #{cc.attrs.titulo}"
-                      widgetVar="dlgFormularioTx"
-                      modal="true" responsive="true"
-                      width="600" closable="true">
-
-                <p:outputPanel id="pnlFormulario">
-                    <h:panelGroup layout="block" id="gridForm"
-                                 rendered="#{cc.attrs.model.registroActual != null}"
-                                 style="display:grid;grid-template-columns:160px 1fr;gap:8px 12px;align-items:center;width:100%">
-
-                        <cc:renderFacet name="formulario"/>
-
-                    </h:panelGroup>
-
-                    <p:divider/>
-
-                    <p:toolbar>
-                        <p:toolbarGroup align="right">
-                            <crud:botonesFormulario model="#{cc.attrs.model}" update="@form" dialog="dlgFormularioTx" />
-                        </p:toolbarGroup>
-                    </p:toolbar>
-                </p:outputPanel>
-            </p:dialog>
-
+            
             <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
                 <p:commandButton value="Sí" type="button"
                                  styleClass="ui-confirmdialog-yes ui-button-danger"
@@ -120,8 +80,27 @@
                                  styleClass="ui-confirmdialog-no ui-button-secondary"
                                  icon="pi pi-times"/>
             </p:confirmDialog>
-
         </h:form>
-    </cc:implementation>
 
+        <p:dialog header="#{cc.attrs.model.estadoCrear ? 'Nuevo' : 'Editar'} — #{cc.attrs.titulo}"
+                  widgetVar="dlgFormularioTx"
+                  modal="true" responsive="true"
+                  width="600" closable="true" appendTo="@(body)">
+            <h:form id="frmDialogo">
+                <p:outputPanel id="pnlFormulario">
+                    <p:outputPanel rendered="#{cc.attrs.model.registroActual != null}">
+                        <cc:renderFacet name="formulario"/>
+                    </p:outputPanel>
+
+                    <p:divider/>
+
+                    <p:toolbar>
+                        <p:toolbarGroup align="right">
+                            <crud:botonesFormulario model="#{cc.attrs.model}" update="@([id$=tabla]) @([id$=mensajes])" process="@all" dialog="dlgFormularioTx" />
+                        </p:toolbarGroup>
+                    </p:toolbar>
+                </p:outputPanel>
+            </h:form>
+        </p:dialog>
+    </cc:implementation>
 </html>
