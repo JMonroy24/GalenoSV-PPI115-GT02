@@ -10,7 +10,7 @@
     <ui:define name="titulo">Exámenes</ui:define>
 
     <ui:define name="contenido">
-        <crud:crudCatalogo model="#{examenModel}"
+        <crud:crudTransaccional model="#{examenModel}" lazyModel="#{examenModel.lazyModel}"
                            titulo="Exámenes"
                            anchoDialogo="800">
 
@@ -114,7 +114,7 @@
                 </p:outputPanel>
             </f:facet>
 
-        </crud:crudCatalogo>
+        </crud:crudTransaccional>
     </ui:define>
 
 </ui:composition>

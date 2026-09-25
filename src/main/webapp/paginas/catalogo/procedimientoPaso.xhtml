@@ -10,7 +10,7 @@
     <ui:define name="titulo">Pasos de Procedimiento</ui:define>
 
     <ui:define name="contenido">
-        <crud:crudCatalogo model="#{procedimientoPasoModel}"
+        <crud:crudTransaccional model="#{procedimientoPasoModel}" lazyModel="#{procedimientoPasoModel.lazyModel}"
                            titulo="Pasos de Procedimiento"
                            anchoDialogo="900">
 
@@ -215,7 +215,7 @@
                 </p:outputPanel>
             </f:facet>
 
-        </crud:crudCatalogo>
+        </crud:crudTransaccional>
     </ui:define>
 
 </ui:composition>

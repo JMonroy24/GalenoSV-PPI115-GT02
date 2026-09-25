@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition template="/WEB-INF/templates/template.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:crud="jakarta.faces.composite/crud">
+
+    <ui:define name="titulo">Roles de Persona</ui:define>
+
+    <ui:define name="contenido">
+        
+        <crud:crudTransaccional model="#{personaRolModel}"
+                                lazyModel="#{personaRolModel.lazyModel}"
+                                titulo="Roles de Persona">
+                                
+            <p:column headerText="Persona">
+                <h:outputText value="#{registro.idPersona.nombres} #{registro.idPersona.apellidos}"/>
+            </p:column>
+            
+            <p:column headerText="Rol">
+                <h:outputText value="#{registro.idRol.nombre}"/>
+            </p:column>
+            
+            <p:column headerText="Clínica">
+                <h:outputText value="#{registro.idClinica.nombre}"/>
+            </p:column>
+
+            <f:facet name="formulario">
+                <h:panelGrid columns="2" cellpadding="7" columnClasses="ui-grid-col-4,ui-grid-col-8" style="width:100%">
+                
+                <p:outputLabel value="Persona:" for="idPersona"/>
+                <p:autoComplete id="idPersona" value="#{personaRolModel.registroActual.idPersona}"
+                                completeMethod="#{personaRolModel.completePersona}"
+                                var="p" itemLabel="#{p.nombres} #{p.apellidos}" itemValue="#{p}"
+                                converter="#{entityConverter}"
+                                forceSelection="true" required="true" scrollHeight="250"
+                                placeholder="Escriba un nombre para buscar..."/>
+                
+                <p:outputLabel value="Rol:" for="idRol"/>
+                <p:selectOneMenu id="idRol" value="#{personaRolModel.registroActual.idRol}"
+                                 converter="#{entityConverter}" required="true" filter="true">
+                    <f:selectItem itemLabel="Seleccione un rol..." itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{rolModel.registros}" var="r"
+                                   itemLabel="#{r.nombre}" itemValue="#{r}"/>
+                </p:selectOneMenu>
+                
+                <p:outputLabel value="Clínica:" for="idClinica"/>
+                <p:selectOneMenu id="idClinica" value="#{personaRolModel.registroActual.idClinica}"
+                                 converter="#{entityConverter}" filter="true">
+                    <f:selectItem itemLabel="Ninguna" itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{clinicaModel.registros}" var="c"
+                                   itemLabel="#{c.nombre}" itemValue="#{c}"/>
+                </p:selectOneMenu>
+                
+                </h:panelGrid>
+            </f:facet>
+            
+        </crud:crudTransaccional>
+        
+    </ui:define>
+
+</ui:composition>
