@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition template="/WEB-INF/templates/template.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:crud="jakarta.faces.composite/crud">
+
+    <ui:define name="titulo">Tipos de Documento</ui:define>
+
+    <ui:define name="contenido">
+        
+        <crud:crudTransaccional model="#{tipoDocumentoModel}" lazyModel="#{tipoDocumentoModel.lazyModel}"
+                                titulo="Tipos de Documento">
+                                
+            <p:column headerText="Nombre">
+                <h:outputText value="#{registro.nombre}"/>
+            </p:column>
+            
+            <p:column headerText="Expresión Regular">
+                <h:outputText value="#{registro.expresionRegular}"/>
+            </p:column>
+            
+            <p:column headerText="Activo">
+                <h:outputText value="#{registro.activo ? 'Sí' : 'No'}"/>
+            </p:column>
+
+            <f:facet name="formulario">
+                <h:panelGrid columns="2" cellpadding="7" columnClasses="ui-grid-col-4,ui-grid-col-8" style="width:100%">
+                
+                <p:outputLabel value="Nombre:" for="nombre"/>
+                <p:inputText id="nombre" value="#{tipoDocumentoModel.registroActual.nombre}" required="true"/>
+                
+                <p:outputLabel value="Indicaciones:" for="indicaciones"/>
+                <p:inputTextarea id="indicaciones" value="#{tipoDocumentoModel.registroActual.indicaciones}"/>
+                
+                <p:outputLabel value="Expresión Regular:" for="expresionRegular"/>
+                <p:inputText id="expresionRegular" value="#{tipoDocumentoModel.registroActual.expresionRegular}"/>
+                
+                <p:outputLabel value="Activo:" for="activo"/>
+                <p:selectBooleanCheckbox id="activo" value="#{tipoDocumentoModel.registroActual.activo}"/>
+                
+                </h:panelGrid>
+            </f:facet>
+            
+        </crud:crudTransaccional>
+        
+    </ui:define>
+
+</ui:composition>

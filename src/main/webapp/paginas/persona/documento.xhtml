@@ -33,6 +33,7 @@
 
 
             <f:facet name="formulario">
+                <h:panelGrid columns="2" cellpadding="7" columnClasses="ui-grid-col-4,ui-grid-col-8" style="width:100%">
                 
                 <p:outputLabel value="Persona:" for="idPersona"/>
                 <p:autoComplete id="idPersona" value="#{documentoModel.registroActual.idPersona}"
@@ -56,6 +57,7 @@
                 <p:outputLabel value="Ruta Física:" for="rutaFisica"/>
                 <p:inputText id="rutaFisica" value="#{documentoModel.registroActual.rutaFisica}"/>
                 
+                            </h:panelGrid>
             </f:facet>
             
         </crud:crudTransaccional>

@@ -32,7 +32,7 @@ public class PersonaRolModel extends ModelTransaccional<PersonaRol, UUID> implem
 
     @Override
     protected PersonaRol crearNuevoRegistro() {
-        return new PersonaRol();
+        return new PersonaRol(UUID.randomUUID());
     }
 
     public PersonaRolDAO getPersonaRolDAO() {
@@ -42,4 +42,12 @@ public class PersonaRolModel extends ModelTransaccional<PersonaRol, UUID> implem
     public void setPersonaRolDAO(PersonaRolDAO personaRolDAO) {
         this.personaRolDAO = personaRolDAO;
     }
+
+    @Inject
+    protected sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaDAO personaDAO;
+
+    public java.util.List<sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona> completePersona(String query) {
+        return personaDAO.buscarParaAutocompletar(query, 10);
+    }
+
 }

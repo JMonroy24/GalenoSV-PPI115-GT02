@@ -17,6 +17,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 class ProcedimientoModelTest {
 
     @Mock
@@ -33,13 +34,12 @@ class ProcedimientoModelTest {
     @Test
     void testInitYCargarDatos() {
         Procedimiento procedimiento = new Procedimiento(UUID.randomUUID());
-        when(procedimientoDAO.findAll()).thenReturn(List.of(procedimiento));
-
+        
         procedimientoModel.init();
 
-        assertNotNull(procedimientoModel.getRegistros());
-        assertEquals(1, procedimientoModel.getRegistros().size());
-        verify(procedimientoDAO).findAll();
+        
+        
+        verifyNoInteractions(procedimientoDAO);
     }
 
     @Test
@@ -75,8 +75,7 @@ class ProcedimientoModelTest {
 
     @Test
     void testGuardarCrear() {
-        when(procedimientoDAO.findAll()).thenReturn(Collections.emptyList());
-
+        
         procedimientoModel.prepararNuevo();
         procedimientoModel.getRegistroActual().setNombre("Toma de muestra sanguínea");
 
@@ -89,8 +88,7 @@ class ProcedimientoModelTest {
 
     @Test
     void testGuardarModificar() {
-        when(procedimientoDAO.findAll()).thenReturn(Collections.emptyList());
-        Procedimiento procedimiento = new Procedimiento(UUID.randomUUID());
+                Procedimiento procedimiento = new Procedimiento(UUID.randomUUID());
 
         procedimientoModel.seleccionar(procedimiento);
         procedimientoModel.guardar();
@@ -101,8 +99,7 @@ class ProcedimientoModelTest {
 
     @Test
     void testEliminar() {
-        when(procedimientoDAO.findAll()).thenReturn(Collections.emptyList());
-        Procedimiento procedimiento = new Procedimiento(UUID.randomUUID());
+                Procedimiento procedimiento = new Procedimiento(UUID.randomUUID());
 
         procedimientoModel.eliminar(procedimiento);
 

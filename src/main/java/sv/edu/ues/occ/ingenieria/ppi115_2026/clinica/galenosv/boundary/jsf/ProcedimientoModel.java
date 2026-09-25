@@ -16,7 +16,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Procedimi
  */
 @Named("procedimientoModel")
 @ViewScoped
-public class ProcedimientoModel extends Model<Procedimiento, UUID>
+public class ProcedimientoModel extends ModelTransaccional<Procedimiento, UUID>
         implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -26,7 +26,7 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override

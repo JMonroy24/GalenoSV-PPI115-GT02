@@ -42,4 +42,13 @@ public class PersonaDAO extends DefaultDAO<Persona, UUID> implements Serializabl
     protected List<String> getCamposBusqueda() {
         return List.of("nombres", "apellidos");
     }
+
+    public java.util.List<Persona> buscarParaAutocompletar(String filtro, int max) {
+        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        return getEntityManager().createQuery(
+                "SELECT e FROM Persona e",
+                Persona.class)
+                .setMaxResults(max)
+                .getResultList();
+    }
 }

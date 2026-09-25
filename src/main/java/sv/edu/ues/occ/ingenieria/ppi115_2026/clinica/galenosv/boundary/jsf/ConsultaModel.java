@@ -5,10 +5,14 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRol;
 
 /**
  * Backing bean JSF para la gestión de la entidad Consulta.
@@ -19,6 +23,9 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
 
     @Inject
     protected ConsultaDAO consultaDAO;
+
+    @Inject
+    protected PersonaRolDAO personaRolDAO;
 
     @PostConstruct
     public void init() {
@@ -32,7 +39,14 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
 
     @Override
     protected Consulta crearNuevoRegistro() {
-        return new Consulta();
+        Consulta consulta = new Consulta(UUID.randomUUID());
+        consulta.setFechaInicio(new Date());
+        return consulta;
+    }
+
+    /** Método para p:autoComplete. Busca asignaciones Persona/Rol. */
+    public List<PersonaRol> completePersonaRol(String query) {
+        return personaRolDAO.buscarParaAutocompletar(query, 20);
     }
 
     public ConsultaDAO getConsultaDAO() {

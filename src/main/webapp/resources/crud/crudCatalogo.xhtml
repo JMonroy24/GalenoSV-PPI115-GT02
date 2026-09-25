@@ -1,30 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  CRUD para catálogos de bajo volumen. La sección opcional "relaciones"
-  permite administrar asociaciones dentro del formulario del catálogo.
--->
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="jakarta.faces.html"
       xmlns:f="jakarta.faces.core"
       xmlns:p="http://primefaces.org/ui"
       xmlns:crud="jakarta.faces.composite/crud"
-      xmlns:cc="jakarta.faces.composite"
-      xmlns:pt="jakarta.faces.passthrough">
+      xmlns:cc="jakarta.faces.composite">
 
     <cc:interface>
-        <cc:attribute name="model" required="true"
-                      shortDescription="Modelo JSF del catálogo."/>
-        <cc:attribute name="titulo" required="true"
-                      type="java.lang.String"
-                      shortDescription="Título visible del catálogo."/>
-        <cc:attribute name="anchoDialogo" default="550"
-                      type="java.lang.String"
-                      shortDescription="Ancho del formulario en píxeles."/>
-
-        <cc:facet name="formulario"
-                  shortDescription="Campos principales en dos columnas."/>
-        <cc:facet name="relaciones"
-                  shortDescription="Asociaciones mostradas a ancho completo."/>
+        <cc:attribute name="model" required="true" />
+        <cc:attribute name="titulo" required="true" type="java.lang.String" />
+        <cc:facet     name="formulario" />
     </cc:interface>
 
     <cc:implementation>
@@ -34,81 +19,61 @@
             <p:panel header="#{cc.attrs.titulo}">
                 <p:toolbar id="toolbarTop">
                     <p:toolbarGroup>
-                        <crud:botonesTop model="#{cc.attrs.model}"
-                                        update="frmCrud:pnlFormulario"
-                                        dialog="dlgFormularioCat"/>
+                        <crud:botonesTop model="#{cc.attrs.model}" update="@([id$=pnlFormulario])" dialog="dlgFormularioCat" />
                     </p:toolbarGroup>
                 </p:toolbar>
 
-                <p:dataTable id="tabla"
-                             var="registro"
+                <p:dataTable id="tabla" var="registro"
                              value="#{cc.attrs.model.registros}"
                              emptyMessage="No se encontraron registros."
-                             rows="20"
+                             rows="15"
                              paginator="true"
                              paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-                             rowsPerPageTemplate="10,20,50"
+                             rowsPerPageTemplate="10,15,25,50"
+                             paginatorPosition="both"
                              stripedRows="true"
                              size="small"
                              selectionMode="single"
-                             selection="#{cc.attrs.model.registroActual}"
+                             selection="#{cc.attrs.model.seleccion}"
                              rowKey="#{registro.hashCode()}">
-
-                    <p:ajax event="rowSelect"
-                            update="frmCrud:toolbarTop"/>
-                    <p:ajax event="rowUnselect"
-                            update="frmCrud:toolbarTop"/>
+                             
+                    <p:ajax event="rowSelect" update="@([id$=toolbarTop])"/>
+                    <p:ajax event="rowUnselect" update="@([id$=toolbarTop])"/>
 
                     <cc:insertChildren/>
                 </p:dataTable>
             </p:panel>
 
-            <p:dialog header="#{cc.attrs.model.estadoCrear ? 'Nuevo' : 'Editar'} — #{cc.attrs.titulo}"
-                      widgetVar="dlgFormularioCat"
-                      modal="true"
-                      responsive="true"
-                      width="#{cc.attrs.anchoDialogo}"
-                      closable="true">
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Sí" type="button"
+                                 styleClass="ui-confirmdialog-yes ui-button-danger"
+                                 icon="pi pi-check"/>
+                <p:commandButton value="No" type="button"
+                                 styleClass="ui-confirmdialog-no ui-button-secondary"
+                                 icon="pi pi-times"/>
+            </p:confirmDialog>
+        </h:form>
 
+        <p:dialog header="#{cc.attrs.model.estadoCrear ? 'Nuevo' : 'Editar'} — #{cc.attrs.titulo}"
+                  widgetVar="dlgFormularioCat"
+                  modal="true" responsive="true"
+                  width="550" closable="true" appendTo="@(body)">
+            <h:form id="frmDialogo">
                 <p:outputPanel id="pnlFormulario">
-                    <h:panelGrid columns="2"
-                                 cellpadding="7"
-                                 columnClasses="ui-grid-col-4,ui-grid-col-8"
-                                 rendered="#{cc.attrs.model.registroActual != null}"
-                                 style="width:100%">
-
+                    <p:outputPanel rendered="#{cc.attrs.model.registroActual != null}">
                         <cc:renderFacet name="formulario"/>
-
-                    </h:panelGrid>
-
-                    <cc:renderFacet name="relaciones"/>
+                    </p:outputPanel>
 
                     <p:divider/>
 
                     <p:toolbar>
                         <p:toolbarGroup align="right">
-                            <crud:botonesFormulario
-                                    model="#{cc.attrs.model}"
-                                    update="@form"
-                                    dialog="dlgFormularioCat"/>
+                            <crud:botonesFormulario model="#{cc.attrs.model}" update="@([id$=tabla]) @([id$=mensajes])" process="@all" dialog="dlgFormularioCat" />
                         </p:toolbarGroup>
                     </p:toolbar>
                 </p:outputPanel>
-            </p:dialog>
-
-            <p:confirmDialog global="true"
-                             showEffect="fade"
-                             hideEffect="fade">
-                <p:commandButton value="Sí"
-                                 type="button"
-                                 styleClass="ui-confirmdialog-yes ui-button-danger"
-                                 icon="pi pi-check"/>
-                <p:commandButton value="No"
-                                 type="button"
-                                 styleClass="ui-confirmdialog-no ui-button-secondary"
-                                 icon="pi pi-times"/>
-            </p:confirmDialog>
-        </h:form>
+            </h:form>
+        </p:dialog>
     </cc:implementation>
 
 </html>

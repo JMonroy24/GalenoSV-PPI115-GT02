@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition template="/WEB-INF/templates/template.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:crud="jakarta.faces.composite/crud">
+
+    <ui:define name="titulo">Consultas</ui:define>
+
+    <ui:define name="contenido">
+
+        <crud:crudTransaccional model="#{consultaModel}"
+                                lazyModel="#{consultaModel.lazyModel}"
+                                titulo="Consultas">
+
+            <p:column headerText="Persona">
+                <h:outputText value="#{registro.idPersonaRol.idPersona.nombres} #{registro.idPersonaRol.idPersona.apellidos}"/>
+            </p:column>
+
+            <p:column headerText="Rol">
+                <h:outputText value="#{registro.idPersonaRol.idRol.nombre}"/>
+            </p:column>
+
+            <p:column headerText="Inicio" width="150">
+                <h:outputText value="#{registro.fechaInicio}">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
+                </h:outputText>
+            </p:column>
+
+            <p:column headerText="Fin" width="150">
+                <h:outputText value="#{registro.fechaFin}">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
+                </h:outputText>
+            </p:column>
+
+            <p:column headerText="Referencia externa">
+                <h:outputText value="#{registro.referenciaExterna}"/>
+            </p:column>
+
+            <p:column headerText="Observaciones">
+                <h:outputText value="#{registro.observaciones}"/>
+            </p:column>
+
+            <f:facet name="formulario">
+
+                <p:outputLabel value="Persona / Rol:" for="idPersonaRol"/>
+                <p:autoComplete id="idPersonaRol" value="#{consultaModel.registroActual.idPersonaRol}"
+                                completeMethod="#{consultaModel.completePersonaRol}"
+                                var="pr"
+                                itemLabel="#{pr.idPersona.nombres} #{pr.idPersona.apellidos} — #{pr.idRol.nombre}"
+                                itemValue="#{pr}"
+                                converter="#{entityConverter}"
+                                forceSelection="true" required="true" requiredMessage="Seleccione una persona/rol." scrollHeight="250"
+                                placeholder="Escriba nombre, apellido, rol o clínica..."/>
+
+                <p:outputLabel value="Fecha de inicio:" for="fechaInicio"/>
+                <p:datePicker id="fechaInicio" value="#{consultaModel.registroActual.fechaInicio}"
+                              showTime="true" showIcon="true" pattern="dd/MM/yyyy HH:mm"
+                              required="true" requiredMessage="La fecha de inicio es obligatoria."
+                              appendTo="@(body)"/>
+
+                <p:outputLabel value="Fecha de fin:" for="fechaFin"/>
+                <p:datePicker id="fechaFin" value="#{consultaModel.registroActual.fechaFin}"
+                              showTime="true" showIcon="true" pattern="dd/MM/yyyy HH:mm"
+                              appendTo="@(body)"/>
+
+                <p:outputLabel value="Referencia externa:" for="referenciaExterna"/>
+                <p:inputText id="referenciaExterna" value="#{consultaModel.registroActual.referenciaExterna}" maxlength="255"/>
+
+                <p:outputLabel value="Observaciones:" for="observaciones"/>
+                <p:inputTextarea id="observaciones" value="#{consultaModel.registroActual.observaciones}"
+                                 rows="4" autoResize="false" maxlength="2000"/>
+
+            </f:facet>
+
+        </crud:crudTransaccional>
+
+    </ui:define>
+
+</ui:composition>

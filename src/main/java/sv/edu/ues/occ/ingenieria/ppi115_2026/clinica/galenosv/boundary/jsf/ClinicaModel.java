@@ -15,14 +15,14 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica;
  */
 @Named("clinicaModel")
 @ViewScoped
-public class ClinicaModel extends Model<Clinica, UUID> implements Serializable {
+public class ClinicaModel extends ModelTransaccional<Clinica, UUID> implements Serializable {
 
     @Inject
     protected ClinicaDAO clinicaDAO;
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override
@@ -32,7 +32,7 @@ public class ClinicaModel extends Model<Clinica, UUID> implements Serializable {
 
     @Override
     protected Clinica crearNuevoRegistro() {
-        return new Clinica();
+        return new Clinica(UUID.randomUUID());
     }
 
     public ClinicaDAO getClinicaDAO() {

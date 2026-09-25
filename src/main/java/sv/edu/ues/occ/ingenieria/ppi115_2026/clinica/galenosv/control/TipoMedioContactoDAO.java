@@ -31,4 +31,19 @@ public class TipoMedioContactoDAO extends DefaultDAO<TipoMedioContacto, UUID> im
     public EntityManager getEntityManager() {
         return em;
     }
+
+    @Override
+    protected java.util.List<String> getCamposBusqueda() {
+        return java.util.List.of("nombre");
+    }
+
+
+    public java.util.List<TipoMedioContacto> buscarParaAutocompletar(String filtro, int max) {
+        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        return getEntityManager().createQuery(
+                "SELECT e FROM TipoMedioContacto e",
+                TipoMedioContacto.class)
+                .setMaxResults(max)
+                .getResultList();
+    }
 }

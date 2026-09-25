@@ -29,23 +29,17 @@
                 <p:menuitem value="Tipos de Examen"
                             outcome="/paginas/catalogo/tipoExamen"
                             icon="pi pi-list"/>
-                <p:separator/>
                 <p:menuitem value="Exámenes"
                             outcome="/paginas/catalogo/examen"
                             icon="pi pi-search"/>
                 <p:menuitem value="Procedimientos"
                             outcome="/paginas/catalogo/procedimiento"
                             icon="pi pi-cog"/>
-                <p:menuitem value="Pasos de Procedimiento"
-                            outcome="/paginas/catalogo/procedimientoPaso"
-                            icon="pi pi-sort-amount-down"/>
-                <p:separator/>
                 <p:menuitem value="Clínicas"
                             outcome="/paginas/catalogo/clinica"
                             icon="pi pi-building"/>
             </p:submenu>
 
-            
             <p:submenu label="Personas" icon="pi pi-users">
                 <p:menuitem value="Personas"
                             outcome="/paginas/persona/persona"
@@ -61,13 +55,23 @@
                             icon="pi pi-sitemap"/>
             </p:submenu>
 
-
             <p:submenu label="Atención Clínica" icon="pi pi-heart">
                 <p:menuitem value="Consultas"
                             outcome="/paginas/clinica/consulta"
                             icon="pi pi-calendar"/>
+                <p:menuitem value="Procedimientos de Consulta"
+                            outcome="/paginas/clinica/consultaProcedimiento"
+                            icon="pi pi-list"/>
+                <p:menuitem value="Pasos de Procedimiento"
+                            outcome="/paginas/clinica/consultaProcedimientoPaso"
+                            icon="pi pi-check-square"/>
+                <p:menuitem value="Órdenes de Examen"
+                            outcome="/paginas/clinica/ordenExamen"
+                            icon="pi pi-clipboard"/>
+                <p:menuitem value="Resultados de Examen"
+                            outcome="/paginas/clinica/examenResultado"
+                            icon="pi pi-chart-bar"/>
             </p:submenu>
-
         </p:menubar>
     </h:form>
 

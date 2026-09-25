@@ -40,6 +40,12 @@ public class ProcedimientoPasoExamenDAO
         return em;
     }
 
+    @Override
+    protected java.util.List<String> getCamposBusqueda() {
+        return java.util.List.of("observaciones");
+    }
+
+
     /**
      * Consulta los exámenes asociados al paso indicado.
      *
@@ -62,5 +68,14 @@ public class ProcedimientoPasoExamenDAO
                 ));
 
         return em.createQuery(cq).getResultList();
+    }
+
+    public java.util.List<ProcedimientoPasoExamen> buscarParaAutocompletar(String filtro, int max) {
+        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        return getEntityManager().createQuery(
+                "SELECT e FROM ProcedimientoPasoExamen e",
+                ProcedimientoPasoExamen.class)
+                .setMaxResults(max)
+                .getResultList();
     }
 }

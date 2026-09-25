@@ -22,7 +22,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Procedimi
 @Named("procedimientoPasoExamenModel")
 @ViewScoped
 public class ProcedimientoPasoExamenModel
-        extends Model<ProcedimientoPasoExamen, UUID>
+        extends ModelTransaccional<ProcedimientoPasoExamen, UUID>
         implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -32,7 +32,7 @@ public class ProcedimientoPasoExamenModel
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override
@@ -42,7 +42,7 @@ public class ProcedimientoPasoExamenModel
 
     @Override
     protected ProcedimientoPasoExamen crearNuevoRegistro() {
-        return new ProcedimientoPasoExamen();
+        return new ProcedimientoPasoExamen(UUID.randomUUID());
     }
 
     public ProcedimientoPasoExamenDAO getProcedimientoPasoExamenDAO() {

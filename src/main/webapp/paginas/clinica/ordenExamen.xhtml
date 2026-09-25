@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition template="/WEB-INF/templates/template.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:crud="jakarta.faces.composite/crud">
+
+    <ui:define name="titulo">Órdenes de Examen</ui:define>
+
+    <ui:define name="contenido">
+
+        <crud:crudTransaccional model="#{ordenExamenModel}"
+                                lazyModel="#{ordenExamenModel.lazyModel}"
+                                titulo="Órdenes de Examen">
+
+            <p:column headerText="Procedimiento">
+                <h:outputText value="#{registro.idConsultaProcedimientoPaso.idConsultaProcedimiento.idProcedimiento.nombre}"/>
+            </p:column>
+
+            <p:column headerText="Estado del paso" width="130">
+                <h:outputText value="#{registro.idConsultaProcedimientoPaso.estado}"/>
+            </p:column>
+
+            <p:column headerText="Fecha de creación" width="150">
+                <h:outputText value="#{registro.fechaCreacion}">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
+                </h:outputText>
+            </p:column>
+
+            <p:column headerText="Indicaciones">
+                <h:outputText value="#{registro.indicaciones}"/>
+            </p:column>
+
+            <f:facet name="formulario">
+
+                <p:outputLabel value="Paso de procedimiento:" for="idConsultaProcedimientoPaso"/>
+                <p:autoComplete id="idConsultaProcedimientoPaso"
+                                value="#{ordenExamenModel.registroActual.idConsultaProcedimientoPaso}"
+                                completeMethod="#{ordenExamenModel.completeConsultaProcedimientoPaso}"
+                                var="cpp"
+                                itemLabel="#{cpp.idConsultaProcedimiento.idProcedimiento.nombre} — #{cpp.idPersonaRol.idPersona.nombres} #{cpp.idPersonaRol.idPersona.apellidos}#{empty cpp.estado ? '' : ' ('}#{cpp.estado}#{empty cpp.estado ? '' : ')'}"
+                                itemValue="#{cpp}"
+                                converter="#{entityConverter}"
+                                forceSelection="true" required="true" requiredMessage="Seleccione un paso de procedimiento." scrollHeight="250"
+                                placeholder="Escriba procedimiento, persona o estado..."/>
+
+                <p:outputLabel value="Indicaciones:" for="indicaciones"/>
+                <p:inputTextarea id="indicaciones" value="#{ordenExamenModel.registroActual.indicaciones}"
+                                 rows="5" autoResize="false"
+                                 required="true" requiredMessage="Las indicaciones son obligatorias."
+                                 maxlength="2000"/>
+
+            </f:facet>
+
+        </crud:crudTransaccional>
+
+    </ui:define>
+
+</ui:composition>

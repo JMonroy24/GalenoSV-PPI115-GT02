@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition template="/WEB-INF/templates/template.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:crud="jakarta.faces.composite/crud">
+
+    <ui:define name="titulo">Clínicas</ui:define>
+
+    <ui:define name="contenido">
+
+        <crud:crudTransaccional model="#{clinicaModel}" lazyModel="#{clinicaModel.lazyModel}" titulo="Clínicas">
+
+            <!-- Columnas de la tabla -->
+            <p:column headerText="Nombre" sortBy="#{registro.nombre}" filterBy="#{registro.nombre}">
+                <h:outputText value="#{registro.nombre}"/>
+            </p:column>
+
+            <p:column headerText="Tipo" width="120" sortBy="#{registro.tipo}" filterBy="#{registro.tipo}">
+                <h:outputText value="#{registro.tipo}"/>
+            </p:column>
+
+            <p:column headerText="Activo" width="90" style="text-align:center">
+                <h:outputText value="#{registro.activo ? 'Sí' : 'No'}"/>
+            </p:column>
+
+            <p:column headerText="Comentarios">
+                <h:outputText value="#{registro.comentarios}"/>
+            </p:column>
+
+            <!-- Formulario crear / editar -->
+            <f:facet name="formulario">
+
+                <p:outputLabel value="Nombre:" for="nombre"/>
+                <p:inputText id="nombre"
+                             value="#{clinicaModel.registroActual.nombre}"
+                             required="true"
+                             requiredMessage="El nombre es obligatorio."
+                             maxlength="255"
+                             placeholder="Nombre de la clínica"/>
+
+                <p:outputLabel value="Tipo:" for="tipo"/>
+                <p:inputText id="tipo"
+                             value="#{clinicaModel.registroActual.tipo}"
+                             maxlength="20"
+                             placeholder="Ej. GENERAL, ESPECIALIZADA"/>
+
+                <p:outputLabel value="Activo:" for="activo"/>
+                <p:selectBooleanCheckbox id="activo"
+                                         value="#{clinicaModel.registroActual.activo}"/>
+
+                <p:outputLabel value="Comentarios:" for="comentarios"/>
+                <p:inputTextarea id="comentarios"
+                                 value="#{clinicaModel.registroActual.comentarios}"
+                                 rows="4"
+                                 autoResize="false"
+                                 placeholder="Observaciones adicionales..."/>
+
+            </f:facet>
+
+        </crud:crudTransaccional>
+
+    </ui:define>
+
+</ui:composition>

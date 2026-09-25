@@ -25,7 +25,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoExame
  */
 @Named("examenModel")
 @ViewScoped
-public class ExamenModel extends Model<Examen, UUID> implements Serializable {
+public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(ExamenModel.class.getName());
@@ -42,7 +42,7 @@ public class ExamenModel extends Model<Examen, UUID> implements Serializable {
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override

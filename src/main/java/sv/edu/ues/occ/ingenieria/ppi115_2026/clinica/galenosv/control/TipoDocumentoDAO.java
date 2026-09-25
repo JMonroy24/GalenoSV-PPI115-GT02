@@ -31,4 +31,19 @@ public class TipoDocumentoDAO extends DefaultDAO<TipoDocumento, UUID> implements
     public EntityManager getEntityManager() {
         return em;
     }
+
+    @Override
+    protected java.util.List<String> getCamposBusqueda() {
+        return java.util.List.of("nombre");
+    }
+
+
+    public java.util.List<TipoDocumento> buscarParaAutocompletar(String filtro, int max) {
+        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        return getEntityManager().createQuery(
+                "SELECT e FROM TipoDocumento e",
+                TipoDocumento.class)
+                .setMaxResults(max)
+                .getResultList();
+    }
 }

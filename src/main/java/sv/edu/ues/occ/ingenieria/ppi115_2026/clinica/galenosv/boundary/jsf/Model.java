@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import java.util.stream.Collectors;
 
 /**
  * Backing bean abstracto y genérico para vistas JSF con operaciones CRUD.
@@ -39,6 +42,10 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
 
     /** Registro seleccionado o en creación/edición; null si no hay operación activa. */
     private T registroActual;
+
+    /** Fila seleccionada en la tabla. Separada de registroActual para que el
+     *  procesamiento ajax de la tabla nunca destruya el objeto del formulario. */
+    private T seleccion;
 
     /** Estado actual de la operación CRUD. */
     private Estado estado = Estado.NINGUNO;
@@ -74,6 +81,7 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
     /** Cancela la operación en curso y restablece el estado a . */
     public void cancelar() {
         registroActual = null;
+        seleccion = null;
         estado = Estado.NINGUNO;
     }
 
@@ -83,6 +91,11 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
      */
     public void guardar() {
         try {
+            if (registroActual == null) {
+                agregarMensaje(FacesMessage.SEVERITY_WARN, "Aviso",
+                        "No hay registro activo. Reabra el formulario con Nuevo o Editar e intente de nuevo.");
+                return;
+            }
             if (estado == Estado.CREAR) {
                 getDAO().create(registroActual);
                 agregarMensaje(FacesMessage.SEVERITY_INFO, "Éxito", "Registro creado correctamente.");
@@ -94,7 +107,27 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
             cancelar(); 
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Error al guardar registro", e);
+            logConstraintViolations(e);
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Error", clasificarError(e));
+        }
+    }
+
+    private void logConstraintViolations(Exception e) {
+        Throwable buscando = e;
+        while (buscando != null) {
+            if (buscando instanceof ConstraintViolationException cve) {
+                for (ConstraintViolation<?> v : cve.getConstraintViolations()) {
+                    LOGGER.log(Level.SEVERE,
+                            "Violacion: {0}.{1} = {2} -> {3}",
+                            new Object[]{
+                                v.getRootBeanClass().getSimpleName(),
+                                v.getPropertyPath(),
+                                v.getInvalidValue(),
+                                v.getMessage()});
+                }
+                return;
+            }
+            buscando = (buscando.getCause() != buscando) ? buscando.getCause() : null;
         }
     }
 
@@ -107,6 +140,9 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
             estado = Estado.ELIMINAR;
             getDAO().delete(registro);
             cargarDatos();
+            if (registro != null && registro.equals(seleccion)) {
+                seleccion = null;
+            }
             if (registroActual != null && registro.equals(registroActual)) {
                 cancelar();
             }
@@ -127,7 +163,19 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
      * @return mensaje descriptivo
      */
     protected String clasificarError(Exception e) {
-        Throwable causa = e;
+       
+        Throwable buscando = e;
+        while (buscando != null) {
+    if (buscando instanceof ConstraintViolationException cve
+            && !cve.getConstraintViolations().isEmpty()) {
+        String detalle = cve.getConstraintViolations().stream()
+                .map(this::formatearViolacion)
+                .collect(Collectors.joining("; "));
+        return "Datos inválidos: " + detalle;
+    }
+    buscando = (buscando.getCause() != buscando) ? buscando.getCause() : null;
+}       
+         Throwable causa = e;
         while (causa.getCause() != null && causa.getCause() != causa) {
             causa = causa.getCause();
         }
@@ -165,6 +213,15 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
         // ── Genérico con detalle (truncado a 200 chars) ──
         return "Error al procesar: " + (msg.length() > 200 ? msg.substring(0, 200) + "…" : msg);
     }
+    
+    private String formatearViolacion(ConstraintViolation<?> v) {
+    Object valor = v.getInvalidValue();
+    String valorStr = (valor == null) ? "null" : valor.toString();
+    if (valorStr.length() > 50) {
+        valorStr = valorStr.substring(0, 50) + "…";
+    }
+    return v.getPropertyPath() + ": " + v.getMessage() + " (valor='" + valorStr + "')";
+}
 
     // ─── Mensajes JSF ────────────────────────────────────────────────
 
@@ -206,6 +263,8 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
     public void setRegistros(List<T> registros) { this.registros = registros; }
     public T getRegistroActual() { return registroActual; }
     public void setRegistroActual(T registroActual) { this.registroActual = registroActual; }
+    public T getSeleccion() { return seleccion; }
+    public void setSeleccion(T seleccion) { this.seleccion = seleccion; }
     public Estado getEstado() { return estado; }
     public void setEstado(Estado estado) { this.estado = estado; }
 }

@@ -2,7 +2,6 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities;
 
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -35,7 +34,6 @@ public class ConsultaProcedimiento implements Serializable {
     @Id
     @Basic(optional = false)
     @NotNull
-    @Convert(converter = UUIDConverter.class)
     @Column(name = "id_consulta_procedimiento")
     private UUID idConsultaProcedimiento;
 

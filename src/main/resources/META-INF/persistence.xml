@@ -9,7 +9,6 @@
     <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPasoSecuencia</class>
     <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPaso</class>
     <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoDocumento</class>
-    <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.UUIDConverter</class>
     <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimientoPaso</class>
     <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExamen</class>
     <class>sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica</class>
@@ -26,6 +25,11 @@
     <exclude-unlisted-classes>false</exclude-unlisted-classes>
     <properties>
       <property name="jakarta.persistence.schema-generation.database.action" value="none"/>
+      <property name="eclipselink.target-database" value="sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.persistence.PostgresUuidPlatform"/>
+      <property name="eclipselink.session.customizer" value="sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.persistence.UuidFieldSessionCustomizer"/>
+      <property name="eclipselink.logging.level" value="FINE"/>
+      <property name="eclipselink.logging.parameters" value="true"/>
+      <property name="eclipselink.logging.sql" value="true"/>
     </properties>
   </persistence-unit>
 </persistence>
