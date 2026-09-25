@@ -42,4 +42,13 @@ public class DocumentoDAO extends DefaultDAO<Documento, UUID> implements Seriali
     protected List<String> getCamposBusqueda() {
         return List.of("valor");
     }
+
+    public java.util.List<Documento> buscarParaAutocompletar(String filtro, int max) {
+        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        return getEntityManager().createQuery(
+                "SELECT e FROM Documento e",
+                Documento.class)
+                .setMaxResults(max)
+                .getResultList();
+    }
 }

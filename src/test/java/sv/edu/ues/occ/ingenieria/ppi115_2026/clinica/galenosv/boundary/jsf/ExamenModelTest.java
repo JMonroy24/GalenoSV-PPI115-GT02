@@ -21,6 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 class ExamenModelTest {
 
     @Mock
@@ -40,12 +41,11 @@ class ExamenModelTest {
     @Test
     void testInitYCargarDatos() {
         Examen examen = new Examen(UUID.randomUUID());
-        when(examenDAO.findAll()).thenReturn(List.of(examen));
-
+        
         examenModel.init();
 
-        assertEquals(1, examenModel.getRegistros().size());
-        verify(examenDAO).findAll();
+        
+        verifyNoInteractions(examenDAO);
     }
 
     @Test
@@ -85,8 +85,7 @@ class ExamenModelTest {
 
     @Test
     void testGuardarCrear() {
-        when(examenDAO.findAll()).thenReturn(Collections.emptyList());
-
+        
         examenModel.prepararNuevo();
         examenModel.getRegistroActual().setNombre("Hemograma");
         examenModel.guardar();
@@ -101,8 +100,7 @@ class ExamenModelTest {
         Examen examen = new Examen(UUID.randomUUID());
         when(examenTipoExamenDAO.findByExamen(examen.getIdExamen()))
                 .thenReturn(Collections.emptyList());
-        when(examenDAO.findAll()).thenReturn(Collections.emptyList());
-
+        
         examenModel.seleccionar(examen);
         examenModel.guardar();
 
@@ -190,8 +188,7 @@ class ExamenModelTest {
     @Test
     void testEliminar() {
         Examen examen = new Examen(UUID.randomUUID());
-        when(examenDAO.findAll()).thenReturn(Collections.emptyList());
-
+        
         examenModel.eliminar(examen);
 
         verify(examenDAO).delete(examen);

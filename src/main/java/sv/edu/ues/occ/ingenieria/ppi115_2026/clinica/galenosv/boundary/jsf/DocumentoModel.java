@@ -35,7 +35,7 @@ public class DocumentoModel extends ModelTransaccional<Documento, UUID> implemen
 
     @Override
     protected Documento crearNuevoRegistro() {
-        return new Documento();
+        return new Documento(UUID.randomUUID());
     }
 
     /**

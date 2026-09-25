@@ -15,14 +15,14 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoExame
  */
 @Named("tipoExamenModel")
 @ViewScoped
-public class TipoExamenModel extends Model<TipoExamen, UUID> implements Serializable {
+public class TipoExamenModel extends ModelTransaccional<TipoExamen, UUID> implements Serializable {
 
     @Inject
     protected TipoExamenDAO tipoExamenDAO;
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override
@@ -32,7 +32,7 @@ public class TipoExamenModel extends Model<TipoExamen, UUID> implements Serializ
 
     @Override
     protected TipoExamen crearNuevoRegistro() {
-        return new TipoExamen();
+        return new TipoExamen(UUID.randomUUID());
     }
 
     public TipoExamenDAO getTipoExamenDAO() {

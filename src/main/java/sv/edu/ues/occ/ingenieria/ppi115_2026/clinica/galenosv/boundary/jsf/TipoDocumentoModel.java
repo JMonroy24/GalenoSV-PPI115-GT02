@@ -15,14 +15,14 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoDocum
  */
 @Named("tipoDocumentoModel")
 @ViewScoped
-public class TipoDocumentoModel extends Model<TipoDocumento, UUID> implements Serializable {
+public class TipoDocumentoModel extends ModelTransaccional<TipoDocumento, UUID> implements Serializable {
 
     @Inject
     protected TipoDocumentoDAO tipoDocumentoDAO;
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override
@@ -32,7 +32,7 @@ public class TipoDocumentoModel extends Model<TipoDocumento, UUID> implements Se
 
     @Override
     protected TipoDocumento crearNuevoRegistro() {
-        return new TipoDocumento();
+        return new TipoDocumento(UUID.randomUUID());
     }
 
     public TipoDocumentoDAO getTipoDocumentoDAO() {

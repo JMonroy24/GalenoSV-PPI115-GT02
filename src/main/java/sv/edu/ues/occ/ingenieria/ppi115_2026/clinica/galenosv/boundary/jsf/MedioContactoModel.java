@@ -32,7 +32,7 @@ public class MedioContactoModel extends ModelTransaccional<MedioContacto, UUID> 
 
     @Override
     protected MedioContacto crearNuevoRegistro() {
-        return new MedioContacto();
+        return new MedioContacto(UUID.randomUUID());
     }
 
     public MedioContactoDAO getMedioContactoDAO() {
@@ -42,4 +42,12 @@ public class MedioContactoModel extends ModelTransaccional<MedioContacto, UUID> 
     public void setMedioContactoDAO(MedioContactoDAO medioContactoDAO) {
         this.medioContactoDAO = medioContactoDAO;
     }
+
+    @Inject
+    protected sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaDAO personaDAO;
+
+    public java.util.List<sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona> completePersona(String query) {
+        return personaDAO.buscarParaAutocompletar(query, 10);
+    }
+
 }

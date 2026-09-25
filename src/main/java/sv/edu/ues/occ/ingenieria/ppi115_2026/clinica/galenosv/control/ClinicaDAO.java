@@ -31,4 +31,19 @@ public class ClinicaDAO extends DefaultDAO<Clinica, UUID> implements Serializabl
     public EntityManager getEntityManager() {
         return em;
     }
+
+    @Override
+    protected java.util.List<String> getCamposBusqueda() {
+        return java.util.List.of("nombre");
+    }
+
+
+    public java.util.List<Clinica> buscarParaAutocompletar(String filtro, int max) {
+        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        return getEntityManager().createQuery(
+                "SELECT e FROM Clinica e",
+                Clinica.class)
+                .setMaxResults(max)
+                .getResultList();
+    }
 }

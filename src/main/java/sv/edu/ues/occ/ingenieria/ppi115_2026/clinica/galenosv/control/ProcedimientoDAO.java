@@ -35,4 +35,19 @@ public class ProcedimientoDAO
     public EntityManager getEntityManager() {
         return em;
     }
+
+    @Override
+    protected java.util.List<String> getCamposBusqueda() {
+        return java.util.List.of("nombre");
+    }
+
+
+    public java.util.List<Procedimiento> buscarParaAutocompletar(String filtro, int max) {
+        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        return getEntityManager().createQuery(
+                "SELECT e FROM Procedimiento e",
+                Procedimiento.class)
+                .setMaxResults(max)
+                .getResultList();
+    }
 }
