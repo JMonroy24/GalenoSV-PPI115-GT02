@@ -6,7 +6,16 @@
         <feature>localConnector-1.0</feature>
     </featureManager>
 
-    <basicRegistry id="basic" />
+    <basicRegistry id="basic">
+        <user name="admin" password="${env.GALENO_ADMIN_PASSWORD}"/>
+        <user name="clinico" password="${env.GALENO_CLINICO_PASSWORD}"/>
+        <group name="ADMINISTRADOR">
+            <member name="admin"/>
+        </group>
+        <group name="PERSONAL_CLINICO">
+            <member name="clinico"/>
+        </group>
+    </basicRegistry>
 
 
     <httpEndpoint id="defaultHttpEndpoint"
