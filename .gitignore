@@ -1,6 +1,8 @@
 target/
 nbproject/private/
 *.class
-*.log.
+*.log
 src/main/liberty/config/lib/*.jar
 /nbproject/
+
+src/main/liberty/config/server.env

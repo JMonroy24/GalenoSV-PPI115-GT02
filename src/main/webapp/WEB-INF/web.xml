@@ -20,6 +20,31 @@
     
     <context-param>
         <param-name>jakarta.faces.PROJECT_STAGE</param-name>
-        <param-value>Development</param-value>
+        <param-value>Production</param-value>
     </context-param>
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Aplicación GalenoSV</web-resource-name>
+            <url-pattern>/paginas/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>ADMINISTRADOR</role-name>
+            <role-name>PERSONAL_CLINICO</role-name>
+        </auth-constraint>
+        <user-data-constraint>
+            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+        </user-data-constraint>
+    </security-constraint>
+
+    <login-config>
+        <auth-method>BASIC</auth-method>
+        <realm-name>GalenoSV</realm-name>
+    </login-config>
+
+    <security-role>
+        <role-name>ADMINISTRADOR</role-name>
+    </security-role>
+    <security-role>
+        <role-name>PERSONAL_CLINICO</role-name>
+    </security-role>
 </web-app>
