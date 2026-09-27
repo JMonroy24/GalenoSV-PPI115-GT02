@@ -196,7 +196,6 @@ class ProcedimientoPasoModelTest {
     }
 
     @Test
-    @org.junit.jupiter.api.Disabled
     void testAgregarSecuenciaEntrePasosDelMismoProcedimiento() {
         Procedimiento procedimiento =
                 new Procedimiento(UUID.randomUUID());
@@ -207,13 +206,15 @@ class ProcedimientoPasoModelTest {
         origen.setIdProcedimiento(procedimiento);
         referencia.setIdProcedimiento(procedimiento);
 
-        when(procedimientoPasoDAO.findAll())
-                .thenReturn(List.of(origen, referencia));
+        // getPasosReferenciaDisponibles() ahora delega en el DAO directamente
+        when(procedimientoPasoDAO.findByProcedimiento(
+                procedimiento.getIdProcedimiento(),
+                origen.getIdProcedimientoPaso()))
+                .thenReturn(List.of(referencia));
         when(procedimientoPasoSecuenciaDAO.findByPaso(
                 origen.getIdProcedimientoPaso()))
                 .thenReturn(Collections.emptyList());
 
-        procedimientoPasoModel.init();
         procedimientoPasoModel.seleccionar(origen);
         procedimientoPasoModel.setPasoReferenciaSeleccionado(referencia);
         procedimientoPasoModel.setTipoSecuencia("Siguiente");
@@ -243,10 +244,13 @@ class ProcedimientoPasoModelTest {
         referencia.setIdProcedimiento(
                 new Procedimiento(UUID.randomUUID()));
 
-        when(procedimientoPasoDAO.findAll())
-                .thenReturn(List.of(origen, referencia));
+        // findByProcedimiento retorna lista vacía porque la referencia
+        // pertenece a otro procedimiento (es excluida por la consulta de BD)
+        when(procedimientoPasoDAO.findByProcedimiento(
+                origen.getIdProcedimiento().getIdProcedimiento(),
+                origen.getIdProcedimientoPaso()))
+                .thenReturn(Collections.emptyList());
 
-        procedimientoPasoModel.init();
         procedimientoPasoModel.seleccionar(origen);
         procedimientoPasoModel.setPasoReferenciaSeleccionado(referencia);
         procedimientoPasoModel.setTipoSecuencia("Siguiente");

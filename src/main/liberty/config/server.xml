@@ -18,6 +18,11 @@
     </basicRegistry>
 
 
+    <keyStore id="defaultKeyStore" password="${env.keystore_password}"/>
+
+    <!-- Permite acceso HTTP sin forzar redireccion a HTTPS en desarrollo -->
+    <webAppSecurity httpsRequired="false" ssoRequiresSSL="false"/>
+
     <httpEndpoint id="defaultHttpEndpoint"
                   httpPort="9080"
                   httpsPort="9443"/>
