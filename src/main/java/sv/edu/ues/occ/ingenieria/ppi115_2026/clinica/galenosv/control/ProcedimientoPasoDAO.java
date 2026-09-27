@@ -75,4 +75,31 @@ public class ProcedimientoPasoDAO
                 .setMaxResults(max)
                 .getResultList();
     }
+
+    /**
+     * Devuelve los pasos del procedimiento indicado, excluyendo el paso cuyo
+     * UUID se pase como {@code excluir} (para el caso de secuencias: no se puede
+     * crear una secuencia hacia sí mismo).
+     *
+     * @param idProcedimiento UUID del procedimiento padre
+     * @param excluir         UUID del paso que se excluye de la lista (puede ser null)
+     * @return lista de pasos del mismo procedimiento, sin el excluido
+     */
+    public java.util.List<ProcedimientoPaso> findByProcedimiento(
+            UUID idProcedimiento, UUID excluir) {
+        if (idProcedimiento == null) {
+            return java.util.Collections.emptyList();
+        }
+        String jpql = "SELECT pp FROM ProcedimientoPaso pp"
+                + " LEFT JOIN FETCH pp.idProcedimiento"
+                + " WHERE pp.idProcedimiento.idProcedimiento = :idProc"
+                + (excluir != null ? " AND pp.idProcedimientoPaso <> :excluir" : "")
+                + " ORDER BY pp.nombre";
+        var query = getEntityManager().createQuery(jpql, ProcedimientoPaso.class)
+                .setParameter("idProc", idProcedimiento);
+        if (excluir != null) {
+            query.setParameter("excluir", excluir);
+        }
+        return query.getResultList();
+    }
 }

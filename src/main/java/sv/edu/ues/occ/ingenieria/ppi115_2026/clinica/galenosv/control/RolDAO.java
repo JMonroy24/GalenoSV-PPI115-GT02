@@ -46,4 +46,17 @@ public class RolDAO extends DefaultDAO<Rol, UUID> implements Serializable {
                 .setMaxResults(max)
                 .getResultList();
     }
+
+    /**
+     * Devuelve todos los roles disponibles, para alimentar selectores de FK
+     * en formularios. Consulta específica sobre catálogo pequeño.
+     *
+     * @return lista de Rol ordenada por nombre
+     */
+    public java.util.List<Rol> findAllActivos() {
+        return getEntityManager().createQuery(
+                "SELECT r FROM Rol r ORDER BY r.nombre",
+                Rol.class)
+                .getResultList();
+    }
 }

@@ -50,4 +50,17 @@ public class ProcedimientoDAO
                 .setMaxResults(max)
                 .getResultList();
     }
+
+    /**
+     * Devuelve todos los procedimientos disponibles, para alimentar selectores de FK
+     * en formularios. Consulta específica sobre catálogo pequeño.
+     *
+     * @return lista de Procedimiento ordenada por nombre
+     */
+    public java.util.List<Procedimiento> findAllActivos() {
+        return getEntityManager().createQuery(
+                "SELECT p FROM Procedimiento p ORDER BY p.nombre",
+                Procedimiento.class)
+                .getResultList();
+    }
 }
