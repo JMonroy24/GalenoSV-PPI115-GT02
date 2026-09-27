@@ -39,6 +39,12 @@ public class ExamenTipoExamenDAO
         return em;
     }
 
+    @Override
+    protected java.util.List<String> getCamposBusqueda() {
+        return java.util.List.of("observaciones");
+    }
+
+
     /**
      * Obtiene los tipos asignados a un examen y carga el tipo necesario
      * para mostrar su nombre en la vista.
@@ -61,5 +67,14 @@ public class ExamenTipoExamenDAO
                 ));
 
         return em.createQuery(cq).getResultList();
+    }
+
+    public java.util.List<ExamenTipoExamen> buscarParaAutocompletar(String filtro, int max) {
+        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        return getEntityManager().createQuery(
+                "SELECT e FROM ExamenTipoExamen e",
+                ExamenTipoExamen.class)
+                .setMaxResults(max)
+                .getResultList();
     }
 }

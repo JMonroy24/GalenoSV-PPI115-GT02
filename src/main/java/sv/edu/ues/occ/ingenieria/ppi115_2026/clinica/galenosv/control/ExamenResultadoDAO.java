@@ -42,4 +42,13 @@ public class ExamenResultadoDAO extends DefaultDAO<ExamenResultado, UUID> implem
     protected List<String> getCamposBusqueda() {
         return List.of("resultado", "interpretacion");
     }
+
+    public java.util.List<ExamenResultado> buscarParaAutocompletar(String filtro, int max) {
+        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        return getEntityManager().createQuery(
+                "SELECT e FROM ExamenResultado e",
+                ExamenResultado.class)
+                .setMaxResults(max)
+                .getResultList();
+    }
 }

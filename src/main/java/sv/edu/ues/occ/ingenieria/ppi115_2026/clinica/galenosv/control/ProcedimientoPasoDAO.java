@@ -40,6 +40,12 @@ public class ProcedimientoPasoDAO
         return em;
     }
 
+    @Override
+    protected java.util.List<String> getCamposBusqueda() {
+        return java.util.List.of("nombre");
+    }
+
+
     /**
      * Lista los pasos con los datos necesarios para mostrar los nombres
      * de su procedimiento y rol en la tabla JSF.
@@ -59,5 +65,14 @@ public class ProcedimientoPasoDAO
         cq.select(paso);
 
         return em.createQuery(cq).getResultList();
+    }
+
+    public java.util.List<ProcedimientoPaso> buscarParaAutocompletar(String filtro, int max) {
+        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        return getEntityManager().createQuery(
+                "SELECT e FROM ProcedimientoPaso e",
+                ProcedimientoPaso.class)
+                .setMaxResults(max)
+                .getResultList();
     }
 }

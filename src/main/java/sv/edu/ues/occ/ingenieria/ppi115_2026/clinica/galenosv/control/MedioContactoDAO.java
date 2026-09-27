@@ -42,4 +42,13 @@ public class MedioContactoDAO extends DefaultDAO<MedioContacto, UUID> implements
     protected List<String> getCamposBusqueda() {
         return List.of("valor");
     }
+
+    public java.util.List<MedioContacto> buscarParaAutocompletar(String filtro, int max) {
+        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        return getEntityManager().createQuery(
+                "SELECT e FROM MedioContacto e",
+                MedioContacto.class)
+                .setMaxResults(max)
+                .getResultList();
+    }
 }

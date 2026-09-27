@@ -15,14 +15,14 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoMedio
  */
 @Named("tipoMedioContactoModel")
 @ViewScoped
-public class TipoMedioContactoModel extends Model<TipoMedioContacto, UUID> implements Serializable {
+public class TipoMedioContactoModel extends ModelTransaccional<TipoMedioContacto, UUID> implements Serializable {
 
     @Inject
     protected TipoMedioContactoDAO tipoMedioContactoDAO;
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override
@@ -32,7 +32,7 @@ public class TipoMedioContactoModel extends Model<TipoMedioContacto, UUID> imple
 
     @Override
     protected TipoMedioContacto crearNuevoRegistro() {
-        return new TipoMedioContacto();
+        return new TipoMedioContacto(UUID.randomUUID());
     }
 
     public TipoMedioContactoDAO getTipoMedioContactoDAO() {

@@ -39,6 +39,12 @@ public class ProcedimientoPasoSecuenciaDAO
         return em;
     }
 
+    @Override
+    protected java.util.List<String> getCamposBusqueda() {
+        return java.util.List.of("tipoSecuencia");
+    }
+
+
     /**
      * Consulta las relaciones de secuencia que parten del paso indicado.
      *
@@ -60,5 +66,14 @@ public class ProcedimientoPasoSecuenciaDAO
                 ));
 
         return em.createQuery(cq).getResultList();
+    }
+
+    public java.util.List<ProcedimientoPasoSecuencia> buscarParaAutocompletar(String filtro, int max) {
+        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        return getEntityManager().createQuery(
+                "SELECT e FROM ProcedimientoPasoSecuencia e",
+                ProcedimientoPasoSecuencia.class)
+                .setMaxResults(max)
+                .getResultList();
     }
 }

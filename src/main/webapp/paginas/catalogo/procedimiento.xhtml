@@ -10,7 +10,7 @@
     <ui:define name="titulo">Procedimientos</ui:define>
 
     <ui:define name="contenido">
-        <crud:crudCatalogo model="#{procedimientoModel}"
+        <crud:crudTransaccional model="#{procedimientoModel}" lazyModel="#{procedimientoModel.lazyModel}"
                            titulo="Procedimientos">
 
             <p:column headerText="Nombre">
@@ -45,7 +45,7 @@
                                  autoResize="false"/>
             </f:facet>
 
-        </crud:crudCatalogo>
+        </crud:crudTransaccional>
     </ui:define>
 
 </ui:composition>

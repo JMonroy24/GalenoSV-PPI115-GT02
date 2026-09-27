@@ -32,7 +32,7 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
 
     @Override
     protected Persona crearNuevoRegistro() {
-        return new Persona();
+        return new Persona(UUID.randomUUID());
     }
 
     public PersonaDAO getPersonaDAO() {

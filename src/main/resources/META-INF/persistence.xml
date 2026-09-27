@@ -27,9 +27,9 @@
       <property name="jakarta.persistence.schema-generation.database.action" value="none"/>
       <property name="eclipselink.target-database" value="sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.persistence.PostgresUuidPlatform"/>
       <property name="eclipselink.session.customizer" value="sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.persistence.UuidFieldSessionCustomizer"/>
-      <property name="eclipselink.logging.level" value="FINE"/>
-      <property name="eclipselink.logging.parameters" value="true"/>
-      <property name="eclipselink.logging.sql" value="true"/>
+      <property name="eclipselink.logging.level" value="INFO"/>
+      <property name="eclipselink.logging.parameters" value="false"/>
+      <property name="eclipselink.logging.sql" value="false"/>
     </properties>
   </persistence-unit>
 </persistence>

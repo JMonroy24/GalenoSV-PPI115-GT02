@@ -7,57 +7,49 @@
                 xmlns:p="http://primefaces.org/ui"
                 xmlns:crud="jakarta.faces.composite/crud">
 
-    <ui:define name="titulo">Documentos de Persona</ui:define>
+    <ui:define name="titulo">Medios de Contacto</ui:define>
 
     <ui:define name="contenido">
         
-        <crud:crudTransaccional model="#{documentoModel}"
-                                lazyModel="#{documentoModel.lazyModel}"
-                                titulo="Documentos">
+        <crud:crudTransaccional model="#{medioContactoModel}"
+                                lazyModel="#{medioContactoModel.lazyModel}"
+                                titulo="Medios de Contacto">
                                 
             <p:column headerText="Persona">
                 <h:outputText value="#{registro.idPersona.nombres} #{registro.idPersona.apellidos}"/>
             </p:column>
             
-            <p:column headerText="Tipo de Documento">
-                <h:outputText value="#{registro.idTipoDocumento.nombre}"/>
+            <p:column headerText="Tipo">
+                <h:outputText value="#{registro.idTipoMedioContacto.nombre}"/>
             </p:column>
             
-            <p:column headerText="Valor (Número)">
+            <p:column headerText="Valor">
                 <h:outputText value="#{registro.valor}"/>
             </p:column>
             
-            <p:column headerText="Ruta Física">
-                <h:outputText value="#{registro.rutaFisica}"/>
-            </p:column>
-
-
             <f:facet name="formulario">
                 <h:panelGrid columns="2" cellpadding="7" columnClasses="ui-grid-col-4,ui-grid-col-8" style="width:100%">
                 
                 <p:outputLabel value="Persona:" for="idPersona"/>
-                <p:autoComplete id="idPersona" value="#{documentoModel.registroActual.idPersona}"
-                                completeMethod="#{documentoModel.completePersona}"
+                <p:autoComplete id="idPersona" value="#{medioContactoModel.registroActual.idPersona}"
+                                completeMethod="#{medioContactoModel.completePersona}"
                                 var="p" itemLabel="#{p.nombres} #{p.apellidos}" itemValue="#{p}"
                                 converter="#{entityConverter}"
                                 forceSelection="true" required="true" scrollHeight="250"
                                 placeholder="Escriba un nombre para buscar..."/>
                 
-                <p:outputLabel value="Tipo de Documento:" for="idTipoDocumento"/>
-                <p:selectOneMenu id="idTipoDocumento" value="#{documentoModel.registroActual.idTipoDocumento}"
+                <p:outputLabel value="Tipo de Medio:" for="idTipoMedioContacto"/>
+                <p:selectOneMenu id="idTipoMedioContacto" value="#{medioContactoModel.registroActual.idTipoMedioContacto}"
                                  converter="#{entityConverter}" required="true" filter="true">
                     <f:selectItem itemLabel="Seleccione un tipo..." itemValue="#{null}" noSelectionOption="true"/>
-                    <f:selectItems value="#{tipoDocumentoModel.registros}" var="td"
-                                   itemLabel="#{td.nombre}" itemValue="#{td}"/>
+                    <f:selectItems value="#{tipoMedioContactoModel.registros}" var="tmc"
+                                   itemLabel="#{tmc.nombre}" itemValue="#{tmc}"/>
                 </p:selectOneMenu>
                 
-                <p:outputLabel value="Valor del Documento:" for="valor"/>
-                <p:inputText id="valor" value="#{documentoModel.registroActual.valor}" required="true"/>
+                <p:outputLabel value="Valor:" for="valor"/>
+                <p:inputText id="valor" value="#{medioContactoModel.registroActual.valor}" required="true"/>
                 
-                <p:outputLabel value="Ruta Física:" for="rutaFisica"/>
-                <p:inputText id="rutaFisica" value="#{documentoModel.registroActual.rutaFisica}"/>
-                
-                            </h:panelGrid>
+                </h:panelGrid>
             </f:facet>
             
         </crud:crudTransaccional>

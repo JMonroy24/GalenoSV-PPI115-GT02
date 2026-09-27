@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition template="/WEB-INF/templates/template.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:crud="jakarta.faces.composite/crud">
+
+    <ui:define name="titulo">Roles</ui:define>
+
+    <ui:define name="contenido">
+        
+        <crud:crudTransaccional model="#{rolModel}" lazyModel="#{rolModel.lazyModel}"
+                                titulo="Roles">
+                                
+            <p:column headerText="Nombre">
+                <h:outputText value="#{registro.nombre}"/>
+            </p:column>
+            
+            <p:column headerText="Activo">
+                <h:outputText value="#{registro.activo ? 'Sí' : 'No'}"/>
+            </p:column>
+            
+            <p:column headerText="Observaciones">
+                <h:outputText value="#{registro.observaciones}"/>
+            </p:column>
+
+            <f:facet name="formulario">
+                <h:panelGrid columns="2" cellpadding="7" columnClasses="ui-grid-col-4,ui-grid-col-8" style="width:100%">
+                
+                <p:outputLabel value="Nombre:" for="nombre"/>
+                <p:inputText id="nombre" value="#{rolModel.registroActual.nombre}" required="true"/>
+                
+                <p:outputLabel value="Observaciones:" for="observaciones"/>
+                <p:inputTextarea id="observaciones" value="#{rolModel.registroActual.observaciones}"/>
+                
+                <p:outputLabel value="Activo:" for="activo"/>
+                <p:selectBooleanCheckbox id="activo" value="#{rolModel.registroActual.activo}"/>
+                
+                </h:panelGrid>
+            </f:facet>
+            
+        </crud:crudTransaccional>
+        
+    </ui:define>
+
+</ui:composition>

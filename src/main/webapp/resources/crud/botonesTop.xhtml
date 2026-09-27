@@ -25,7 +25,7 @@
                          update="#{cc.attrs.update}"
                          oncomplete="PF('#{cc.attrs.dialog}').show()"
                          disabled="#{cc.attrs.model.seleccion == null}"/>
-                          
+                         
         <p:commandButton value="Eliminar" icon="pi pi-trash"
                          styleClass="ui-button-danger"
                          action="#{cc.attrs.model.eliminar(cc.attrs.model.seleccion)}"

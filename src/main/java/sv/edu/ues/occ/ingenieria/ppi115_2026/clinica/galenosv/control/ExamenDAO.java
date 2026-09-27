@@ -34,4 +34,19 @@ public class ExamenDAO extends DefaultDAO<Examen, UUID> implements Serializable 
     public EntityManager getEntityManager() {
         return em;
     }
+
+    @Override
+    protected java.util.List<String> getCamposBusqueda() {
+        return java.util.List.of("nombre");
+    }
+
+
+    public java.util.List<Examen> buscarParaAutocompletar(String filtro, int max) {
+        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        return getEntityManager().createQuery(
+                "SELECT e FROM Examen e",
+                Examen.class)
+                .setMaxResults(max)
+                .getResultList();
+    }
 }

@@ -33,6 +33,12 @@ public class PersonaRolDAO extends DefaultDAO<PersonaRol, UUID> implements Seria
         return em;
     }
 
+    @Override
+    protected java.util.List<String> getCamposBusqueda() {
+        return java.util.List.of("id");
+    }
+
+
     /**
      * Busca registros para autocompletado (p:autoComplete), sin distinguir mayúsculas.
      *

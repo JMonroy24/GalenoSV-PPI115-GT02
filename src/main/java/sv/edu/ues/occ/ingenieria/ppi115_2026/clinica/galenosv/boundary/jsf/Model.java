@@ -210,8 +210,8 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
             return "Uno de los campos excede la longitud máxima permitida.";
         }
 
-        // ── Genérico con detalle (truncado a 200 chars) ──
-        return "Error al procesar: " + (msg.length() > 200 ? msg.substring(0, 200) + "…" : msg);
+        // ── Error genérico sin detalles internos ──
+        return "No fue posible completar la operación. Intente nuevamente o contacte al administrador.";
     }
     
     private String formatearViolacion(ConstraintViolation<?> v) {

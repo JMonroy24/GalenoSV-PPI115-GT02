@@ -15,14 +15,14 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol;
  */
 @Named("rolModel")
 @ViewScoped
-public class RolModel extends Model<Rol, UUID> implements Serializable {
+public class RolModel extends ModelTransaccional<Rol, UUID> implements Serializable {
 
     @Inject
     protected RolDAO rolDAO;
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override
@@ -32,7 +32,7 @@ public class RolModel extends Model<Rol, UUID> implements Serializable {
 
     @Override
     protected Rol crearNuevoRegistro() {
-        return new Rol();
+        return new Rol(UUID.randomUUID());
     }
 
     public RolDAO getRolDAO() {

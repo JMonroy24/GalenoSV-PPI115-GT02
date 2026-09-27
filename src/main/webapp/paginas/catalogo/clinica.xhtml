@@ -11,7 +11,7 @@
 
     <ui:define name="contenido">
 
-        <crud:crudCatalogo model="#{clinicaModel}" titulo="Clínicas">
+        <crud:crudTransaccional model="#{clinicaModel}" lazyModel="#{clinicaModel.lazyModel}" titulo="Clínicas">
 
             <!-- Columnas de la tabla -->
             <p:column headerText="Nombre" sortBy="#{registro.nombre}" filterBy="#{registro.nombre}">
@@ -60,7 +60,7 @@
 
             </f:facet>
 
-        </crud:crudCatalogo>
+        </crud:crudTransaccional>
 
     </ui:define>
 

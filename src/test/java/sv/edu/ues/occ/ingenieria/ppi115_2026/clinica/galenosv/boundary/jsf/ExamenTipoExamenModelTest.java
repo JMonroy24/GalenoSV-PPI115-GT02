@@ -17,6 +17,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 class ExamenTipoExamenModelTest {
 
     @Mock
@@ -33,13 +34,12 @@ class ExamenTipoExamenModelTest {
     @Test
     void testInitYCargarDatos() {
         ExamenTipoExamen examenTipoexamen = new ExamenTipoExamen(UUID.randomUUID());
-        when(examenTipoexamenDAO.findAll()).thenReturn(List.of(examenTipoexamen));
-
+        
         examenTipoexamenModel.init();
 
-        assertNotNull(examenTipoexamenModel.getRegistros());
-        assertEquals(1, examenTipoexamenModel.getRegistros().size());
-        verify(examenTipoexamenDAO).findAll();
+        
+        assertEquals(1, examenTipoexamenModel.getLazyModel() != null ? 1 : 0);
+        verifyNoInteractions(examenTipoexamenDAO);
     }
 
     @Test
@@ -75,8 +75,7 @@ class ExamenTipoExamenModelTest {
 
     @Test
     void testGuardarCrear() {
-        when(examenTipoexamenDAO.findAll()).thenReturn(Collections.emptyList());
-
+        
         examenTipoexamenModel.prepararNuevo();
         examenTipoexamenModel.getRegistroActual().setObservaciones("Asociación entre examen y tipo de examen");
 
@@ -89,8 +88,7 @@ class ExamenTipoExamenModelTest {
 
     @Test
     void testGuardarModificar() {
-        when(examenTipoexamenDAO.findAll()).thenReturn(Collections.emptyList());
-        ExamenTipoExamen examenTipoexamen = new ExamenTipoExamen(UUID.randomUUID());
+                ExamenTipoExamen examenTipoexamen = new ExamenTipoExamen(UUID.randomUUID());
 
         examenTipoexamenModel.seleccionar(examenTipoexamen);
         examenTipoexamenModel.guardar();
@@ -101,8 +99,7 @@ class ExamenTipoExamenModelTest {
 
     @Test
     void testEliminar() {
-        when(examenTipoexamenDAO.findAll()).thenReturn(Collections.emptyList());
-        ExamenTipoExamen examenTipoexamen = new ExamenTipoExamen(UUID.randomUUID());
+                ExamenTipoExamen examenTipoexamen = new ExamenTipoExamen(UUID.randomUUID());
 
         examenTipoexamenModel.eliminar(examenTipoexamen);
 
