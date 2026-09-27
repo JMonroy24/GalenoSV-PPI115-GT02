@@ -44,6 +44,16 @@ public class ProcedimientoModel extends ModelTransaccional<Procedimiento, UUID>
         return new Procedimiento(UUID.randomUUID());
     }
 
+    /**
+     * Fuente de opciones para selectores de FK en otras vistas (p.ej. ProcedimientoPaso).
+     * Retorna todos los procedimientos disponibles sin cargar el modelo completo.
+     *
+     * @return lista de Procedimiento ordenada por nombre
+     */
+    public java.util.List<Procedimiento> getProcedimientosActivos() {
+        return procedimientoDAO.findAllActivos();
+    }
+
     public ProcedimientoDAO getProcedimientoDAO() {
         return procedimientoDAO;
     }

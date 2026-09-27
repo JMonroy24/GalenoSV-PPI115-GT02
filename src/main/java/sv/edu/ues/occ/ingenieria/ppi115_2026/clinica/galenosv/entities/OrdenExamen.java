@@ -26,7 +26,7 @@ import java.util.UUID;
     @NamedQuery(name = "OrdenExamen.findAll", query = "SELECT o FROM OrdenExamen o"),
     @NamedQuery(name = "OrdenExamen.findByFechaCreacion", query = "SELECT o FROM OrdenExamen o WHERE o.fechaCreacion = :fechaCreacion"),
     @NamedQuery(name = "OrdenExamen.findByIndicaciones", query = "SELECT o FROM OrdenExamen o WHERE o.indicaciones = :indicaciones")})
-public class OrdenExamen implements Serializable {
+public class OrdenExamen implements Serializable, IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -98,7 +98,12 @@ public class OrdenExamen implements Serializable {
         this.idConsultaProcedimientoPaso = idConsultaProcedimientoPaso;
     }
 
-    @Override
+        @Override
+    public String getIdKey() {
+        return idOrdenExamen != null ? idOrdenExamen.toString() : "";
+    }
+
+@Override
     public int hashCode() {
         int hash = 0;
         hash += (idOrdenExamen != null ? idOrdenExamen.hashCode() : 0);

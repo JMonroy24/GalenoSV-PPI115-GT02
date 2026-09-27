@@ -49,4 +49,17 @@ public class ExamenDAO extends DefaultDAO<Examen, UUID> implements Serializable 
                 .setMaxResults(max)
                 .getResultList();
     }
+
+    /**
+     * Devuelve todos los exámenes activos, para alimentar selectores de FK
+     * en formularios. Consulta específica sobre catálogo pequeño.
+     *
+     * @return lista de Examen con activo = true, ordenados por nombre
+     */
+    public java.util.List<Examen> findAllActivos() {
+        return getEntityManager().createQuery(
+                "SELECT e FROM Examen e WHERE e.activo = true ORDER BY e.nombre",
+                Examen.class)
+                .getResultList();
+    }
 }

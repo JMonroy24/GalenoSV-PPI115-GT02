@@ -8,10 +8,12 @@
       xmlns:pt="jakarta.faces.passthrough">
 
     <cc:interface>
-        <cc:attribute name="model" required="true" />
-        <cc:attribute name="lazyModel" required="true" />
-        <cc:attribute name="titulo" required="true" type="java.lang.String" />
+        <cc:attribute name="model"         required="true" />
+        <cc:attribute name="lazyModel"     required="true" />
+        <cc:attribute name="titulo"        required="true" type="java.lang.String" />
+        <cc:attribute name="anchoDialogo"  default="600"   type="java.lang.Integer" />
         <cc:facet     name="formulario" />
+        <cc:facet     name="relaciones" />
         <cc:facet     name="accionesExtra" />
     </cc:interface>
 
@@ -57,9 +59,9 @@
                              size="small"
                              selectionMode="single"
                              selection="#{cc.attrs.model.seleccion}"
-                             rowKey="#{registro.hashCode()}">
-                             
-                    <p:ajax event="rowSelect" update="@([id$=toolbarTop])"/>
+                             rowKey="#{registro.idKey}">
+
+                    <p:ajax event="rowSelect"   update="@([id$=toolbarTop])"/>
                     <p:ajax event="rowUnselect" update="@([id$=toolbarTop])"/>
 
                     <cc:insertChildren/>
@@ -71,7 +73,7 @@
                     </p:column>
                 </p:dataTable>
             </p:panel>
-            
+
             <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
                 <p:commandButton value="Sí" type="button"
                                  styleClass="ui-confirmdialog-yes ui-button-danger"
@@ -85,11 +87,26 @@
         <p:dialog header="#{cc.attrs.model.estadoCrear ? 'Nuevo' : 'Editar'} — #{cc.attrs.titulo}"
                   widgetVar="dlgFormularioTx"
                   modal="true" responsive="true"
-                  width="600" closable="true" appendTo="@(body)">
+                  width="#{cc.attrs.anchoDialogo}" closable="true" appendTo="@(body)">
             <h:form id="frmDialogo">
                 <p:outputPanel id="pnlFormulario">
                     <p:outputPanel rendered="#{cc.attrs.model.registroActual != null}">
-                        <cc:renderFacet name="formulario"/>
+
+                        <!-- Cuando hay facet relaciones: pestañas Formulario | Relaciones -->
+                        <p:tabView rendered="#{not empty cc.facets.relaciones}">
+                            <p:tab title="Formulario">
+                                <cc:renderFacet name="formulario"/>
+                            </p:tab>
+                            <p:tab title="Relaciones">
+                                <cc:renderFacet name="relaciones"/>
+                            </p:tab>
+                        </p:tabView>
+
+                        <!-- Sin relaciones: formulario directo (como antes) -->
+                        <p:outputPanel rendered="#{empty cc.facets.relaciones}">
+                            <cc:renderFacet name="formulario"/>
+                        </p:outputPanel>
+
                     </p:outputPanel>
 
                     <p:divider/>

@@ -28,7 +28,7 @@ import java.util.UUID;
     @NamedQuery(name = "Consulta.findByFechaFin", query = "SELECT c FROM Consulta c WHERE c.fechaFin = :fechaFin"),
     @NamedQuery(name = "Consulta.findByReferenciaExterna", query = "SELECT c FROM Consulta c WHERE c.referenciaExterna = :referenciaExterna"),
     @NamedQuery(name = "Consulta.findByObservaciones", query = "SELECT c FROM Consulta c WHERE c.observaciones = :observaciones")})
-public class Consulta implements Serializable {
+public class Consulta implements Serializable, IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -124,7 +124,12 @@ public class Consulta implements Serializable {
         this.consultaProcedimientoList = consultaProcedimientoList;
     }
 
-    @Override
+        @Override
+    public String getIdKey() {
+        return idConsulta != null ? idConsulta.toString() : "";
+    }
+
+@Override
     public int hashCode() {
         int hash = 0;
         hash += (idConsulta != null ? idConsulta.hashCode() : 0);

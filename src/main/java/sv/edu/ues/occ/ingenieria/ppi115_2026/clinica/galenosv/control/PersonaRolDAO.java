@@ -35,7 +35,11 @@ public class PersonaRolDAO extends DefaultDAO<PersonaRol, UUID> implements Seria
 
     @Override
     protected java.util.List<String> getCamposBusqueda() {
-        return java.util.List.of("id");
+        // PersonaRol no tiene campos String propios buscables directamente.
+        // La búsqueda por persona/rol/clínica se realiza vía buscarParaAutocompletar()
+        // con JOINs explícitos. Retornar lista vacía evita que DefaultDAO intente
+        // hacer root.get("id") (campo inexistente) en la Criteria API.
+        return java.util.Collections.emptyList();
     }
 
 
