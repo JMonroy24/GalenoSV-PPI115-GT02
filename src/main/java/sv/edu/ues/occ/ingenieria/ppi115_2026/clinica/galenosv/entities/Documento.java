@@ -21,7 +21,7 @@ import java.util.UUID;
     @NamedQuery(name = "Documento.findAll", query = "SELECT d FROM Documento d"),
     @NamedQuery(name = "Documento.findByValor", query = "SELECT d FROM Documento d WHERE d.valor = :valor"),
     @NamedQuery(name = "Documento.findByRutaFisica", query = "SELECT d FROM Documento d WHERE d.rutaFisica = :rutaFisica")})
-public class Documento implements Serializable {
+public class Documento implements Serializable, IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -94,7 +94,12 @@ public class Documento implements Serializable {
         this.idTipoDocumento = idTipoDocumento;
     }
 
-    @Override
+        @Override
+    public String getIdKey() {
+        return idDocumento != null ? idDocumento.toString() : "";
+    }
+
+@Override
     public int hashCode() {
         int hash = 0;
         hash += (idDocumento != null ? idDocumento.hashCode() : 0);

@@ -35,6 +35,16 @@ public class RolModel extends ModelTransaccional<Rol, UUID> implements Serializa
         return new Rol(UUID.randomUUID());
     }
 
+    /**
+     * Fuente de opciones para selectores de FK en otras vistas.
+     * Retorna todos los roles disponibles, sin cargar el modelo completo.
+     *
+     * @return lista de Rol ordenada por nombre
+     */
+    public java.util.List<Rol> getRolesActivos() {
+        return rolDAO.findAllActivos();
+    }
+
     public RolDAO getRolDAO() {
         return rolDAO;
     }

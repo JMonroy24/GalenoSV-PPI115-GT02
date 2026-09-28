@@ -22,7 +22,7 @@ import java.util.UUID;
     @NamedQuery(name = "Examen.findByNombre", query = "SELECT e FROM Examen e WHERE e.nombre = :nombre"),
     @NamedQuery(name = "Examen.findByActivo", query = "SELECT e FROM Examen e WHERE e.activo = :activo"),
     @NamedQuery(name = "Examen.findByObservaciones", query = "SELECT e FROM Examen e WHERE e.observaciones = :observaciones")})
-public class Examen implements Serializable {
+public class Examen implements Serializable, IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -104,7 +104,12 @@ public class Examen implements Serializable {
         this.procedimientoPasoExamenList = procedimientoPasoExamenList;
     }
 
-    @Override
+        @Override
+    public String getIdKey() {
+        return idExamen != null ? idExamen.toString() : "";
+    }
+
+@Override
     public int hashCode() {
         int hash = 0;
         hash += (idExamen != null ? idExamen.hashCode() : 0);

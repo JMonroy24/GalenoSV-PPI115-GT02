@@ -182,14 +182,14 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
 
     /**
      * Devuelve los demás pasos del mismo procedimiento para elegir
-     * una referencia válida de secuencia.
+     * una referencia válida de secuencia. Consulta el DAO directamente
+     * porque en modelos transaccionales getRegistros() siempre es null.
      *
-     * @return pasos disponibles para relacionar
+     * @return pasos del mismo procedimiento, sin el paso actual
      */
     public List<ProcedimientoPaso> getPasosReferenciaDisponibles() {
         if (getRegistroActual() == null
-                || getRegistroActual().getIdProcedimiento() == null
-                || getRegistros() == null) {
+                || getRegistroActual().getIdProcedimiento() == null) {
             return Collections.emptyList();
         }
 
@@ -197,14 +197,7 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
                 .getIdProcedimiento().getIdProcedimiento();
         UUID idPasoActual = getRegistroActual().getIdProcedimientoPaso();
 
-        return getRegistros().stream()
-                .filter(paso -> paso.getIdProcedimiento() != null)
-                .filter(paso -> Objects.equals(
-                        paso.getIdProcedimiento().getIdProcedimiento(),
-                        idProcedimiento))
-                .filter(paso -> !Objects.equals(
-                        paso.getIdProcedimientoPaso(), idPasoActual))
-                .toList();
+        return procedimientoPasoDAO.findByProcedimiento(idProcedimiento, idPasoActual);
     }
 
     /**

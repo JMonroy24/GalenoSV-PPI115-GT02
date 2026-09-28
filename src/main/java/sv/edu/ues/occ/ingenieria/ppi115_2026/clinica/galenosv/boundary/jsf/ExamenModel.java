@@ -193,4 +193,14 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
     public void setExamenDAO(ExamenDAO examenDAO) {
         this.examenDAO = examenDAO;
     }
+
+    /**
+     * Fuente de opciones para selectores de FK en otras vistas (p.ej. ProcedimientoPaso).
+     * Retorna solo los exámenes activos sin cargar el modelo completo.
+     *
+     * @return lista de Examen con activo = true, ordenados por nombre
+     */
+    public java.util.List<Examen> getExamenesActivos() {
+        return examenDAO.findAllActivos();
+    }
 }

@@ -35,6 +35,16 @@ public class TipoExamenModel extends ModelTransaccional<TipoExamen, UUID> implem
         return new TipoExamen(UUID.randomUUID());
     }
 
+    /**
+     * Fuente de opciones para selectores de FK en otras vistas.
+     * Retorna solo los tipos de examen activos, sin cargar el modelo completo.
+     *
+     * @return lista de TipoExamen activos ordenados por nombre
+     */
+    public java.util.List<TipoExamen> getTiposActivos() {
+        return tipoExamenDAO.findAllActivos();
+    }
+
     public TipoExamenDAO getTipoExamenDAO() {
         return tipoExamenDAO;
     }
