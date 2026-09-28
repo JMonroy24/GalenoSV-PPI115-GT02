@@ -6,6 +6,7 @@ import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortMeta;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.IdentificableEntity;
 
 /**
  * DataModel genérico para paginación server-side y búsqueda con PrimeFaces.
@@ -64,19 +65,25 @@ public class GenericLazyDataModel<T> extends LazyDataModel<T> {
 
     /**
      * Clave de fila para PrimeFaces (selection + lazy).
-     * Debe coincidir con rowKey="#{registro.hashCode()}" en los composites CRUD.
+     * Debe coincidir con rowKey="#{registro.idKey}" en los composites CRUD.
+     *
+     * Usa IdentificableEntity.getIdKey() (el UUID de la PK) en vez de
+     * hashCode(), que es inestable entre recargas y puede colisionar.
+     * Se mantiene un respaldo con hashCode() solo por seguridad, por si
+     * algún T no implementara la interfaz.
      */
     @Override
     public String getRowKey(T object) {
-        if (object == null) {
-            return null;
+        if (object instanceof IdentificableEntity ie) {
+            return ie.getIdKey();
         }
-        return String.valueOf(object.hashCode());
+        return object == null ? null : String.valueOf(object.hashCode());
     }
 
     /**
      * Resuelve la entidad a partir de la clave de fila generada por getRowKey.
-     * Busca en la página actualmente cargada (wrapped data).
+     * Busca en la página actualmente cargada (wrapped data), comparando
+     * por idKey para que coincida con el rowKey real usado en la vista.
      */
     @Override
     public T getRowData(String rowKey) {
@@ -86,7 +93,7 @@ public class GenericLazyDataModel<T> extends LazyDataModel<T> {
         List<T> data = getWrappedData();
         if (data != null) {
             for (T item : data) {
-                if (item != null && rowKey.equals(String.valueOf(item.hashCode()))) {
+                if (item instanceof IdentificableEntity ie && rowKey.equals(ie.getIdKey())) {
                     return item;
                 }
             }
