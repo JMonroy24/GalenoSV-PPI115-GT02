@@ -42,6 +42,14 @@
             <p:column headerText="Observaciones">
                 <h:outputText value="#{registro.observaciones}"/>
             </p:column>
+            
+             <f:facet name="accionesExtra">
+    <p:button outcome="/paginas/clinica/consultaProcedimiento"
+              icon="pi pi-arrow-right"
+              title="Ver procedimientos de esta consulta">
+        <f:param name="idConsulta" value="#{registro.idConsulta}"/>
+    </p:button>
+</f:facet>
 
             <f:facet name="formulario">
 
