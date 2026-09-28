@@ -42,21 +42,26 @@ public class ConsultaProcedimientoModel extends ModelTransaccional<ConsultaProce
     }
 
 private void leerConsultaDesdeUrl() {
-    if (FacesContext.getCurrentInstance() == null) {
-        return;
-    }
-    String idConsultaParam = FacesContext.getCurrentInstance()
-            .getExternalContext()
-            .getRequestParameterMap()
-            .get("idConsulta");
+    try {
+        FacesContext fc = FacesContext.getCurrentInstance();
+        if (fc == null) {
+            return;
+        }
+        String idConsultaParam = fc.getExternalContext()
+                .getRequestParameterMap()
+                .get("idConsulta");
 
-    if (idConsultaParam != null && !idConsultaParam.isBlank()) {
-        try {
+        if (idConsultaParam != null && !idConsultaParam.isBlank()) {
             UUID idConsulta = UUID.fromString(idConsultaParam.trim());
             consultaPreseleccionada = consultaDAO.findById(idConsulta);
-        } catch (IllegalArgumentException ex) {
-            consultaPreseleccionada = null;
         }
+    } catch (IllegalArgumentException ex) {
+        // parámetro con formato inválido
+        consultaPreseleccionada = null;
+    } catch (LinkageError ex) {
+        // FacesContext no resuelve fuera de un contenedor JSF real
+        // (por ejemplo, en pruebas unitarias con Mockito)
+        consultaPreseleccionada = null;
     }
 }
     @Override
