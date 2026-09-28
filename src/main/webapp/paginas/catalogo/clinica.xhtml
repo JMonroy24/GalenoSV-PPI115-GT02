@@ -14,11 +14,11 @@
         <crud:crudTransaccional model="#{clinicaModel}" lazyModel="#{clinicaModel.lazyModel}" titulo="Clínicas">
 
             <!-- Columnas de la tabla -->
-            <p:column headerText="Nombre" sortBy="#{registro.nombre}" filterBy="#{registro.nombre}">
+            <p:column headerText="Nombre" sortBy="#{registro.nombre}">
                 <h:outputText value="#{registro.nombre}"/>
             </p:column>
 
-            <p:column headerText="Tipo" width="120" sortBy="#{registro.tipo}" filterBy="#{registro.tipo}">
+            <p:column headerText="Tipo" width="120" sortBy="#{registro.tipo}">
                 <h:outputText value="#{registro.tipo}"/>
             </p:column>
 

@@ -51,7 +51,11 @@ public class PersonaRolDAO extends DefaultDAO<PersonaRol, UUID> implements Seria
      * @return lista de coincidencias
      */
     public List<PersonaRol> buscarParaAutocompletar(String filtro, int max) {
-        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        if (filtro == null) {
+            filtro = "";
+        }
+        String textoLimpio = filtro.replace("—", " ").replace("-", " ").replaceAll("\\s+", " ").trim().toLowerCase();
+        String patron = "%" + textoLimpio + "%";
         return getEntityManager().createQuery(
                 "SELECT pr FROM PersonaRol pr"
                 + " LEFT JOIN pr.idPersona p"
@@ -60,7 +64,9 @@ public class PersonaRolDAO extends DefaultDAO<PersonaRol, UUID> implements Seria
                 + " WHERE LOWER(p.nombres) LIKE :patron"
                 + " OR LOWER(p.apellidos) LIKE :patron"
                 + " OR LOWER(r.nombre) LIKE :patron"
-                + " OR LOWER(c.nombre) LIKE :patron",
+                + " OR LOWER(c.nombre) LIKE :patron"
+                + " OR LOWER(CONCAT(p.nombres, ' ', p.apellidos)) LIKE :patron"
+                + " OR LOWER(CONCAT(p.nombres, ' ', p.apellidos, ' ', r.nombre)) LIKE :patron",
                 PersonaRol.class)
                 .setParameter("patron", patron)
                 .setMaxResults(max)
