@@ -7,44 +7,41 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.io.Serializable;
 import java.util.UUID;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "documento")
-@NamedQueries({
-    @NamedQuery(name = "Documento.findAll", query = "SELECT d FROM Documento d"),
-    @NamedQuery(name = "Documento.findByValor", query = "SELECT d FROM Documento d WHERE d.valor = :valor"),
-    @NamedQuery(name = "Documento.findByRutaFisica", query = "SELECT d FROM Documento d WHERE d.rutaFisica = :rutaFisica")})
-public class Documento implements Serializable, IdentificableEntity {
+public class Documento extends EntidadVersionada implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
+    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
-    @NotNull
     @Column(name = "id_documento")
     private UUID idDocumento;
 
-    @Size(max = 2147483647)
-    @Column(name = "valor")
+    @NotBlank(message = "{documento.valor.obligatorio}")
+    @Size(max = 50, message = "{documento.valor.longitud}")
+    @Column(name = "valor", nullable = false, length = 50)
     private String valor;
 
-    @Size(max = 2147483647)
-    @Column(name = "ruta_fisica")
+    @Size(max = 500, message = "{documento.rutaFisica.longitud}")
+    @Column(name = "ruta_fisica", length = 500)
     private String rutaFisica;
 
-    @JoinColumn(name = "id_persona", referencedColumnName = "id_persona")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull(message = "{documento.idPersona.obligatorio}")
+    @JoinColumn(name = "id_persona", referencedColumnName = "id_persona", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Persona idPersona;
 
-    @JoinColumn(name = "id_tipo_documento", referencedColumnName = "id_tipo_documento")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull(message = "{documento.idTipoDocumento.obligatorio}")
+    @JoinColumn(name = "id_tipo_documento", referencedColumnName = "id_tipo_documento", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private TipoDocumento idTipoDocumento;
 
     public Documento() {
@@ -94,12 +91,12 @@ public class Documento implements Serializable, IdentificableEntity {
         this.idTipoDocumento = idTipoDocumento;
     }
 
-        @Override
+    @Override
     public String getIdKey() {
         return idDocumento != null ? idDocumento.toString() : "";
     }
 
-@Override
+    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idDocumento != null ? idDocumento.hashCode() : 0);

@@ -31,13 +31,10 @@ public class OrdenExamenModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        // Now it uses inicializarLazyModel() which initializes lazyModel instead of registros
-        
-        // Let's call init or anything, maybe it will just initialize lazy model
-        try {
-            // We just ensure it runs without exception
-            // We cannot test getLazyModel() != null ? 1 : 0 easily because it uses lazy model
-        } catch (Exception e) {}
+        ordenExamenModel.init();
+        assertNotNull(ordenExamenModel.getLazyModel());
+        assertNull(ordenExamenModel.getRegistros());
+
     }
 
     @Test
@@ -74,6 +71,8 @@ public class OrdenExamenModelTest {
         ordenExamenModel.prepararNuevo();
         ordenExamenModel.getRegistroActual().setIndicaciones("Realizar examen de sangre");
 
+        ordenExamenModel.getRegistroActual().setIndicaciones("Tomar muestra");
+        ordenExamenModel.getRegistroActual().setIdConsultaProcedimientoPaso(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimientoPaso(UUID.randomUUID()));
         ordenExamenModel.guardar();
 
         verify(ordenExamenDAO).create(any(OrdenExamen.class));
@@ -86,6 +85,8 @@ public class OrdenExamenModelTest {
         OrdenExamen oe = new OrdenExamen(UUID.randomUUID());
         ordenExamenModel.seleccionar(oe);
 
+        ordenExamenModel.getRegistroActual().setIndicaciones("Tomar muestra");
+        ordenExamenModel.getRegistroActual().setIdConsultaProcedimientoPaso(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimientoPaso(UUID.randomUUID()));
         ordenExamenModel.guardar();
 
         verify(ordenExamenDAO).update(oe);

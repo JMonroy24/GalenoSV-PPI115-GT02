@@ -70,12 +70,24 @@ public class ProcedimientoPasoExamenDAO
         return em.createQuery(cq).getResultList();
     }
 
-    public java.util.List<ProcedimientoPasoExamen> buscarParaAutocompletar(String filtro, int max) {
-        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
-        return getEntityManager().createQuery(
-                "SELECT e FROM ProcedimientoPasoExamen e",
-                ProcedimientoPasoExamen.class)
-                .setMaxResults(max)
-                .getResultList();
+
+    @Override
+    protected java.util.List<String> getRelacionesCarga() {
+        return java.util.List.of("idProcedimientoPaso.idProcedimiento", "idExamen");
+    }
+
+    public boolean existePasoExamen(UUID idPaso, UUID idExamen) {
+        return existePasoExamen(idPaso, idExamen, null);
+    }
+
+    public boolean existePasoExamen(UUID idPaso, UUID idExamen, UUID excluirId) {
+        if (idPaso == null || idExamen == null) return false;
+        String jpql = "SELECT COUNT(p) FROM ProcedimientoPasoExamen p"
+                + " WHERE p.idProcedimientoPaso.idProcedimientoPaso = :paso AND p.idExamen.idExamen = :examen"
+                + (excluirId == null ? "" : " AND p.idProcedimientoPasoExamen <> :excluir");
+        var query = getEntityManager().createQuery(jpql, Long.class)
+                .setParameter("paso", idPaso).setParameter("examen", idExamen);
+        if (excluirId != null) query.setParameter("excluir", excluirId);
+        return query.getSingleResult() > 0;
     }
 }

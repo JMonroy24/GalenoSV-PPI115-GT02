@@ -33,13 +33,10 @@ public class ClinicaModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        // Now it uses inicializarLazyModel() which initializes lazyModel instead of registros
-        
-        // Let's call init or anything, maybe it will just initialize lazy model
-        try {
-            // We just ensure it runs without exception
-            // We cannot test getLazyModel() != null ? 1 : 0 easily because it uses lazy model
-        } catch (Exception e) {}
+        clinicaModel.init();
+        assertNotNull(clinicaModel.getLazyModel());
+        assertNull(clinicaModel.getRegistros());
+
     }
 
     @Test
@@ -77,6 +74,7 @@ public class ClinicaModelTest {
         clinicaModel.prepararNuevo();
         clinicaModel.getRegistroActual().setNombre("Clinica Central");
 
+        clinicaModel.getRegistroActual().setNombre("Registro válido");
         clinicaModel.guardar();
 
         verify(clinicaDAO).create(any(Clinica.class));
@@ -90,6 +88,7 @@ public class ClinicaModelTest {
         Clinica c = new Clinica(UUID.randomUUID());
         clinicaModel.seleccionar(c);
 
+        clinicaModel.getRegistroActual().setNombre("Registro válido");
         clinicaModel.guardar();
 
         verify(clinicaDAO).update(c);

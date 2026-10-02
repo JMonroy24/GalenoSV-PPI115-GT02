@@ -45,17 +45,36 @@ chmod 600 src/main/liberty/config/server.env
 
 ## Ejecución local
 
-Primero debe estar iniciado el contenedor de PostgreSQL:
+Copie `.env.example` a `.env`, asigne una contraseña local y cree PostgreSQL:
 
 ```bash
-docker start galenosv-grupo-db
+docker compose up -d --wait db
 ```
+
+Para una base nueva, configure `FLYWAY_URL` (por ejemplo
+`jdbc:postgresql://localhost:5432/galenoSV`), `FLYWAY_USER` y `FLYWAY_PASSWORD`
+en su entorno y aplique el esquema:
+
+```bash
+mvn flyway:migrate
+```
+
+Para una base existente, consulte primero [la guía de correcciones](docs/analisis-y-correcciones.md).
+El esquema inferido debe contrastarse con su DDL; no habilite un baseline automático.
+Antes de iniciar la aplicación debe estar aplicada la versión 3 del esquema,
+que incluye las columnas de concurrencia y la fecha de nacimiento sin hora.
 
 Después, desde la raíz del proyecto, iniciar Open Liberty:
 
 ```bash
 WLP_INSTALL_DIR=/opt/openliberty-26.0.0.8/wlp mvn -DskipTests liberty:dev
 ```
+
+En PowerShell, asigne `$env:WLP_INSTALL_DIR` a su instalación de Liberty y ejecute
+`mvn -DskipTests liberty:dev`. Los datos de conexión admiten
+`GALENOSV_DB_HOST`, `GALENOSV_DB_PORT`, `GALENOSV_DB_NAME` y `GALENOSV_DB_USER`
+en `server.env`; use la misma base y contraseña que en Compose.
+El WAR generado es `target/GalenoSV.war`.
 
 La aplicación queda disponible en:
 
@@ -96,6 +115,22 @@ Ejecutar las pruebas:
 ```bash
 mvn -Djacoco.skip=true test
 ```
+
+Verificación completa del WAR y umbral mínimo de cobertura de líneas (65 %):
+
+```bash
+mvn verify
+```
+
+Integración con PostgreSQL 15 real en un contenedor temporal independiente
+(requiere Docker en ejecución):
+
+```bash
+mvn -Pintegration verify
+```
+
+Este perfil falla si Docker no está disponible; no omite silenciosamente las pruebas.
+La integración continua ejecuta ese perfil y conserva los informes de pruebas y cobertura.
 
 Validar el estado del repositorio:
 

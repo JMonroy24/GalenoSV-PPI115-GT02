@@ -31,13 +31,10 @@ public class ExamenResultadoModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        // Now it uses inicializarLazyModel() which initializes lazyModel instead of registros
-        
-        // Let's call init or anything, maybe it will just initialize lazy model
-        try {
-            // We just ensure it runs without exception
-            // We cannot test getLazyModel() != null ? 1 : 0 easily because it uses lazy model
-        } catch (Exception e) {}
+        examenResultadoModel.init();
+        assertNotNull(examenResultadoModel.getLazyModel());
+        assertNull(examenResultadoModel.getRegistros());
+
     }
 
     @Test
@@ -74,6 +71,9 @@ public class ExamenResultadoModelTest {
         examenResultadoModel.prepararNuevo();
         examenResultadoModel.getRegistroActual().setResultado("Normal");
 
+        examenResultadoModel.getRegistroActual().setResultado("Resultado de prueba");
+        examenResultadoModel.getRegistroActual().setInterpretacion("Interpretación de prueba");
+        examenResultadoModel.getRegistroActual().setIdOrdenExamen(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExamen(UUID.randomUUID()));
         examenResultadoModel.guardar();
 
         verify(examenResultadoDAO).create(any(ExamenResultado.class));
@@ -86,6 +86,9 @@ public class ExamenResultadoModelTest {
         ExamenResultado er = new ExamenResultado(UUID.randomUUID());
         examenResultadoModel.seleccionar(er);
 
+        examenResultadoModel.getRegistroActual().setResultado("Resultado de prueba");
+        examenResultadoModel.getRegistroActual().setInterpretacion("Interpretación de prueba");
+        examenResultadoModel.getRegistroActual().setIdOrdenExamen(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExamen(UUID.randomUUID()));
         examenResultadoModel.guardar();
 
         verify(examenResultadoDAO).update(er);

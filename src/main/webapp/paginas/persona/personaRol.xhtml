@@ -19,11 +19,11 @@
                 <h:outputText value="#{registro.idPersona.nombres} #{registro.idPersona.apellidos}"/>
             </p:column>
             
-            <p:column headerText="Rol">
+            <p:column headerText="Rol" sortBy="#{registro.idRol.nombre}">
                 <h:outputText value="#{registro.idRol.nombre}"/>
             </p:column>
             
-            <p:column headerText="Clínica">
+            <p:column headerText="Clínica" sortBy="#{registro.idClinica.nombre}">
                 <h:outputText value="#{registro.idClinica.nombre}"/>
             </p:column>
 
@@ -36,21 +36,21 @@
                                 var="p" itemLabel="#{p.nombres} #{p.apellidos}" itemValue="#{p}"
                                 converter="#{entityConverter}"
                                 forceSelection="true" required="true" scrollHeight="250"
-                                placeholder="Escriba un nombre para buscar..."/>
+                                placeholder="Escriba un nombre para buscar..." label="Persona" requiredMessage="Complete el campo persona." minQueryLength="2"/>
                 
                 <p:outputLabel value="Rol:" for="idRol"/>
                 <p:selectOneMenu id="idRol" value="#{personaRolModel.registroActual.idRol}"
-                                 converter="#{entityConverter}" required="true" filter="true">
+                                 converter="#{entityConverter}" required="true" filter="true" label="Rol" requiredMessage="Complete el campo rol.">
                     <f:selectItem itemLabel="Seleccione un rol..." itemValue="#{null}" noSelectionOption="true"/>
-                    <f:selectItems value="#{rolModel.registros}" var="r"
+                    <f:selectItems value="#{rolModel.rolesActivos}" var="r"
                                    itemLabel="#{r.nombre}" itemValue="#{r}"/>
                 </p:selectOneMenu>
                 
                 <p:outputLabel value="Clínica:" for="idClinica"/>
                 <p:selectOneMenu id="idClinica" value="#{personaRolModel.registroActual.idClinica}"
-                                 converter="#{entityConverter}" filter="true">
+                                 converter="#{entityConverter}" filter="true" label="Clínica">
                     <f:selectItem itemLabel="Ninguna" itemValue="#{null}" noSelectionOption="true"/>
-                    <f:selectItems value="#{clinicaModel.registros}" var="c"
+                    <f:selectItems value="#{clinicaModel.activos}" var="c"
                                    itemLabel="#{c.nombre}" itemValue="#{c}"/>
                 </p:selectOneMenu>
                 

@@ -33,13 +33,10 @@ public class RolModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        // Now it uses inicializarLazyModel() which initializes lazyModel instead of registros
-        
-        // Let's call init or anything, maybe it will just initialize lazy model
-        try {
-            // We just ensure it runs without exception
-            // We cannot test getLazyModel() != null ? 1 : 0 easily because it uses lazy model
-        } catch (Exception e) {}
+        rolModel.init();
+        assertNotNull(rolModel.getLazyModel());
+        assertNull(rolModel.getRegistros());
+
     }
 
     @Test
@@ -77,6 +74,7 @@ public class RolModelTest {
         rolModel.prepararNuevo();
         rolModel.getRegistroActual().setNombre("Medico");
 
+        rolModel.getRegistroActual().setNombre("Registro válido");
         rolModel.guardar();
 
         verify(rolDAO).create(any(Rol.class));
@@ -90,6 +88,7 @@ public class RolModelTest {
         Rol r = new Rol(UUID.randomUUID());
         rolModel.seleccionar(r);
 
+        rolModel.getRegistroActual().setNombre("Registro válido");
         rolModel.guardar();
 
         verify(rolDAO).update(r);

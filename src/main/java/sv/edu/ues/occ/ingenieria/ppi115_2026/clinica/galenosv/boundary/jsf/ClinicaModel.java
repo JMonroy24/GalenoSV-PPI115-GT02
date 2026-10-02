@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -16,6 +18,8 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica;
 @Named("clinicaModel")
 @ViewScoped
 public class ClinicaModel extends ModelTransaccional<Clinica, UUID> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Inject
     protected ClinicaDAO clinicaDAO;
@@ -42,4 +46,17 @@ public class ClinicaModel extends ModelTransaccional<Clinica, UUID> implements S
     public void setClinicaDAO(ClinicaDAO clinicaDAO) {
         this.clinicaDAO = clinicaDAO;
     }
+
+    @Override
+    protected void validarNegocio(Clinica registro) {
+        registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre"));
+        if (clinicaDAO.existePorCampo("nombre", registro.getNombre(), registro.getIdClinica())) {
+            throw new ValidacionNegocioException("Ya existe un registro con este nombre.");
+        }
+    }
+
+    public java.util.List<Clinica> getActivos() {
+        return clinicaDAO.findAllActivos();
+    }
+
 }

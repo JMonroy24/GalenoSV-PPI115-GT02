@@ -24,20 +24,23 @@ public class ConsultaProcedimientoModelTest {
     @InjectMocks
     private ConsultaProcedimientoModel consultaProcedimientoModel;
 
+    private org.mockito.MockedStatic<jakarta.faces.context.FacesContext> faces;
+
+    @org.junit.jupiter.api.AfterEach
+    void closeFaces() { faces.close(); }
+
     @BeforeEach
     public void setUp() {
+        faces = mockStatic(jakarta.faces.context.FacesContext.class);
         consultaProcedimientoModel.setConsultaProcedimientoDAO(consultaProcedimientoDAO);
     }
 
     @Test
     public void testInitYCargarDatos() {
-        // Now it uses inicializarLazyModel() which initializes lazyModel instead of registros
-        
-        // Let's call init or anything, maybe it will just initialize lazy model
-        try {
-            // We just ensure it runs without exception
-            // We cannot test getLazyModel() != null ? 1 : 0 easily because it uses lazy model
-        } catch (Exception e) {}
+        consultaProcedimientoModel.init();
+        assertNotNull(consultaProcedimientoModel.getLazyModel());
+        assertNull(consultaProcedimientoModel.getRegistros());
+
     }
 
     @Test

@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -22,6 +24,9 @@ class ExamenTipoExamenModelTest {
 
     @Mock
     private ExamenTipoExamenDAO examenTipoexamenDAO;
+
+    @Mock
+    private AsignacionService asignacionService;
 
     @InjectMocks
     private ExamenTipoExamenModel examenTipoexamenModel;
@@ -81,7 +86,7 @@ class ExamenTipoExamenModelTest {
 
         examenTipoexamenModel.guardar();
 
-        verify(examenTipoexamenDAO).create(any(ExamenTipoExamen.class));
+        verify(asignacionService).guardarTipo(any(ExamenTipoExamen.class), eq(true));
         assertEquals(Estado.NINGUNO, examenTipoexamenModel.getEstado());
         assertNull(examenTipoexamenModel.getRegistroActual());
     }
@@ -93,7 +98,7 @@ class ExamenTipoExamenModelTest {
         examenTipoexamenModel.seleccionar(examenTipoexamen);
         examenTipoexamenModel.guardar();
 
-        verify(examenTipoexamenDAO).update(examenTipoexamen);
+        verify(asignacionService).guardarTipo(examenTipoexamen, false);
         assertEquals(Estado.NINGUNO, examenTipoexamenModel.getEstado());
     }
 

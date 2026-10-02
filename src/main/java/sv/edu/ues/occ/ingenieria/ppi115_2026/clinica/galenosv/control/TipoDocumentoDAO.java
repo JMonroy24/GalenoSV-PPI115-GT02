@@ -8,7 +8,7 @@ import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoDocumento;
 
 /**
- * Acceso a datos para la entidad .
+ * Acceso a datos para la entidad TipoDocumento.
  */
 @ApplicationScoped
 public class TipoDocumentoDAO extends DefaultDAO<TipoDocumento, UUID> implements Serializable {
@@ -38,12 +38,11 @@ public class TipoDocumentoDAO extends DefaultDAO<TipoDocumento, UUID> implements
     }
 
 
-    public java.util.List<TipoDocumento> buscarParaAutocompletar(String filtro, int max) {
-        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+
+    /** Catálogo activo, ordenado para los selectores de los formularios. */
+    public java.util.List<TipoDocumento> findAllActivos() {
         return getEntityManager().createQuery(
-                "SELECT e FROM TipoDocumento e",
-                TipoDocumento.class)
-                .setMaxResults(max)
-                .getResultList();
+                "SELECT e FROM TipoDocumento e WHERE e.activo = true ORDER BY e.nombre, e.idTipoDocumento",
+                TipoDocumento.class).getResultList();
     }
 }

@@ -1,5 +1,8 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.view.ViewScoped;
@@ -56,6 +59,9 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
     private ProcedimientoPaso pasoReferenciaSeleccionado;
     private String tipoSecuencia;
 
+    @Inject
+    protected AsignacionService asignacionService;
+
     @PostConstruct
     public void init() {
         inicializarLazyModel();
@@ -83,6 +89,7 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
      */
     @Override
     public void seleccionar(ProcedimientoPaso paso) {
+        if (paso == null) return;
         super.seleccionar(paso);
         UUID idPaso = paso.getIdProcedimientoPaso();
         examenesAsignados = procedimientoPasoExamenDAO.findByPaso(idPaso);
@@ -111,20 +118,9 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
      */
     public void agregarExamen() {
         if (!isEstadoModificar() || getRegistroActual() == null
-                || examenSeleccionado == null) {
+                || examenSeleccionado == null || examenSeleccionado.getIdExamen() == null) {
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Examen del paso",
                     "Seleccione un examen para un paso guardado.");
-            return;
-        }
-
-        UUID idExamen = examenSeleccionado.getIdExamen();
-        boolean yaAsignado = examenesAsignados.stream()
-                .anyMatch(asignacion -> asignacion.getIdExamen() != null
-                && idExamen.equals(asignacion.getIdExamen().getIdExamen()));
-
-        if (yaAsignado) {
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Examen del paso",
-                    "Este examen ya está asignado al paso.");
             return;
         }
 
@@ -137,13 +133,17 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
         asignacion.setObservaciones(observacionesExamen);
 
         try {
-            procedimientoPasoExamenDAO.create(asignacion);
+            asignacionService.guardarExamen(asignacion, true);
             examenesAsignados = procedimientoPasoExamenDAO.findByPaso(
                     getRegistroActual().getIdProcedimientoPaso());
             limpiarCamposExamen();
             agregarMensaje(FacesMessage.SEVERITY_INFO, "Examen del paso",
                     "Examen asignado correctamente.");
+        } catch (ValidacionNegocioException e) {
+            agregarMensaje(FacesMessage.SEVERITY_WARN, "Validación", e.getMessage());
+            marcarValidacionFallida();
         } catch (Exception e) {
+            marcarValidacionFallida();
             LOGGER.log(Level.SEVERE, "Error al asignar examen al paso", e);
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Examen del paso",
                     clasificarError(e));
@@ -173,7 +173,11 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
                     getRegistroActual().getIdProcedimientoPaso());
             agregarMensaje(FacesMessage.SEVERITY_INFO, "Examen del paso",
                     "Examen quitado correctamente.");
+        } catch (ValidacionNegocioException e) {
+            agregarMensaje(FacesMessage.SEVERITY_WARN, "Validación", e.getMessage());
+            marcarValidacionFallida();
         } catch (Exception e) {
+            marcarValidacionFallida();
             LOGGER.log(Level.SEVERE, "Error al quitar examen del paso", e);
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Examen del paso",
                     clasificarError(e));
@@ -210,14 +214,8 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
         if (idReferencia == null) {
             return "";
         }
-        if (getRegistros() != null) {
-            for (ProcedimientoPaso paso : getRegistros()) {
-                if (idReferencia.equals(paso.getIdProcedimientoPaso())) {
-                    return paso.getNombre();
-                }
-            }
-        }
-        return idReferencia.toString();
+        ProcedimientoPaso paso = procedimientoPasoDAO.findById(idReferencia);
+        return paso == null || paso.getNombre() == null ? idReferencia.toString() : paso.getNombre();
     }
 
     /**
@@ -233,35 +231,7 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
         }
 
         String tipo = tipoSecuencia.trim();
-        if (tipo.length() > 20) {
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Secuencia",
-                    "El tipo de secuencia no puede superar 20 caracteres.");
-            return;
-        }
-
-        UUID idReferencia =
-                pasoReferenciaSeleccionado.getIdProcedimientoPaso();
-        boolean referenciaValida = getPasosReferenciaDisponibles().stream()
-                .anyMatch(paso -> Objects.equals(
-                        paso.getIdProcedimientoPaso(), idReferencia));
-
-        if (!referenciaValida) {
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Secuencia",
-                    "El paso de referencia debe pertenecer al mismo procedimiento.");
-            return;
-        }
-
-        boolean yaExiste = secuencias.stream()
-                .anyMatch(secuencia -> Objects.equals(
-                        secuencia.getIdProcedimientoPasoReferencia(),
-                        idReferencia)
-                && tipo.equalsIgnoreCase(secuencia.getTipoSecuencia()));
-
-        if (yaExiste) {
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Secuencia",
-                    "Esta relación de secuencia ya existe.");
-            return;
-        }
+        UUID idReferencia = pasoReferenciaSeleccionado.getIdProcedimientoPaso();
 
         ProcedimientoPasoSecuencia secuencia =
                 new ProcedimientoPasoSecuencia(UUID.randomUUID());
@@ -270,13 +240,17 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
         secuencia.setTipoSecuencia(tipo);
 
         try {
-            procedimientoPasoSecuenciaDAO.create(secuencia);
+            asignacionService.guardarSecuencia(secuencia, true);
             secuencias = procedimientoPasoSecuenciaDAO.findByPaso(
                     getRegistroActual().getIdProcedimientoPaso());
             limpiarCamposSecuencia();
             agregarMensaje(FacesMessage.SEVERITY_INFO, "Secuencia",
                     "Secuencia agregada correctamente.");
+        } catch (ValidacionNegocioException e) {
+            agregarMensaje(FacesMessage.SEVERITY_WARN, "Validación", e.getMessage());
+            marcarValidacionFallida();
         } catch (Exception e) {
+            marcarValidacionFallida();
             LOGGER.log(Level.SEVERE, "Error al agregar secuencia", e);
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Secuencia",
                     clasificarError(e));
@@ -306,7 +280,11 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
                     getRegistroActual().getIdProcedimientoPaso());
             agregarMensaje(FacesMessage.SEVERITY_INFO, "Secuencia",
                     "Secuencia quitada correctamente.");
+        } catch (ValidacionNegocioException e) {
+            agregarMensaje(FacesMessage.SEVERITY_WARN, "Validación", e.getMessage());
+            marcarValidacionFallida();
         } catch (Exception e) {
+            marcarValidacionFallida();
             LOGGER.log(Level.SEVERE, "Error al quitar secuencia", e);
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Secuencia",
                     clasificarError(e));
@@ -386,4 +364,16 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
             ProcedimientoPasoDAO procedimientoPasoDAO) {
         this.procedimientoPasoDAO = procedimientoPasoDAO;
     }
+
+    @Override
+    protected void validarNegocio(ProcedimientoPaso registro) {
+        registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre del paso"));
+        var procedimiento = ValidadorComun.requerido(registro.getIdProcedimiento(), "Seleccione un procedimiento.");
+        ValidadorComun.requerido(procedimiento.getIdProcedimiento(), "Seleccione un procedimiento válido.");
+        if (procedimientoPasoDAO.existeNombreEnProcedimiento(procedimiento.getIdProcedimiento(),
+                registro.getNombre(), registro.getIdProcedimientoPaso())) {
+            throw new ValidacionNegocioException("Ya existe un paso con este nombre en el procedimiento.");
+        }
+    }
+
 }

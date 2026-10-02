@@ -13,7 +13,7 @@
         <crud:crudTransaccional model="#{procedimientoModel}" lazyModel="#{procedimientoModel.lazyModel}"
                            titulo="Procedimientos">
 
-            <p:column headerText="Nombre">
+            <p:column headerText="Nombre" sortBy="#{registro.nombre}">
                 <h:outputText value="#{registro.nombre}"/>
             </p:column>
 
@@ -21,7 +21,7 @@
                 <h:outputText value="#{registro.activo ? 'Sí' : 'No'}"/>
             </p:column>
 
-            <p:column headerText="Observaciones">
+            <p:column headerText="Observaciones" sortBy="#{registro.observaciones}">
                 <h:outputText value="#{registro.observaciones}"/>
             </p:column>
 
@@ -31,7 +31,7 @@
                              value="#{procedimientoModel.registroActual.nombre}"
                              required="true"
                              requiredMessage="Ingrese el nombre del procedimiento."
-                             maxlength="155"/>
+                             maxlength="155" label="Nombre"/>
 
                 <p:outputLabel for="activo" value="Activo:"/>
                 <p:selectBooleanCheckbox id="activo"
@@ -42,7 +42,7 @@
                 <p:inputTextarea id="observaciones"
                                  value="#{procedimientoModel.registroActual.observaciones}"
                                  rows="3"
-                                 autoResize="false"/>
+                                 autoResize="false" label="Observaciones" maxlength="2000"/>
             </f:facet>
 
         </crud:crudTransaccional>

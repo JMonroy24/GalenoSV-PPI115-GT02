@@ -26,7 +26,7 @@
                 <h:outputText value="#{registro.activo ? 'Sí' : 'No'}"/>
             </p:column>
 
-            <p:column headerText="Comentarios">
+            <p:column headerText="Comentarios" sortBy="#{registro.comentarios}">
                 <h:outputText value="#{registro.comentarios}"/>
             </p:column>
 
@@ -39,13 +39,13 @@
                              required="true"
                              requiredMessage="El nombre es obligatorio."
                              maxlength="255"
-                             placeholder="Nombre de la clínica"/>
+                             placeholder="Nombre de la clínica" label="Nombre"/>
 
                 <p:outputLabel value="Tipo:" for="tipo"/>
                 <p:inputText id="tipo"
                              value="#{clinicaModel.registroActual.tipo}"
                              maxlength="20"
-                             placeholder="Ej. GENERAL, ESPECIALIZADA"/>
+                             placeholder="Ej. GENERAL, ESPECIALIZADA" label="Tipo"/>
 
                 <p:outputLabel value="Activo:" for="activo"/>
                 <p:selectBooleanCheckbox id="activo"
@@ -56,7 +56,7 @@
                                  value="#{clinicaModel.registroActual.comentarios}"
                                  rows="4"
                                  autoResize="false"
-                                 placeholder="Observaciones adicionales..."/>
+                                 placeholder="Observaciones adicionales..." label="Comentarios" maxlength="2000"/>
 
             </f:facet>
 

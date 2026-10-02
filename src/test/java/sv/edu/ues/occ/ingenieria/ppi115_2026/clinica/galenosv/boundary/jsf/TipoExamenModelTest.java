@@ -33,13 +33,10 @@ public class TipoExamenModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        // Now it uses inicializarLazyModel() which initializes lazyModel instead of registros
-        
-        // Let's call init or anything, maybe it will just initialize lazy model
-        try {
-            // We just ensure it runs without exception
-            // We cannot test getLazyModel() != null ? 1 : 0 easily because it uses lazy model
-        } catch (Exception e) {}
+        tipoExamenModel.init();
+        assertNotNull(tipoExamenModel.getLazyModel());
+        assertNull(tipoExamenModel.getRegistros());
+
     }
 
     @Test
@@ -77,6 +74,7 @@ public class TipoExamenModelTest {
         tipoExamenModel.prepararNuevo();
         tipoExamenModel.getRegistroActual().setNombre("Hemograma");
 
+        tipoExamenModel.getRegistroActual().setNombre("Registro válido");
         tipoExamenModel.guardar();
 
         verify(tipoExamenDAO).create(any(TipoExamen.class));
@@ -90,6 +88,7 @@ public class TipoExamenModelTest {
         TipoExamen te = new TipoExamen(UUID.randomUUID());
         tipoExamenModel.seleccionar(te);
 
+        tipoExamenModel.getRegistroActual().setNombre("Registro válido");
         tipoExamenModel.guardar();
 
         verify(tipoExamenDAO).update(te);

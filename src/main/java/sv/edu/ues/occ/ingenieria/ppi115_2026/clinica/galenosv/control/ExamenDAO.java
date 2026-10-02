@@ -8,9 +8,9 @@ import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Examen;
 
 /**
- * Acceso a datos para la entidad .
+ * Acceso a datos para la entidad Examen.
  *
- * Hereda las operaciones CRUD proporcionadas por .
+ * Hereda las operaciones CRUD de DefaultDAO.
  */
 
 @ApplicationScoped
@@ -41,14 +41,6 @@ public class ExamenDAO extends DefaultDAO<Examen, UUID> implements Serializable 
     }
 
 
-    public java.util.List<Examen> buscarParaAutocompletar(String filtro, int max) {
-        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
-        return getEntityManager().createQuery(
-                "SELECT e FROM Examen e",
-                Examen.class)
-                .setMaxResults(max)
-                .getResultList();
-    }
 
     /**
      * Devuelve todos los exámenes activos, para alimentar selectores de FK

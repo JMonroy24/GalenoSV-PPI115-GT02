@@ -31,13 +31,10 @@ public class PersonaModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        // Now it uses inicializarLazyModel() which initializes lazyModel instead of registros
-        
-        // Let's call init or anything, maybe it will just initialize lazy model
-        try {
-            // We just ensure it runs without exception
-            // We cannot test getLazyModel() != null ? 1 : 0 easily because it uses lazy model
-        } catch (Exception e) {}
+        personaModel.init();
+        assertNotNull(personaModel.getLazyModel());
+        assertNull(personaModel.getRegistros());
+
     }
 
     @Test
@@ -74,6 +71,8 @@ public class PersonaModelTest {
         personaModel.prepararNuevo();
         personaModel.getRegistroActual().setNombres("Juan");
 
+        personaModel.getRegistroActual().setNombres("Ana");
+        personaModel.getRegistroActual().setApellidos("Pérez");
         personaModel.guardar();
 
         verify(personaDAO).create(any(Persona.class));
@@ -86,6 +85,8 @@ public class PersonaModelTest {
         Persona p = new Persona(UUID.randomUUID());
         personaModel.seleccionar(p);
 
+        personaModel.getRegistroActual().setNombres("Ana");
+        personaModel.getRegistroActual().setApellidos("Pérez");
         personaModel.guardar();
 
         verify(personaDAO).update(p);

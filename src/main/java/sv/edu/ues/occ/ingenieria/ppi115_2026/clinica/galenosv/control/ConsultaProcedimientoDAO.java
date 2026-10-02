@@ -46,20 +46,29 @@ public class ConsultaProcedimientoDAO extends DefaultDAO<ConsultaProcedimiento, 
      * @return lista de coincidencias
      */
     public List<ConsultaProcedimiento> buscarParaAutocompletar(String filtro, int max) {
-        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        String texto = normalizarFiltro(filtro);
+        if (texto == null || texto.length() < 2) {
+            return java.util.List.of();
+        }
+        String patron = patronBusqueda(texto);
         return getEntityManager().createQuery(
                 "SELECT cp FROM ConsultaProcedimiento cp"
-                + " LEFT JOIN cp.idProcedimiento proc"
-                + " LEFT JOIN cp.idConsulta c"
-                + " LEFT JOIN c.idPersonaRol pr"
-                + " LEFT JOIN pr.idPersona p"
-                + " WHERE LOWER(proc.nombre) LIKE :patron"
-                + " OR LOWER(p.nombres) LIKE :patron"
-                + " OR LOWER(p.apellidos) LIKE :patron"
-                + " ORDER BY cp.fechaInicio DESC",
+                + " LEFT JOIN FETCH cp.idProcedimiento proc"
+                + " LEFT JOIN FETCH cp.idConsulta c"
+                + " LEFT JOIN FETCH c.idPersonaRol pr"
+                + " LEFT JOIN FETCH pr.idPersona p"
+                + " WHERE LOWER(proc.nombre) LIKE :patron ESCAPE '\\'"
+                + " OR LOWER(p.nombres) LIKE :patron ESCAPE '\\'"
+                + " OR LOWER(p.apellidos) LIKE :patron ESCAPE '\\'"
+                + " ORDER BY cp.fechaInicio DESC, cp.idConsultaProcedimiento",
                 ConsultaProcedimiento.class)
                 .setParameter("patron", patron)
-                .setMaxResults(max)
+                .setMaxResults(limitarAutocompletado(max))
                 .getResultList();
+    }
+
+    @Override
+    protected java.util.List<String> getRelacionesCarga() {
+        return java.util.List.of("idConsulta.idPersonaRol.idPersona", "idConsulta.idPersonaRol.idRol", "idProcedimiento");
     }
 }

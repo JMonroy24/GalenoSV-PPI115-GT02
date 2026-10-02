@@ -8,9 +8,9 @@ import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Procedimiento;
 
 /**
- * Acceso a datos para la entidad .
+ * Acceso a datos para la entidad Procedimiento.
  *
- * Hereda las operaciones CRUD proporcionadas por .
+ * Hereda las operaciones CRUD de DefaultDAO.
  */
 @ApplicationScoped
 public class ProcedimientoDAO
@@ -42,14 +42,6 @@ public class ProcedimientoDAO
     }
 
 
-    public java.util.List<Procedimiento> buscarParaAutocompletar(String filtro, int max) {
-        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
-        return getEntityManager().createQuery(
-                "SELECT e FROM Procedimiento e",
-                Procedimiento.class)
-                .setMaxResults(max)
-                .getResultList();
-    }
 
     /**
      * Devuelve todos los procedimientos disponibles, para alimentar selectores de FK
@@ -59,7 +51,7 @@ public class ProcedimientoDAO
      */
     public java.util.List<Procedimiento> findAllActivos() {
         return getEntityManager().createQuery(
-                "SELECT p FROM Procedimiento p ORDER BY p.nombre",
+                "SELECT p FROM Procedimiento p WHERE p.activo = true ORDER BY p.nombre",
                 Procedimiento.class)
                 .getResultList();
     }

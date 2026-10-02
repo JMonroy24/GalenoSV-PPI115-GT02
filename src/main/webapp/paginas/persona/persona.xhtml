@@ -15,17 +15,17 @@
                                 lazyModel="#{personaModel.lazyModel}"
                                 titulo="Personas">
                                 
-            <p:column headerText="Nombres">
+            <p:column headerText="Nombres" sortBy="#{registro.nombres}">
                 <h:outputText value="#{registro.nombres}"/>
             </p:column>
             
-            <p:column headerText="Apellidos">
+            <p:column headerText="Apellidos" sortBy="#{registro.apellidos}">
                 <h:outputText value="#{registro.apellidos}"/>
             </p:column>
             
-            <p:column headerText="Fecha de Nacimiento">
+            <p:column headerText="Fecha de Nacimiento" sortBy="#{registro.fechaNacimiento}">
                 <h:outputText value="#{registro.fechaNacimiento}">
-                    <f:convertDateTime pattern="dd/MM/yyyy"/>
+                    <f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/>
                 </h:outputText>
             </p:column>
 
@@ -33,13 +33,13 @@
                 <h:panelGrid columns="2" cellpadding="7" columnClasses="ui-grid-col-4,ui-grid-col-8" style="width:100%">
                 
                 <p:outputLabel value="Nombres:" for="nombres"/>
-                <p:inputText id="nombres" value="#{personaModel.registroActual.nombres}" required="true"/>
+                <p:inputText id="nombres" value="#{personaModel.registroActual.nombres}" required="true" label="Nombres" requiredMessage="Complete el campo nombres." maxlength="255"/>
                 
                 <p:outputLabel value="Apellidos:" for="apellidos"/>
-                <p:inputText id="apellidos" value="#{personaModel.registroActual.apellidos}" required="true"/>
+                <p:inputText id="apellidos" value="#{personaModel.registroActual.apellidos}" required="true" label="Apellidos" requiredMessage="Complete el campo apellidos." maxlength="255"/>
                 
                 <p:outputLabel value="Fecha de Nacimiento:" for="fechaNacimiento"/>
-                <p:datePicker id="fechaNacimiento" value="#{personaModel.registroActual.fechaNacimiento}" pattern="dd/MM/yyyy" showIcon="true"/>
+                <p:datePicker id="fechaNacimiento" value="#{personaModel.registroActual.fechaNacimiento}" pattern="dd/MM/yyyy" showIcon="true" label="Fecha de Nacimiento" maxdate="#{personaModel.hoy}"/>
                 
                 </h:panelGrid>
             </f:facet>

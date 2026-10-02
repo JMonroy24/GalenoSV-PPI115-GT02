@@ -8,7 +8,7 @@ import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol;
 
 /**
- * Acceso a datos para la entidad .
+ * Acceso a datos para la entidad Rol.
  */
 @ApplicationScoped
 public class RolDAO extends DefaultDAO<Rol, UUID> implements Serializable {
@@ -38,14 +38,6 @@ public class RolDAO extends DefaultDAO<Rol, UUID> implements Serializable {
     }
 
 
-    public java.util.List<Rol> buscarParaAutocompletar(String filtro, int max) {
-        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
-        return getEntityManager().createQuery(
-                "SELECT e FROM Rol e",
-                Rol.class)
-                .setMaxResults(max)
-                .getResultList();
-    }
 
     /**
      * Devuelve todos los roles disponibles, para alimentar selectores de FK
@@ -55,7 +47,7 @@ public class RolDAO extends DefaultDAO<Rol, UUID> implements Serializable {
      */
     public java.util.List<Rol> findAllActivos() {
         return getEntityManager().createQuery(
-                "SELECT r FROM Rol r ORDER BY r.nombre",
+                "SELECT r FROM Rol r WHERE r.activo = true ORDER BY r.nombre",
                 Rol.class)
                 .getResultList();
     }

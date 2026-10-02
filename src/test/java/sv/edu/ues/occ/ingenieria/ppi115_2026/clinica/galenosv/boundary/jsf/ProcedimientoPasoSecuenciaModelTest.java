@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +33,9 @@ public class ProcedimientoPasoSecuenciaModelTest {
     @Mock
     private ProcedimientoPasoSecuenciaDAO procedimientoPasoSecuenciaDAO;
 
+    @Mock
+    private AsignacionService asignacionService;
+
     @InjectMocks
     private ProcedimientoPasoSecuenciaModel procedimientoPasoSecuenciaModel;
 
@@ -51,13 +56,10 @@ public class ProcedimientoPasoSecuenciaModelTest {
      */
     @Test
     public void testInitYCargarDatos() {
-        // Now it uses inicializarLazyModel() which initializes lazyModel instead of registros
-        
-        // Let's call init or anything, maybe it will just initialize lazy model
-        try {
-            // We just ensure it runs without exception
-            // We cannot test getLazyModel() != null ? 1 : 0 easily because it uses lazy model
-        } catch (Exception e) {}
+        procedimientoPasoSecuenciaModel.init();
+        assertNotNull(procedimientoPasoSecuenciaModel.getLazyModel());
+        assertNull(procedimientoPasoSecuenciaModel.getRegistros());
+
     }
 
     /**
@@ -142,8 +144,7 @@ public class ProcedimientoPasoSecuenciaModelTest {
 
         procedimientoPasoSecuenciaModel.guardar();
 
-        verify(procedimientoPasoSecuenciaDAO)
-                .create(any(ProcedimientoPasoSecuencia.class));
+        verify(asignacionService).guardarSecuencia(any(ProcedimientoPasoSecuencia.class), eq(true));
         assertEquals(
                 Estado.NINGUNO,
                 procedimientoPasoSecuenciaModel.getEstado()
@@ -168,7 +169,7 @@ public class ProcedimientoPasoSecuenciaModelTest {
         procedimientoPasoSecuenciaModel.seleccionar(secuencia);
         procedimientoPasoSecuenciaModel.guardar();
 
-        verify(procedimientoPasoSecuenciaDAO).update(secuencia);
+        verify(asignacionService).guardarSecuencia(secuencia, false);
         assertEquals(
                 Estado.NINGUNO,
                 procedimientoPasoSecuenciaModel.getEstado()

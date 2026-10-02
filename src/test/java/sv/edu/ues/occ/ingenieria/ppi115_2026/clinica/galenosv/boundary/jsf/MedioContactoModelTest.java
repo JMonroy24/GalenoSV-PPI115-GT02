@@ -31,13 +31,10 @@ public class MedioContactoModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        // Now it uses inicializarLazyModel() which initializes lazyModel instead of registros
-        
-        // Let's call init or anything, maybe it will just initialize lazy model
-        try {
-            // We just ensure it runs without exception
-            // We cannot test getLazyModel() != null ? 1 : 0 easily because it uses lazy model
-        } catch (Exception e) {}
+        medioContactoModel.init();
+        assertNotNull(medioContactoModel.getLazyModel());
+        assertNull(medioContactoModel.getRegistros());
+
     }
 
     @Test
@@ -74,6 +71,11 @@ public class MedioContactoModelTest {
         medioContactoModel.prepararNuevo();
         medioContactoModel.getRegistroActual().setValor("test@email.com");
 
+        medioContactoModel.getRegistroActual().setValor("12345678");
+        medioContactoModel.getRegistroActual().setIdPersona(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona(UUID.randomUUID()));
+        var tipoValido = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoMedioContacto(UUID.randomUUID());
+        tipoValido.setActivo(true);
+        medioContactoModel.getRegistroActual().setIdTipoMedioContacto(tipoValido);
         medioContactoModel.guardar();
 
         verify(medioContactoDAO).create(any(MedioContacto.class));
@@ -86,6 +88,11 @@ public class MedioContactoModelTest {
         MedioContacto mc = new MedioContacto(UUID.randomUUID());
         medioContactoModel.seleccionar(mc);
 
+        medioContactoModel.getRegistroActual().setValor("12345678");
+        medioContactoModel.getRegistroActual().setIdPersona(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona(UUID.randomUUID()));
+        var tipoValido = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoMedioContacto(UUID.randomUUID());
+        tipoValido.setActivo(true);
+        medioContactoModel.getRegistroActual().setIdTipoMedioContacto(tipoValido);
         medioContactoModel.guardar();
 
         verify(medioContactoDAO).update(mc);

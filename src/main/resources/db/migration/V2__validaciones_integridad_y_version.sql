@@ -1,0 +1,195 @@
+-- Ejecutar con la aplicación detenida, después de auditar datos y tener respaldo.
+-- PostgreSQL/Flyway revierte toda esta migración si alguna validación falla.
+
+DO $$
+BEGIN
+ IF EXISTS (
+ SELECT 1 FROM procedimiento_paso_secuencia s
+ JOIN procedimiento_paso p ON p.id_procedimiento_paso=s.id_procedimiento_paso
+ JOIN procedimiento_paso r ON r.id_procedimiento_paso=s.id_procedimiento_paso_referencia
+ WHERE p.id_procedimiento <> r.id_procedimiento
+ ) THEN RAISE EXCEPTION 'Hay secuencias entre procedimientos distintos. Ejecute la auditoría previa.'; END IF;
+ IF EXISTS (
+ WITH RECURSIVE alcanzables(origen, destino) AS (
+ SELECT id_procedimiento_paso, id_procedimiento_paso_referencia FROM procedimiento_paso_secuencia
+ UNION
+ SELECT a.origen, s.id_procedimiento_paso_referencia FROM alcanzables a
+ JOIN procedimiento_paso_secuencia s ON s.id_procedimiento_paso=a.destino
+ ) SELECT 1 FROM alcanzables WHERE origen=destino
+ ) THEN RAISE EXCEPTION 'Hay ciclos de secuencia. Ejecute la auditoría previa.'; END IF;
+END $$;
+
+ALTER TABLE clinica ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE clinica ALTER COLUMN nombre SET NOT NULL;
+ALTER TABLE clinica ALTER COLUMN activo SET NOT NULL;
+ALTER TABLE consulta ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE consulta ALTER COLUMN fecha_inicio SET NOT NULL;
+ALTER TABLE consulta ALTER COLUMN id_persona_rol SET NOT NULL;
+ALTER TABLE consulta_procedimiento ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE consulta_procedimiento ALTER COLUMN fecha_inicio SET NOT NULL;
+ALTER TABLE consulta_procedimiento ALTER COLUMN id_consulta SET NOT NULL;
+ALTER TABLE consulta_procedimiento ALTER COLUMN id_procedimiento SET NOT NULL;
+ALTER TABLE consulta_procedimiento_paso ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE consulta_procedimiento_paso ALTER COLUMN fecha_inicio SET NOT NULL;
+ALTER TABLE consulta_procedimiento_paso ALTER COLUMN estado SET NOT NULL;
+ALTER TABLE consulta_procedimiento_paso ALTER COLUMN id_consulta_procedimiento SET NOT NULL;
+ALTER TABLE consulta_procedimiento_paso ALTER COLUMN id_persona_rol SET NOT NULL;
+ALTER TABLE documento ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE documento ALTER COLUMN valor SET NOT NULL;
+ALTER TABLE documento ALTER COLUMN id_persona SET NOT NULL;
+ALTER TABLE documento ALTER COLUMN id_tipo_documento SET NOT NULL;
+ALTER TABLE examen ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE examen ALTER COLUMN nombre SET NOT NULL;
+ALTER TABLE examen ALTER COLUMN activo SET NOT NULL;
+ALTER TABLE examen_resultado ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE examen_resultado ALTER COLUMN fecha_creacion SET NOT NULL;
+ALTER TABLE examen_resultado ALTER COLUMN fecha_creacion SET DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE examen_resultado ALTER COLUMN resultado SET NOT NULL;
+ALTER TABLE examen_resultado ALTER COLUMN interpretacion SET NOT NULL;
+ALTER TABLE examen_resultado ALTER COLUMN id_orden_examen SET NOT NULL;
+ALTER TABLE examen_tipo_examen ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE examen_tipo_examen ALTER COLUMN fecha_creacion SET NOT NULL;
+ALTER TABLE examen_tipo_examen ALTER COLUMN fecha_creacion SET DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE examen_tipo_examen ALTER COLUMN id_examen SET NOT NULL;
+ALTER TABLE examen_tipo_examen ALTER COLUMN id_tipo_examen SET NOT NULL;
+ALTER TABLE medio_contacto ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE medio_contacto ALTER COLUMN valor SET NOT NULL;
+ALTER TABLE medio_contacto ALTER COLUMN fecha_creacion SET NOT NULL;
+ALTER TABLE medio_contacto ALTER COLUMN fecha_creacion SET DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE medio_contacto ALTER COLUMN id_persona SET NOT NULL;
+ALTER TABLE medio_contacto ALTER COLUMN id_tipo_medio_contacto SET NOT NULL;
+ALTER TABLE orden_examen ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE orden_examen ALTER COLUMN fecha_creacion SET NOT NULL;
+ALTER TABLE orden_examen ALTER COLUMN fecha_creacion SET DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE orden_examen ALTER COLUMN indicaciones SET NOT NULL;
+ALTER TABLE orden_examen ALTER COLUMN id_consulta_procedimiento_paso SET NOT NULL;
+ALTER TABLE persona ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE persona ALTER COLUMN nombres SET NOT NULL;
+ALTER TABLE persona ALTER COLUMN apellidos SET NOT NULL;
+ALTER TABLE persona ALTER COLUMN fecha_creacion SET NOT NULL;
+ALTER TABLE persona ALTER COLUMN fecha_creacion SET DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE persona_rol ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE persona_rol ALTER COLUMN fecha_creacion SET NOT NULL;
+ALTER TABLE persona_rol ALTER COLUMN fecha_creacion SET DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE persona_rol ALTER COLUMN id_persona SET NOT NULL;
+ALTER TABLE persona_rol ALTER COLUMN id_rol SET NOT NULL;
+ALTER TABLE procedimiento ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE procedimiento ALTER COLUMN nombre SET NOT NULL;
+ALTER TABLE procedimiento ALTER COLUMN activo SET NOT NULL;
+ALTER TABLE procedimiento_paso ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE procedimiento_paso ALTER COLUMN nombre SET NOT NULL;
+ALTER TABLE procedimiento_paso ALTER COLUMN indica_fin SET NOT NULL;
+ALTER TABLE procedimiento_paso ALTER COLUMN id_procedimiento SET NOT NULL;
+ALTER TABLE procedimiento_paso_examen ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE procedimiento_paso_examen ALTER COLUMN fecha_creacion SET NOT NULL;
+ALTER TABLE procedimiento_paso_examen ALTER COLUMN fecha_creacion SET DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE procedimiento_paso_examen ALTER COLUMN activo SET NOT NULL;
+ALTER TABLE procedimiento_paso_examen ALTER COLUMN id_examen SET NOT NULL;
+ALTER TABLE procedimiento_paso_examen ALTER COLUMN id_procedimiento_paso SET NOT NULL;
+ALTER TABLE procedimiento_paso_secuencia ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE procedimiento_paso_secuencia ALTER COLUMN id_procedimiento_paso_referencia SET NOT NULL;
+ALTER TABLE procedimiento_paso_secuencia ALTER COLUMN tipo_secuencia SET NOT NULL;
+ALTER TABLE procedimiento_paso_secuencia ALTER COLUMN id_procedimiento_paso SET NOT NULL;
+ALTER TABLE rol ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE rol ALTER COLUMN nombre SET NOT NULL;
+ALTER TABLE rol ALTER COLUMN activo SET NOT NULL;
+ALTER TABLE tipo_documento ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE tipo_documento ALTER COLUMN nombre SET NOT NULL;
+ALTER TABLE tipo_documento ALTER COLUMN activo SET NOT NULL;
+ALTER TABLE tipo_examen ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE tipo_examen ALTER COLUMN nombre SET NOT NULL;
+ALTER TABLE tipo_examen ALTER COLUMN activo SET NOT NULL;
+ALTER TABLE tipo_medio_contacto ADD COLUMN version bigint NOT NULL DEFAULT 0;
+ALTER TABLE tipo_medio_contacto ALTER COLUMN nombre SET NOT NULL;
+ALTER TABLE tipo_medio_contacto ALTER COLUMN activo SET NOT NULL;
+ALTER TABLE clinica ADD CONSTRAINT ck_clinica_nombre_texto CHECK (length(btrim(nombre)) > 0);
+ALTER TABLE clinica ADD CONSTRAINT ck_clinica_nombre_longitud CHECK (char_length(nombre) <= 255);
+ALTER TABLE clinica ADD CONSTRAINT ck_clinica_tipo_longitud CHECK (char_length(tipo) <= 20);
+ALTER TABLE clinica ADD CONSTRAINT ck_clinica_comentarios_longitud CHECK (char_length(comentarios) <= 2000);
+ALTER TABLE consulta ADD CONSTRAINT ck_consulta_referencia_externa_longitud CHECK (char_length(referencia_externa) <= 255);
+ALTER TABLE consulta ADD CONSTRAINT ck_consulta_observaciones_longitud CHECK (char_length(observaciones) <= 2000);
+ALTER TABLE consulta ADD CONSTRAINT ck_consulta_fechas CHECK (fecha_fin IS NULL OR fecha_fin >= fecha_inicio);
+ALTER TABLE consulta_procedimiento ADD CONSTRAINT ck_consulta_procedimiento_observaciones_longitud CHECK (char_length(observaciones) <= 2000);
+ALTER TABLE consulta_procedimiento ADD CONSTRAINT ck_consulta_procedimiento_fechas CHECK (fecha_fin IS NULL OR fecha_fin >= fecha_inicio);
+ALTER TABLE consulta_procedimiento_paso ADD CONSTRAINT ck_consulta_procedimiento_paso_estado_texto CHECK (length(btrim(estado)) > 0);
+ALTER TABLE consulta_procedimiento_paso ADD CONSTRAINT ck_consulta_procedimiento_paso_estado_longitud CHECK (char_length(estado) <= 20);
+ALTER TABLE consulta_procedimiento_paso ADD CONSTRAINT ck_consulta_procedimiento_paso_fechas CHECK (fecha_fin IS NULL OR fecha_fin >= fecha_inicio);
+ALTER TABLE documento ADD CONSTRAINT ck_documento_valor_texto CHECK (length(btrim(valor)) > 0);
+ALTER TABLE documento ADD CONSTRAINT ck_documento_valor_longitud CHECK (char_length(valor) <= 50);
+ALTER TABLE documento ADD CONSTRAINT ck_documento_ruta_fisica_longitud CHECK (char_length(ruta_fisica) <= 500);
+ALTER TABLE examen ADD CONSTRAINT ck_examen_nombre_texto CHECK (length(btrim(nombre)) > 0);
+ALTER TABLE examen ADD CONSTRAINT ck_examen_nombre_longitud CHECK (char_length(nombre) <= 255);
+ALTER TABLE examen ADD CONSTRAINT ck_examen_observaciones_longitud CHECK (char_length(observaciones) <= 2000);
+ALTER TABLE examen_resultado ADD CONSTRAINT ck_examen_resultado_resultado_texto CHECK (length(btrim(resultado)) > 0);
+ALTER TABLE examen_resultado ADD CONSTRAINT ck_examen_resultado_resultado_longitud CHECK (char_length(resultado) <= 4000);
+ALTER TABLE examen_resultado ADD CONSTRAINT ck_examen_resultado_interpretacion_texto CHECK (length(btrim(interpretacion)) > 0);
+ALTER TABLE examen_resultado ADD CONSTRAINT ck_examen_resultado_interpretacion_longitud CHECK (char_length(interpretacion) <= 4000);
+ALTER TABLE examen_resultado ADD CONSTRAINT ck_examen_resultado_ruta_atestado_longitud CHECK (char_length(ruta_atestado) <= 500);
+ALTER TABLE examen_tipo_examen ADD CONSTRAINT ck_examen_tipo_examen_observaciones_longitud CHECK (char_length(observaciones) <= 2000);
+ALTER TABLE medio_contacto ADD CONSTRAINT ck_medio_contacto_valor_texto CHECK (length(btrim(valor)) > 0);
+ALTER TABLE medio_contacto ADD CONSTRAINT ck_medio_contacto_valor_longitud CHECK (char_length(valor) <= 255);
+ALTER TABLE orden_examen ADD CONSTRAINT ck_orden_examen_indicaciones_texto CHECK (length(btrim(indicaciones)) > 0);
+ALTER TABLE orden_examen ADD CONSTRAINT ck_orden_examen_indicaciones_longitud CHECK (char_length(indicaciones) <= 2000);
+ALTER TABLE persona ADD CONSTRAINT ck_persona_nombres_texto CHECK (length(btrim(nombres)) > 0);
+ALTER TABLE persona ADD CONSTRAINT ck_persona_nombres_longitud CHECK (char_length(nombres) <= 255);
+ALTER TABLE persona ADD CONSTRAINT ck_persona_apellidos_texto CHECK (length(btrim(apellidos)) > 0);
+ALTER TABLE persona ADD CONSTRAINT ck_persona_apellidos_longitud CHECK (char_length(apellidos) <= 255);
+ALTER TABLE procedimiento ADD CONSTRAINT ck_procedimiento_nombre_texto CHECK (length(btrim(nombre)) > 0);
+ALTER TABLE procedimiento ADD CONSTRAINT ck_procedimiento_nombre_longitud CHECK (char_length(nombre) <= 155);
+ALTER TABLE procedimiento ADD CONSTRAINT ck_procedimiento_observaciones_longitud CHECK (char_length(observaciones) <= 2000);
+ALTER TABLE procedimiento_paso ADD CONSTRAINT ck_procedimiento_paso_nombre_texto CHECK (length(btrim(nombre)) > 0);
+ALTER TABLE procedimiento_paso ADD CONSTRAINT ck_procedimiento_paso_nombre_longitud CHECK (char_length(nombre) <= 155);
+ALTER TABLE procedimiento_paso_examen ADD CONSTRAINT ck_procedimiento_paso_examen_observaciones_longitud CHECK (char_length(observaciones) <= 2000);
+ALTER TABLE procedimiento_paso_secuencia ADD CONSTRAINT ck_procedimiento_paso_secuencia_tipo_secuencia_texto CHECK (length(btrim(tipo_secuencia)) > 0);
+ALTER TABLE procedimiento_paso_secuencia ADD CONSTRAINT ck_procedimiento_paso_secuencia_tipo_secuencia_longitud CHECK (char_length(tipo_secuencia) <= 20);
+ALTER TABLE rol ADD CONSTRAINT ck_rol_nombre_texto CHECK (length(btrim(nombre)) > 0);
+ALTER TABLE rol ADD CONSTRAINT ck_rol_nombre_longitud CHECK (char_length(nombre) <= 155);
+ALTER TABLE rol ADD CONSTRAINT ck_rol_observaciones_longitud CHECK (char_length(observaciones) <= 2000);
+ALTER TABLE tipo_documento ADD CONSTRAINT ck_tipo_documento_nombre_texto CHECK (length(btrim(nombre)) > 0);
+ALTER TABLE tipo_documento ADD CONSTRAINT ck_tipo_documento_nombre_longitud CHECK (char_length(nombre) <= 155);
+ALTER TABLE tipo_documento ADD CONSTRAINT ck_tipo_documento_indicaciones_longitud CHECK (char_length(indicaciones) <= 2000);
+ALTER TABLE tipo_documento ADD CONSTRAINT ck_tipo_documento_expresion_regular_longitud CHECK (char_length(expresion_regular) <= 500);
+ALTER TABLE tipo_examen ADD CONSTRAINT ck_tipo_examen_nombre_texto CHECK (length(btrim(nombre)) > 0);
+ALTER TABLE tipo_examen ADD CONSTRAINT ck_tipo_examen_nombre_longitud CHECK (char_length(nombre) <= 255);
+ALTER TABLE tipo_examen ADD CONSTRAINT ck_tipo_examen_observaciones_longitud CHECK (char_length(observaciones) <= 2000);
+ALTER TABLE tipo_medio_contacto ADD CONSTRAINT ck_tipo_medio_contacto_nombre_texto CHECK (length(btrim(nombre)) > 0);
+ALTER TABLE tipo_medio_contacto ADD CONSTRAINT ck_tipo_medio_contacto_nombre_longitud CHECK (char_length(nombre) <= 155);
+ALTER TABLE tipo_medio_contacto ADD CONSTRAINT ck_tipo_medio_contacto_indicaciones_longitud CHECK (char_length(indicaciones) <= 2000);
+ALTER TABLE tipo_medio_contacto ADD CONSTRAINT ck_tipo_medio_contacto_expresion_regular_longitud CHECK (char_length(expresion_regular) <= 500);
+ALTER TABLE procedimiento_paso_secuencia ADD CONSTRAINT ck_secuencia_distinta CHECK (id_procedimiento_paso <> id_procedimiento_paso_referencia);
+CREATE UNIQUE INDEX uq_rol_nombre ON rol (lower(btrim(nombre)));
+CREATE UNIQUE INDEX uq_clinica_nombre ON clinica (lower(btrim(nombre)));
+CREATE UNIQUE INDEX uq_procedimiento_nombre ON procedimiento (lower(btrim(nombre)));
+CREATE UNIQUE INDEX uq_examen_nombre ON examen (lower(btrim(nombre)));
+CREATE UNIQUE INDEX uq_tipo_examen_nombre ON tipo_examen (lower(btrim(nombre)));
+CREATE UNIQUE INDEX uq_tipo_documento_nombre ON tipo_documento (lower(btrim(nombre)));
+CREATE UNIQUE INDEX uq_tipo_medio_contacto_nombre ON tipo_medio_contacto (lower(btrim(nombre)));
+CREATE UNIQUE INDEX uq_documento_tipo_valor ON documento (id_tipo_documento, lower(btrim(valor)));
+CREATE UNIQUE INDEX uq_medio_contacto ON medio_contacto (id_persona, id_tipo_medio_contacto, lower(btrim(valor)));
+CREATE UNIQUE INDEX uq_persona_rol ON persona_rol (id_persona, id_rol, id_clinica) NULLS NOT DISTINCT;
+CREATE UNIQUE INDEX uq_paso_nombre ON procedimiento_paso (id_procedimiento, lower(btrim(nombre)));
+CREATE UNIQUE INDEX uq_paso_examen ON procedimiento_paso_examen (id_procedimiento_paso, id_examen);
+CREATE UNIQUE INDEX uq_examen_tipo ON examen_tipo_examen (id_examen, id_tipo_examen);
+CREATE UNIQUE INDEX uq_secuencia ON procedimiento_paso_secuencia (id_procedimiento_paso, id_procedimiento_paso_referencia, lower(btrim(tipo_secuencia)));
+ALTER TABLE procedimiento_paso_secuencia ADD CONSTRAINT fk_secuencia_referencia FOREIGN KEY (id_procedimiento_paso_referencia) REFERENCES procedimiento_paso (id_procedimiento_paso);
+CREATE INDEX ix_consulta_persona_rol ON consulta (id_persona_rol);
+CREATE INDEX ix_consulta_procedimiento_consulta ON consulta_procedimiento (id_consulta);
+CREATE INDEX ix_consulta_procedimiento_procedimiento ON consulta_procedimiento (id_procedimiento);
+CREATE INDEX ix_consulta_procedimiento_paso_consulta_procedimiento ON consulta_procedimiento_paso (id_consulta_procedimiento);
+CREATE INDEX ix_consulta_procedimiento_paso_persona_rol ON consulta_procedimiento_paso (id_persona_rol);
+CREATE INDEX ix_documento_persona ON documento (id_persona);
+CREATE INDEX ix_documento_tipo_documento ON documento (id_tipo_documento);
+CREATE INDEX ix_examen_resultado_orden_examen ON examen_resultado (id_orden_examen);
+CREATE INDEX ix_examen_tipo_examen_examen ON examen_tipo_examen (id_examen);
+CREATE INDEX ix_examen_tipo_examen_tipo_examen ON examen_tipo_examen (id_tipo_examen);
+CREATE INDEX ix_medio_contacto_persona ON medio_contacto (id_persona);
+CREATE INDEX ix_medio_contacto_tipo_medio_contacto ON medio_contacto (id_tipo_medio_contacto);
+CREATE INDEX ix_orden_examen_consulta_procedimiento_paso ON orden_examen (id_consulta_procedimiento_paso);
+CREATE INDEX ix_persona_rol_clinica ON persona_rol (id_clinica);
+CREATE INDEX ix_persona_rol_persona ON persona_rol (id_persona);
+CREATE INDEX ix_persona_rol_rol ON persona_rol (id_rol);
+CREATE INDEX ix_procedimiento_paso_procedimiento ON procedimiento_paso (id_procedimiento);
+CREATE INDEX ix_procedimiento_paso_rol ON procedimiento_paso (id_rol);
+CREATE INDEX ix_procedimiento_paso_examen_examen ON procedimiento_paso_examen (id_examen);
+CREATE INDEX ix_procedimiento_paso_examen_procedimiento_paso ON procedimiento_paso_examen (id_procedimiento_paso);
+CREATE INDEX ix_procedimiento_paso_secuencia_procedimiento_paso ON procedimiento_paso_secuencia (id_procedimiento_paso);

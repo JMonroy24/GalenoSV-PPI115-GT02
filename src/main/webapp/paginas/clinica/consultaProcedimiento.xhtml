@@ -27,23 +27,23 @@
                 <h:outputText value="#{registro.idConsulta.idPersonaRol.idPersona.nombres} #{registro.idConsulta.idPersonaRol.idPersona.apellidos}"/>
             </p:column>
 
-            <p:column headerText="Procedimiento">
+            <p:column headerText="Procedimiento" sortBy="#{registro.idProcedimiento.nombre}">
                 <h:outputText value="#{registro.idProcedimiento.nombre}"/>
             </p:column>
 
-            <p:column headerText="Inicio" width="150">
+            <p:column headerText="Inicio" width="150" sortBy="#{registro.fechaInicio}">
                 <h:outputText value="#{registro.fechaInicio}">
                     <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
                 </h:outputText>
             </p:column>
 
-            <p:column headerText="Fin" width="150">
+            <p:column headerText="Fin" width="150" sortBy="#{registro.fechaFin}">
                 <h:outputText value="#{registro.fechaFin}">
                     <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
                 </h:outputText>
             </p:column>
 
-            <p:column headerText="Observaciones">
+            <p:column headerText="Observaciones" sortBy="#{registro.observaciones}">
                 <h:outputText value="#{registro.observaciones}"/>
             </p:column>
 
@@ -58,11 +58,11 @@
                                     itemValue="#{c}"
                                     converter="#{entityConverter}"
                                     forceSelection="true" required="true" requiredMessage="Seleccione una consulta." scrollHeight="250"
-                                    placeholder="Escriba nombre, apellido o referencia..."/>
+                                    placeholder="Escriba nombre, apellido o referencia..." label="Consulta" minQueryLength="2"/>
 
                     <p:outputLabel value="Procedimiento:" for="idProcedimiento"/>
                     <p:selectOneMenu id="idProcedimiento" value="#{consultaProcedimientoModel.registroActual.idProcedimiento}"
-                                     converter="#{entityConverter}" required="true" requiredMessage="Seleccione un procedimiento." filter="true">
+                                     converter="#{entityConverter}" required="true" requiredMessage="Seleccione un procedimiento." filter="true" label="Procedimiento">
                         <f:selectItem itemLabel="Seleccione un procedimiento..." itemValue="#{null}" noSelectionOption="true"/>
                         <f:selectItems value="#{procedimientoModel.procedimientosActivos}" var="pr"
                                        itemLabel="#{pr.nombre}" itemValue="#{pr}"/>
@@ -72,16 +72,16 @@
                     <p:datePicker id="fechaInicio" value="#{consultaProcedimientoModel.registroActual.fechaInicio}"
                                   showTime="true" showIcon="true" pattern="dd/MM/yyyy HH:mm"
                                   required="true" requiredMessage="La fecha de inicio es obligatoria."
-                                  appendTo="@(body)"/>
+                                  appendTo="@(body)" label="Fecha de inicio"/>
 
                     <p:outputLabel value="Fecha de fin:" for="fechaFin"/>
                     <p:datePicker id="fechaFin" value="#{consultaProcedimientoModel.registroActual.fechaFin}"
                                   showTime="true" showIcon="true" pattern="dd/MM/yyyy HH:mm"
-                                  appendTo="@(body)"/>
+                                  appendTo="@(body)" label="Fecha de fin" mindate="#{consultaProcedimientoModel.registroActual.fechaInicio}"/>
 
                     <p:outputLabel value="Observaciones:" for="observaciones"/>
                     <p:inputTextarea id="observaciones" value="#{consultaProcedimientoModel.registroActual.observaciones}"
-                                     rows="4" autoResize="false" maxlength="2000"/>
+                                     rows="4" autoResize="false" maxlength="2000" label="Observaciones"/>
 
                 </p:panelGrid>
             </f:facet>

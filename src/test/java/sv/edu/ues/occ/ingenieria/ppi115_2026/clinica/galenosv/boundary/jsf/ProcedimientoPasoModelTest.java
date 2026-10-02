@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -35,6 +37,9 @@ class ProcedimientoPasoModelTest {
 
     @Mock
     private ProcedimientoPasoSecuenciaDAO procedimientoPasoSecuenciaDAO;
+
+    @Mock
+    private AsignacionService asignacionService;
 
     @InjectMocks
     private ProcedimientoPasoModel procedimientoPasoModel;
@@ -105,6 +110,8 @@ class ProcedimientoPasoModelTest {
         procedimientoPasoModel.prepararNuevo();
         procedimientoPasoModel.getRegistroActual()
                 .setNombre("Verificar identidad del paciente");
+        procedimientoPasoModel.getRegistroActual().setNombre("Paso de prueba");
+        procedimientoPasoModel.getRegistroActual().setIdProcedimiento(new Procedimiento(UUID.randomUUID()));
         procedimientoPasoModel.guardar();
 
         verify(procedimientoPasoDAO).create(any(ProcedimientoPaso.class));
@@ -124,6 +131,8 @@ class ProcedimientoPasoModelTest {
                 .thenReturn(Collections.emptyList());
 
         procedimientoPasoModel.seleccionar(paso);
+        procedimientoPasoModel.getRegistroActual().setNombre("Paso de prueba");
+        procedimientoPasoModel.getRegistroActual().setIdProcedimiento(new Procedimiento(UUID.randomUUID()));
         procedimientoPasoModel.guardar();
 
         verify(procedimientoPasoDAO).update(paso);
@@ -147,7 +156,7 @@ class ProcedimientoPasoModelTest {
 
         ArgumentCaptor<ProcedimientoPasoExamen> captor =
                 ArgumentCaptor.forClass(ProcedimientoPasoExamen.class);
-        verify(procedimientoPasoExamenDAO).create(captor.capture());
+        verify(asignacionService).guardarExamen(captor.capture(), eq(true));
 
         ProcedimientoPasoExamen asignacion = captor.getValue();
         assertNotNull(asignacion.getIdProcedimientoPasoExamen());
@@ -173,7 +182,11 @@ class ProcedimientoPasoModelTest {
 
         procedimientoPasoModel.seleccionar(paso);
         procedimientoPasoModel.setExamenSeleccionado(examen);
+        doThrow(new ValidacionNegocioException("Asignación inválida"))
+                .when(asignacionService).guardarExamen(any(), eq(true));
         procedimientoPasoModel.agregarExamen();
+        assertEquals(examen, procedimientoPasoModel.getExamenSeleccionado());
+        assertEquals(Estado.MODIFICAR, procedimientoPasoModel.getEstado());
 
         verify(procedimientoPasoExamenDAO, never())
                 .create(any(ProcedimientoPasoExamen.class));
@@ -222,7 +235,7 @@ class ProcedimientoPasoModelTest {
 
         ArgumentCaptor<ProcedimientoPasoSecuencia> captor =
                 ArgumentCaptor.forClass(ProcedimientoPasoSecuencia.class);
-        verify(procedimientoPasoSecuenciaDAO).create(captor.capture());
+        verify(asignacionService).guardarSecuencia(captor.capture(), eq(true));
 
         ProcedimientoPasoSecuencia secuencia = captor.getValue();
         assertNotNull(secuencia.getIdProcedimientoPasoSecuencia());
@@ -254,7 +267,11 @@ class ProcedimientoPasoModelTest {
         procedimientoPasoModel.seleccionar(origen);
         procedimientoPasoModel.setPasoReferenciaSeleccionado(referencia);
         procedimientoPasoModel.setTipoSecuencia("Siguiente");
+        doThrow(new ValidacionNegocioException("Asignación inválida"))
+                .when(asignacionService).guardarSecuencia(any(), eq(true));
         procedimientoPasoModel.agregarSecuencia();
+        assertEquals(referencia, procedimientoPasoModel.getPasoReferenciaSeleccionado());
+        assertEquals(Estado.MODIFICAR, procedimientoPasoModel.getEstado());
 
         verify(procedimientoPasoSecuenciaDAO, never())
                 .create(any(ProcedimientoPasoSecuencia.class));

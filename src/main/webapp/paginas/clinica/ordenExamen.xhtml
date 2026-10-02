@@ -15,21 +15,21 @@
                                 lazyModel="#{ordenExamenModel.lazyModel}"
                                 titulo="Órdenes de Examen">
 
-            <p:column headerText="Procedimiento">
+            <p:column headerText="Procedimiento" sortBy="#{registro.idConsultaProcedimientoPaso.idConsultaProcedimiento.idProcedimiento.nombre}">
                 <h:outputText value="#{registro.idConsultaProcedimientoPaso.idConsultaProcedimiento.idProcedimiento.nombre}"/>
             </p:column>
 
-            <p:column headerText="Estado del paso" width="130">
+            <p:column headerText="Estado del paso" width="130" sortBy="#{registro.idConsultaProcedimientoPaso.estado}">
                 <h:outputText value="#{registro.idConsultaProcedimientoPaso.estado}"/>
             </p:column>
 
-            <p:column headerText="Fecha de creación" width="150">
+            <p:column headerText="Fecha de creación" width="150" sortBy="#{registro.fechaCreacion}">
                 <h:outputText value="#{registro.fechaCreacion}">
                     <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
                 </h:outputText>
             </p:column>
 
-            <p:column headerText="Indicaciones">
+            <p:column headerText="Indicaciones" sortBy="#{registro.indicaciones}">
                 <h:outputText value="#{registro.indicaciones}"/>
             </p:column>
 
@@ -44,13 +44,13 @@
                                 itemValue="#{cpp}"
                                 converter="#{entityConverter}"
                                 forceSelection="true" required="true" requiredMessage="Seleccione un paso de procedimiento." scrollHeight="250"
-                                placeholder="Escriba procedimiento, persona o estado..."/>
+                                placeholder="Escriba procedimiento, persona o estado..." label="Paso de procedimiento" minQueryLength="2"/>
 
                 <p:outputLabel value="Indicaciones:" for="indicaciones"/>
                 <p:inputTextarea id="indicaciones" value="#{ordenExamenModel.registroActual.indicaciones}"
                                  rows="5" autoResize="false"
                                  required="true" requiredMessage="Las indicaciones son obligatorias."
-                                 maxlength="2000"/>
+                                 maxlength="2000" label="Indicaciones"/>
 
             </f:facet>
 

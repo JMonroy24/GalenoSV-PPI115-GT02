@@ -29,7 +29,7 @@
                     <p:toolbarGroup align="right">
                         <p:inputText id="campoBusqueda"
                                      value="#{cc.attrs.lazyModel.filtroGlobal}"
-                                     placeholder="Buscar..."/>
+                                     placeholder="Buscar..." maxlength="100"/>
                         <p:commandButton icon="pi pi-search"
                                          title="Buscar" pt:aria-label="Ejecutar búsqueda"
                                          styleClass="ui-button-info"
@@ -89,6 +89,7 @@
                   modal="true" responsive="true"
                   width="#{cc.attrs.anchoDialogo}" closable="true" appendTo="@(body)">
             <h:form id="frmDialogo">
+                <p:messages id="msgForm" showDetail="true" closable="true"/>
                 <p:outputPanel id="pnlFormulario">
                     <p:outputPanel rendered="#{cc.attrs.model.registroActual != null}">
 
@@ -113,7 +114,7 @@
 
                     <p:toolbar>
                         <p:toolbarGroup align="right">
-                            <crud:botonesFormulario model="#{cc.attrs.model}" update="@([id$=tabla]) @([id$=mensajes])" process="@all" dialog="dlgFormularioTx" />
+                            <crud:botonesFormulario model="#{cc.attrs.model}" update="@([id$=tabla]) @([id$=mensajes])" process="@form" dialog="dlgFormularioTx" />
                         </p:toolbarGroup>
                     </p:toolbar>
                 </p:outputPanel>

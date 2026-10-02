@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -29,6 +31,9 @@ class ExamenModelTest {
 
     @Mock
     private ExamenTipoExamenDAO examenTipoExamenDAO;
+
+    @Mock
+    private AsignacionService asignacionService;
 
     @InjectMocks
     private ExamenModel examenModel;
@@ -88,6 +93,7 @@ class ExamenModelTest {
         
         examenModel.prepararNuevo();
         examenModel.getRegistroActual().setNombre("Hemograma");
+        examenModel.getRegistroActual().setNombre("Registro válido");
         examenModel.guardar();
 
         verify(examenDAO).create(any(Examen.class));
@@ -102,6 +108,7 @@ class ExamenModelTest {
                 .thenReturn(Collections.emptyList());
         
         examenModel.seleccionar(examen);
+        examenModel.getRegistroActual().setNombre("Registro válido");
         examenModel.guardar();
 
         verify(examenDAO).update(examen);
@@ -122,7 +129,7 @@ class ExamenModelTest {
 
         ArgumentCaptor<ExamenTipoExamen> captor =
                 ArgumentCaptor.forClass(ExamenTipoExamen.class);
-        verify(examenTipoExamenDAO).create(captor.capture());
+        verify(asignacionService).guardarTipo(captor.capture(), eq(true));
 
         ExamenTipoExamen asignacion = captor.getValue();
         assertNotNull(asignacion.getIdExamenTipoExamen());
@@ -147,8 +154,12 @@ class ExamenModelTest {
 
         examenModel.seleccionar(examen);
         examenModel.setTipoSeleccionado(tipo);
+        doThrow(new ValidacionNegocioException("Duplicado"))
+                .when(asignacionService).guardarTipo(any(), eq(true));
         examenModel.agregarTipo();
 
+        assertEquals(tipo, examenModel.getTipoSeleccionado());
+        assertEquals(Estado.MODIFICAR, examenModel.getEstado());
         verify(examenTipoExamenDAO, never())
                 .create(any(ExamenTipoExamen.class));
     }

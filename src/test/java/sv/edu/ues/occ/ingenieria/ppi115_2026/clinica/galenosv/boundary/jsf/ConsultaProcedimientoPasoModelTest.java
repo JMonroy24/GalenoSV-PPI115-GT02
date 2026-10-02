@@ -31,13 +31,10 @@ public class ConsultaProcedimientoPasoModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        // Now it uses inicializarLazyModel() which initializes lazyModel instead of registros
-        
-        // Let's call init or anything, maybe it will just initialize lazy model
-        try {
-            // We just ensure it runs without exception
-            // We cannot test getLazyModel() != null ? 1 : 0 easily because it uses lazy model
-        } catch (Exception e) {}
+        consultaProcedimientoPasoModel.init();
+        assertNotNull(consultaProcedimientoPasoModel.getLazyModel());
+        assertNull(consultaProcedimientoPasoModel.getRegistros());
+
     }
 
     @Test
@@ -74,6 +71,7 @@ public class ConsultaProcedimientoPasoModelTest {
         consultaProcedimientoPasoModel.prepararNuevo();
         consultaProcedimientoPasoModel.getRegistroActual().setEstado("COMPLETADO");
 
+        consultaProcedimientoPasoModel.getRegistroActual().setEstado("Registrado");
         consultaProcedimientoPasoModel.guardar();
 
         verify(consultaProcedimientoPasoDAO).create(any(ConsultaProcedimientoPaso.class));
@@ -86,6 +84,7 @@ public class ConsultaProcedimientoPasoModelTest {
         ConsultaProcedimientoPaso cpp = new ConsultaProcedimientoPaso(UUID.randomUUID());
         consultaProcedimientoPasoModel.seleccionar(cpp);
 
+        consultaProcedimientoPasoModel.getRegistroActual().setEstado("Registrado");
         consultaProcedimientoPasoModel.guardar();
 
         verify(consultaProcedimientoPasoDAO).update(cpp);

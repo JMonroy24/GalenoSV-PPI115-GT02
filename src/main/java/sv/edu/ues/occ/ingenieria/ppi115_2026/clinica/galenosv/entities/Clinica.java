@@ -5,49 +5,42 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "clinica")
-@NamedQueries({
-    @NamedQuery(name = "Clinica.findAll", query = "SELECT c FROM Clinica c"),
-    @NamedQuery(name = "Clinica.findByNombre", query = "SELECT c FROM Clinica c WHERE c.nombre = :nombre"),
-    @NamedQuery(name = "Clinica.findByActivo", query = "SELECT c FROM Clinica c WHERE c.activo = :activo"),
-    @NamedQuery(name = "Clinica.findByTipo", query = "SELECT c FROM Clinica c WHERE c.tipo = :tipo"),
-    @NamedQuery(name = "Clinica.findByComentarios", query = "SELECT c FROM Clinica c WHERE c.comentarios = :comentarios")})
-public class Clinica implements Serializable, IdentificableEntity {
+public class Clinica extends EntidadVersionada implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
+    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
-    @NotNull
     @Column(name = "id_clinica")
     private UUID idClinica;
 
+    @NotBlank(message = "{clinica.nombre.obligatorio}")
+    @Size(max = 255, message = "{clinica.nombre.longitud}")
     @Basic(optional = false)
-    @NotNull
-    @Size(min = 1, max = 255)
-    @Column(name = "nombre")
+    @Column(name = "nombre", nullable = false, length = 255)
     private String nombre;
 
-    @Column(name = "activo")
+    @NotNull(message = "{clinica.activo.obligatorio}")
+    @Column(name = "activo", nullable = false)
     private Boolean activo;
 
-    @Size(max = 20)
-    @Column(name = "tipo")
+    @Size(max = 20, message = "{clinica.tipo.longitud}")
+    @Column(name = "tipo", length = 20)
     private String tipo;
 
-    @Size(max = 2147483647)
-    @Column(name = "comentarios")
+    @Size(max = 2000, message = "{clinica.comentarios.longitud}")
+    @Column(name = "comentarios", length = 2000)
     private String comentarios;
 
     @OneToMany(mappedBy = "idClinica", fetch = FetchType.LAZY)
@@ -113,12 +106,12 @@ public class Clinica implements Serializable, IdentificableEntity {
         this.personaRolList = personaRolList;
     }
 
-        @Override
+    @Override
     public String getIdKey() {
         return idClinica != null ? idClinica.toString() : "";
     }
 
-@Override
+    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idClinica != null ? idClinica.hashCode() : 0);

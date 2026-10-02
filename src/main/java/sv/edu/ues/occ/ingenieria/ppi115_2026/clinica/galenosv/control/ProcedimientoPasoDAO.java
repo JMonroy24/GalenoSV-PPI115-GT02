@@ -46,35 +46,7 @@ public class ProcedimientoPasoDAO
     }
 
 
-    /**
-     * Lista los pasos con los datos necesarios para mostrar los nombres
-     * de su procedimiento y rol en la tabla JSF.
-     *
-     * @return pasos con sus relaciones cargadas
-     */
-    @Override
-    public List<ProcedimientoPaso> findAll() {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        CriteriaQuery<ProcedimientoPaso> cq =
-                cb.createQuery(ProcedimientoPaso.class);
-        Root<ProcedimientoPaso> paso =
-                cq.from(ProcedimientoPaso.class);
 
-        paso.fetch("idProcedimiento", JoinType.LEFT);
-        paso.fetch("idRol", JoinType.LEFT);
-        cq.select(paso);
-
-        return em.createQuery(cq).getResultList();
-    }
-
-    public java.util.List<ProcedimientoPaso> buscarParaAutocompletar(String filtro, int max) {
-        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
-        return getEntityManager().createQuery(
-                "SELECT e FROM ProcedimientoPaso e",
-                ProcedimientoPaso.class)
-                .setMaxResults(max)
-                .getResultList();
-    }
 
     /**
      * Devuelve los pasos del procedimiento indicado, excluyendo el paso cuyo
@@ -101,5 +73,21 @@ public class ProcedimientoPasoDAO
             query.setParameter("excluir", excluir);
         }
         return query.getResultList();
+    }
+
+    @Override
+    protected java.util.List<String> getRelacionesCarga() {
+        return java.util.List.of("idProcedimiento", "idRol");
+    }
+
+    public boolean existeNombreEnProcedimiento(UUID idProcedimiento, String nombre, UUID excluirId) {
+        if (idProcedimiento == null || nombre == null || nombre.isBlank()) return false;
+        String jpql = "SELECT COUNT(p) FROM ProcedimientoPaso p"
+                + " WHERE p.idProcedimiento.idProcedimiento = :procedimiento AND LOWER(p.nombre) = :nombre"
+                + (excluirId == null ? "" : " AND p.idProcedimientoPaso <> :excluir");
+        var query = getEntityManager().createQuery(jpql, Long.class).setParameter("procedimiento", idProcedimiento)
+                .setParameter("nombre", nombre.trim().toLowerCase(java.util.Locale.ROOT));
+        if (excluirId != null) query.setParameter("excluir", excluirId);
+        return query.getSingleResult() > 0;
     }
 }

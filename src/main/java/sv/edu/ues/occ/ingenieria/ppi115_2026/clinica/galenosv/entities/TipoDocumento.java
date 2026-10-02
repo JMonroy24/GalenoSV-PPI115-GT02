@@ -5,47 +5,43 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
+import jakarta.validation.constraints.NotBlank;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.validation.RegexValido;
 
 @Entity
 @Table(name = "tipo_documento")
-@NamedQueries({
-    @NamedQuery(name = "TipoDocumento.findAll", query = "SELECT t FROM TipoDocumento t"),
-    @NamedQuery(name = "TipoDocumento.findByNombre", query = "SELECT t FROM TipoDocumento t WHERE t.nombre = :nombre"),
-    @NamedQuery(name = "TipoDocumento.findByIndicaciones", query = "SELECT t FROM TipoDocumento t WHERE t.indicaciones = :indicaciones"),
-    @NamedQuery(name = "TipoDocumento.findByExpresionRegular", query = "SELECT t FROM TipoDocumento t WHERE t.expresionRegular = :expresionRegular"),
-    @NamedQuery(name = "TipoDocumento.findByActivo", query = "SELECT t FROM TipoDocumento t WHERE t.activo = :activo")})
-public class TipoDocumento implements Serializable, IdentificableEntity {
+public class TipoDocumento extends EntidadVersionada implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
+    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
-    @NotNull
     @Column(name = "id_tipo_documento")
     private UUID idTipoDocumento;
 
-    @Size(max = 155)
-    @Column(name = "nombre")
+    @NotBlank(message = "{tipoDocumento.nombre.obligatorio}")
+    @Size(max = 155, message = "{tipoDocumento.nombre.longitud}")
+    @Column(name = "nombre", nullable = false, length = 155)
     private String nombre;
 
-    @Size(max = 2147483647)
-    @Column(name = "indicaciones")
+    @Size(max = 2000, message = "{tipoDocumento.indicaciones.longitud}")
+    @Column(name = "indicaciones", length = 2000)
     private String indicaciones;
 
-    @Size(max = 2147483647)
-    @Column(name = "expresion_regular")
+    @Size(max = 500, message = "{tipoDocumento.expresionRegular.longitud}")
+    @RegexValido
+    @Column(name = "expresion_regular", length = 500)
     private String expresionRegular;
 
-    @Column(name = "activo")
+    @NotNull(message = "{tipoDocumento.activo.obligatorio}")
+    @Column(name = "activo", nullable = false)
     private Boolean activo;
 
     @OneToMany(mappedBy = "idTipoDocumento", fetch = FetchType.LAZY)
@@ -106,12 +102,12 @@ public class TipoDocumento implements Serializable, IdentificableEntity {
         this.documentoList = documentoList;
     }
 
-        @Override
+    @Override
     public String getIdKey() {
         return idTipoDocumento != null ? idTipoDocumento.toString() : "";
     }
 
-@Override
+    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idTipoDocumento != null ? idTipoDocumento.hashCode() : 0);

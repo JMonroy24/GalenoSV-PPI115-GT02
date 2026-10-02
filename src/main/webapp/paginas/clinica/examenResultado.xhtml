@@ -15,25 +15,25 @@
                                 lazyModel="#{examenResultadoModel.lazyModel}"
                                 titulo="Resultados de Examen">
 
-            <p:column headerText="Procedimiento (orden)">
+            <p:column headerText="Procedimiento (orden)" sortBy="#{registro.idOrdenExamen.idConsultaProcedimientoPaso.idConsultaProcedimiento.idProcedimiento.nombre}">
                 <h:outputText value="#{registro.idOrdenExamen.idConsultaProcedimientoPaso.idConsultaProcedimiento.idProcedimiento.nombre}"/>
             </p:column>
 
-            <p:column headerText="Fecha" width="150">
+            <p:column headerText="Fecha" width="150" sortBy="#{registro.fechaCreacion}">
                 <h:outputText value="#{registro.fechaCreacion}">
                     <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
                 </h:outputText>
             </p:column>
 
-            <p:column headerText="Resultado">
+            <p:column headerText="Resultado" sortBy="#{registro.resultado}">
                 <h:outputText value="#{registro.resultado}"/>
             </p:column>
 
-            <p:column headerText="Interpretación">
+            <p:column headerText="Interpretación" sortBy="#{registro.interpretacion}">
                 <h:outputText value="#{registro.interpretacion}"/>
             </p:column>
 
-            <p:column headerText="Ruta del atestado">
+            <p:column headerText="Ruta del atestado" sortBy="#{registro.rutaAtestado}">
                 <h:outputText value="#{registro.rutaAtestado}"/>
             </p:column>
 
@@ -47,22 +47,22 @@
                                 itemValue="#{o}"
                                 converter="#{entityConverter}"
                                 forceSelection="true" required="true" requiredMessage="Seleccione una orden de examen." scrollHeight="250"
-                                placeholder="Escriba indicaciones o procedimiento..."/>
+                                placeholder="Escriba indicaciones o procedimiento..." label="Orden de examen" minQueryLength="2"/>
 
                 <p:outputLabel value="Resultado:" for="resultado"/>
                 <p:inputTextarea id="resultado" value="#{examenResultadoModel.registroActual.resultado}"
                                  rows="4" autoResize="false"
                                  required="true" requiredMessage="El resultado es obligatorio."
-                                 maxlength="2000"/>
+                                 maxlength="4000" label="Resultado"/>
 
                 <p:outputLabel value="Interpretación:" for="interpretacion"/>
                 <p:inputTextarea id="interpretacion" value="#{examenResultadoModel.registroActual.interpretacion}"
                                  rows="4" autoResize="false"
                                  required="true" requiredMessage="La interpretación es obligatoria."
-                                 maxlength="2000"/>
+                                 maxlength="4000" label="Interpretación"/>
 
                 <p:outputLabel value="Ruta del atestado:" for="rutaAtestado"/>
-                <p:inputText id="rutaAtestado" value="#{examenResultadoModel.registroActual.rutaAtestado}" maxlength="255"/>
+                <p:inputText id="rutaAtestado" value="#{examenResultadoModel.registroActual.rutaAtestado}" maxlength="500" label="Ruta del atestado"/>
 
             </f:facet>
 

@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -22,6 +24,8 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRo
 @Named("consultaProcedimientoPasoModel")
 @ViewScoped
 public class ConsultaProcedimientoPasoModel extends ModelTransaccional<ConsultaProcedimientoPaso, UUID> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Inject
     protected ConsultaProcedimientoPasoDAO consultaProcedimientoPasoDAO;
@@ -51,11 +55,13 @@ public class ConsultaProcedimientoPasoModel extends ModelTransaccional<ConsultaP
 
     /** Método para p:autoComplete. Busca procedimientos de consulta. */
     public List<ConsultaProcedimiento> completeConsultaProcedimiento(String query) {
+        if (query == null || query.trim().length() < 2) return java.util.List.of();
         return consultaProcedimientoDAO.buscarParaAutocompletar(query, 20);
     }
 
     /** Método para p:autoComplete. Busca asignaciones Persona/Rol. */
     public List<PersonaRol> completePersonaRol(String query) {
+        if (query == null || query.trim().length() < 2) return java.util.List.of();
         return personaRolDAO.buscarParaAutocompletar(query, 20);
     }
 
@@ -66,4 +72,11 @@ public class ConsultaProcedimientoPasoModel extends ModelTransaccional<ConsultaP
     public void setConsultaProcedimientoPasoDAO(ConsultaProcedimientoPasoDAO consultaProcedimientoPasoDAO) {
         this.consultaProcedimientoPasoDAO = consultaProcedimientoPasoDAO;
     }
+
+    @Override
+    protected void validarNegocio(ConsultaProcedimientoPaso registro) {
+        ValidadorComun.rangoFechas(registro.getFechaInicio(), registro.getFechaFin());
+        registro.setEstado(ValidadorComun.textoObligatorio(registro.getEstado(), "El estado"));
+    }
+
 }

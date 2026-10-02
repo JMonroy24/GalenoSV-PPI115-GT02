@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -16,6 +18,8 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona;
 @Named("personaModel")
 @ViewScoped
 public class PersonaModel extends ModelTransaccional<Persona, UUID> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Inject
     protected PersonaDAO personaDAO;
@@ -42,4 +46,18 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
     public void setPersonaDAO(PersonaDAO personaDAO) {
         this.personaDAO = personaDAO;
     }
+
+    @Override
+    protected void validarNegocio(Persona registro) {
+        registro.setNombres(ValidadorComun.textoObligatorio(registro.getNombres(), "Los nombres"));
+        registro.setApellidos(ValidadorComun.textoObligatorio(registro.getApellidos(), "Los apellidos"));
+        if (registro.getFechaNacimiento() != null && !registro.getFechaNacimiento().isBefore(getHoy())) {
+            throw new ValidacionNegocioException("La fecha de nacimiento debe estar en el pasado.");
+        }
+    }
+
+    public java.time.LocalDate getHoy() {
+        return java.time.LocalDate.now(java.time.ZoneId.of("America/El_Salvador"));
+    }
+
 }

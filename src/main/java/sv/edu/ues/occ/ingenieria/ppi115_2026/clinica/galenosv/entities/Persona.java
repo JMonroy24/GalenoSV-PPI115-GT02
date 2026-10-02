@@ -5,50 +5,47 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.io.Serializable;
 import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import jakarta.persistence.PrePersist;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Past;
 
 @Entity
 @Table(name = "persona")
-@NamedQueries({
-    @NamedQuery(name = "Persona.findAll", query = "SELECT p FROM Persona p"),
-    @NamedQuery(name = "Persona.findByNombres", query = "SELECT p FROM Persona p WHERE p.nombres = :nombres"),
-    @NamedQuery(name = "Persona.findByApellidos", query = "SELECT p FROM Persona p WHERE p.apellidos = :apellidos"),
-    @NamedQuery(name = "Persona.findByFechaNacimiento", query = "SELECT p FROM Persona p WHERE p.fechaNacimiento = :fechaNacimiento"),
-    @NamedQuery(name = "Persona.findByFechaCreacion", query = "SELECT p FROM Persona p WHERE p.fechaCreacion = :fechaCreacion")})
-public class Persona implements Serializable, IdentificableEntity {
+public class Persona extends EntidadVersionada implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
+    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
-    @NotNull
     @Column(name = "id_persona")
     private UUID idPersona;
 
-    @Size(max = 255)
-    @Column(name = "nombres")
+    @NotBlank(message = "{persona.nombres.obligatorio}")
+    @Size(max = 255, message = "{persona.nombres.longitud}")
+    @Column(name = "nombres", nullable = false, length = 255)
     private String nombres;
 
-    @Size(max = 255)
-    @Column(name = "apellidos")
+    @NotBlank(message = "{persona.apellidos.obligatorio}")
+    @Size(max = 255, message = "{persona.apellidos.longitud}")
+    @Column(name = "apellidos", nullable = false, length = 255)
     private String apellidos;
 
+    @Past(message = "{persona.fechaNacimiento.pasada}")
     @Column(name = "fecha_nacimiento")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date fechaNacimiento;
+    private LocalDate fechaNacimiento;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", nullable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaCreacion;
 
@@ -60,6 +57,14 @@ public class Persona implements Serializable, IdentificableEntity {
 
     @OneToMany(mappedBy = "idPersona", fetch = FetchType.LAZY)
     private List<PersonaRol> personaRolList;
+
+    /** Conserva fechas importadas y asigna la creación en todos los flujos JPA. */
+    @PrePersist
+    protected void asignarFechaCreacion() {
+        if (fechaCreacion == null) {
+            fechaCreacion = new Date();
+        }
+    }
 
     public Persona() {
     }
@@ -92,11 +97,11 @@ public class Persona implements Serializable, IdentificableEntity {
         this.apellidos = apellidos;
     }
 
-    public Date getFechaNacimiento() {
+    public LocalDate getFechaNacimiento() {
         return fechaNacimiento;
     }
 
-    public void setFechaNacimiento(Date fechaNacimiento) {
+    public void setFechaNacimiento(LocalDate fechaNacimiento) {
         this.fechaNacimiento = fechaNacimiento;
     }
 
@@ -132,12 +137,12 @@ public class Persona implements Serializable, IdentificableEntity {
         this.personaRolList = personaRolList;
     }
 
-        @Override
+    @Override
     public String getIdKey() {
         return idPersona != null ? idPersona.toString() : "";
     }
 
-@Override
+    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idPersona != null ? idPersona.hashCode() : 0);

@@ -19,15 +19,15 @@
                 <h:outputText value="#{registro.idPersona.nombres} #{registro.idPersona.apellidos}"/>
             </p:column>
             
-            <p:column headerText="Tipo de Documento">
+            <p:column headerText="Tipo de Documento" sortBy="#{registro.idTipoDocumento.nombre}">
                 <h:outputText value="#{registro.idTipoDocumento.nombre}"/>
             </p:column>
             
-            <p:column headerText="Valor (Número)">
+            <p:column headerText="Valor (Número)" sortBy="#{registro.valor}">
                 <h:outputText value="#{registro.valor}"/>
             </p:column>
             
-            <p:column headerText="Ruta Física">
+            <p:column headerText="Ruta Física" sortBy="#{registro.rutaFisica}">
                 <h:outputText value="#{registro.rutaFisica}"/>
             </p:column>
 
@@ -41,21 +41,25 @@
                                 var="p" itemLabel="#{p.nombres} #{p.apellidos}" itemValue="#{p}"
                                 converter="#{entityConverter}"
                                 forceSelection="true" required="true" scrollHeight="250"
-                                placeholder="Escriba un nombre para buscar..."/>
+                                placeholder="Escriba un nombre para buscar..." label="Persona" requiredMessage="Complete el campo persona." minQueryLength="2"/>
                 
                 <p:outputLabel value="Tipo de Documento:" for="idTipoDocumento"/>
                 <p:selectOneMenu id="idTipoDocumento" value="#{documentoModel.registroActual.idTipoDocumento}"
-                                 converter="#{entityConverter}" required="true" filter="true">
+                                 converter="#{entityConverter}" required="true" filter="true" label="Tipo de Documento" requiredMessage="Complete el campo tipo de documento.">
                     <f:selectItem itemLabel="Seleccione un tipo..." itemValue="#{null}" noSelectionOption="true"/>
-                    <f:selectItems value="#{tipoDocumentoModel.registros}" var="td"
+                    <f:selectItems value="#{tipoDocumentoModel.activos}" var="td"
                                    itemLabel="#{td.nombre}" itemValue="#{td}"/>
+                    <p:ajax process="@this" update="valor indicacionesTipo"/>
                 </p:selectOneMenu>
                 
                 <p:outputLabel value="Valor del Documento:" for="valor"/>
-                <p:inputText id="valor" value="#{documentoModel.registroActual.valor}" required="true"/>
+                <h:panelGroup>
+                    <p:inputText id="valor" value="#{documentoModel.registroActual.valor}" required="true" label="Valor del Documento" requiredMessage="Complete el campo valor del documento." maxlength="50" placeholder="#{documentoModel.registroActual.idTipoDocumento.indicaciones}"/>
+                    <h:outputText id="indicacionesTipo" value="#{documentoModel.registroActual.idTipoDocumento.indicaciones}" styleClass="ui-text-secondary"/>
+                </h:panelGroup>
                 
                 <p:outputLabel value="Ruta Física:" for="rutaFisica"/>
-                <p:inputText id="rutaFisica" value="#{documentoModel.registroActual.rutaFisica}"/>
+                <p:inputText id="rutaFisica" value="#{documentoModel.registroActual.rutaFisica}" label="Ruta Física" maxlength="500"/>
                 
                             </h:panelGrid>
             </f:facet>

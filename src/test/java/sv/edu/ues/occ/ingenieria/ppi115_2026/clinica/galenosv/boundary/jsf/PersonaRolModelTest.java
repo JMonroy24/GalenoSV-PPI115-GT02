@@ -31,13 +31,10 @@ public class PersonaRolModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        // Now it uses inicializarLazyModel() which initializes lazyModel instead of registros
-        
-        // Let's call init or anything, maybe it will just initialize lazy model
-        try {
-            // We just ensure it runs without exception
-            // We cannot test getLazyModel() != null ? 1 : 0 easily because it uses lazy model
-        } catch (Exception e) {}
+        personaRolModel.init();
+        assertNotNull(personaRolModel.getLazyModel());
+        assertNull(personaRolModel.getRegistros());
+
     }
 
     @Test
@@ -73,6 +70,10 @@ public class PersonaRolModelTest {
     public void testGuardarCrear() {
         personaRolModel.prepararNuevo();
 
+        personaRolModel.getRegistroActual().setIdPersona(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona(UUID.randomUUID()));
+        var rolValido = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol(UUID.randomUUID());
+        rolValido.setActivo(true);
+        personaRolModel.getRegistroActual().setIdRol(rolValido);
         personaRolModel.guardar();
 
         verify(personaRolDAO).create(any(PersonaRol.class));
@@ -85,6 +86,10 @@ public class PersonaRolModelTest {
         PersonaRol pr = new PersonaRol(UUID.randomUUID());
         personaRolModel.seleccionar(pr);
 
+        personaRolModel.getRegistroActual().setIdPersona(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona(UUID.randomUUID()));
+        var rolValido = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol(UUID.randomUUID());
+        rolValido.setActivo(true);
+        personaRolModel.getRegistroActual().setIdRol(rolValido);
         personaRolModel.guardar();
 
         verify(personaRolDAO).update(pr);

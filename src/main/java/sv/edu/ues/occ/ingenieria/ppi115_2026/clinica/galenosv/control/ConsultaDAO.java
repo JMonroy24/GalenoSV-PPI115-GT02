@@ -46,18 +46,27 @@ public class ConsultaDAO extends DefaultDAO<Consulta, UUID> implements Serializa
      * @return lista de coincidencias
      */
     public List<Consulta> buscarParaAutocompletar(String filtro, int max) {
-        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        String texto = normalizarFiltro(filtro);
+        if (texto == null || texto.length() < 2) {
+            return java.util.List.of();
+        }
+        String patron = patronBusqueda(texto);
         return getEntityManager().createQuery(
                 "SELECT c FROM Consulta c"
-                + " LEFT JOIN c.idPersonaRol pr"
-                + " LEFT JOIN pr.idPersona p"
-                + " WHERE LOWER(c.referenciaExterna) LIKE :patron"
-                + " OR LOWER(p.nombres) LIKE :patron"
-                + " OR LOWER(p.apellidos) LIKE :patron"
-                + " ORDER BY c.fechaInicio DESC",
+                + " LEFT JOIN FETCH c.idPersonaRol pr"
+                + " LEFT JOIN FETCH pr.idPersona p"
+                + " WHERE LOWER(c.referenciaExterna) LIKE :patron ESCAPE '\\'"
+                + " OR LOWER(p.nombres) LIKE :patron ESCAPE '\\'"
+                + " OR LOWER(p.apellidos) LIKE :patron ESCAPE '\\'"
+                + " ORDER BY c.fechaInicio DESC, c.idConsulta",
                 Consulta.class)
                 .setParameter("patron", patron)
-                .setMaxResults(max)
+                .setMaxResults(limitarAutocompletado(max))
                 .getResultList();
+    }
+
+    @Override
+    protected java.util.List<String> getRelacionesCarga() {
+        return java.util.List.of("idPersonaRol.idPersona", "idPersonaRol.idRol", "idPersonaRol.idClinica");
     }
 }

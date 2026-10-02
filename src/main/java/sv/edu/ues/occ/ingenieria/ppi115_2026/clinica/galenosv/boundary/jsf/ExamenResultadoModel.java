@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -20,6 +22,8 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExam
 @Named("examenResultadoModel")
 @ViewScoped
 public class ExamenResultadoModel extends ModelTransaccional<ExamenResultado, UUID> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Inject
     protected ExamenResultadoDAO examenResultadoDAO;
@@ -46,6 +50,7 @@ public class ExamenResultadoModel extends ModelTransaccional<ExamenResultado, UU
 
     /** Método para p:autoComplete. Busca órdenes de examen. */
     public List<OrdenExamen> completeOrdenExamen(String query) {
+        if (query == null || query.trim().length() < 2) return java.util.List.of();
         return ordenExamenDAO.buscarParaAutocompletar(query, 20);
     }
 
@@ -56,4 +61,12 @@ public class ExamenResultadoModel extends ModelTransaccional<ExamenResultado, UU
     public void setExamenResultadoDAO(ExamenResultadoDAO examenResultadoDAO) {
         this.examenResultadoDAO = examenResultadoDAO;
     }
+
+    @Override
+    protected void validarNegocio(ExamenResultado registro) {
+        registro.setResultado(ValidadorComun.textoObligatorio(registro.getResultado(), "El resultado"));
+        registro.setInterpretacion(ValidadorComun.textoObligatorio(registro.getInterpretacion(), "La interpretación"));
+        ValidadorComun.requerido(registro.getIdOrdenExamen(), "Seleccione una orden de examen.");
+    }
+
 }

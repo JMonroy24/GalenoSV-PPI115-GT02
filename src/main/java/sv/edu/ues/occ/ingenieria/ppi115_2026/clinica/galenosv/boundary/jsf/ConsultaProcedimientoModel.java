@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
@@ -22,6 +24,8 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaP
 @ViewScoped
 public class ConsultaProcedimientoModel extends ModelTransaccional<ConsultaProcedimiento, UUID> implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Inject
     protected ConsultaProcedimientoDAO consultaProcedimientoDAO;
 
@@ -41,29 +45,18 @@ public class ConsultaProcedimientoModel extends ModelTransaccional<ConsultaProce
         leerConsultaDesdeUrl();
     }
 
-private void leerConsultaDesdeUrl() {
-    try {
+    private void leerConsultaDesdeUrl() {
         FacesContext fc = FacesContext.getCurrentInstance();
-        if (fc == null) {
-            return;
+        if (fc == null) return;
+        String parametro = fc.getExternalContext().getRequestParameterMap().get("idConsulta");
+        if (parametro == null || parametro.isBlank()) return;
+        try {
+            consultaPreseleccionada = consultaDAO.findById(UUID.fromString(parametro.trim()));
+        } catch (IllegalArgumentException ex) {
+            consultaPreseleccionada = null;
         }
-        String idConsultaParam = fc.getExternalContext()
-                .getRequestParameterMap()
-                .get("idConsulta");
-
-        if (idConsultaParam != null && !idConsultaParam.isBlank()) {
-            UUID idConsulta = UUID.fromString(idConsultaParam.trim());
-            consultaPreseleccionada = consultaDAO.findById(idConsulta);
-        }
-    } catch (IllegalArgumentException ex) {
-        // parámetro con formato inválido
-        consultaPreseleccionada = null;
-    } catch (LinkageError ex) {
-        // FacesContext no resuelve fuera de un contenedor JSF real
-        // (por ejemplo, en pruebas unitarias con Mockito)
-        consultaPreseleccionada = null;
     }
-}
+
     @Override
     protected DAOInterface<ConsultaProcedimiento, UUID> getDAO() {
         return consultaProcedimientoDAO;
@@ -81,6 +74,7 @@ private void leerConsultaDesdeUrl() {
 
     /** Método para p:autoComplete. Busca consultas por persona o referencia. */
     public List<Consulta> completeConsulta(String query) {
+        if (query == null || query.trim().length() < 2) return java.util.List.of();
         return consultaDAO.buscarParaAutocompletar(query, 20);
     }
 
@@ -95,4 +89,18 @@ private void leerConsultaDesdeUrl() {
     public Consulta getConsultaPreseleccionada() {
         return consultaPreseleccionada;
     }
+
+    @Override
+    protected void validarNegocio(ConsultaProcedimiento registro) {
+        ValidadorComun.rangoFechas(registro.getFechaInicio(), registro.getFechaFin());
+        if (registro.getIdConsulta() != null) {
+            var consulta = registro.getIdConsulta();
+            ValidadorComun.dentroDelPeriodo(registro.getFechaInicio(), registro.getFechaFin(),
+                    consulta.getFechaInicio(), consulta.getFechaFin());
+        }
+        if (registro.getIdProcedimiento() != null) {
+            ValidadorComun.activo(registro.getIdProcedimiento().getActivo(), "El procedimiento");
+        }
+    }
+
 }

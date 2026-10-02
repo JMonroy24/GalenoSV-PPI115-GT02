@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +33,9 @@ public class ProcedimientoPasoExamenModelTest {
     @Mock
     private ProcedimientoPasoExamenDAO procedimientoPasoExamenDAO;
 
+    @Mock
+    private AsignacionService asignacionService;
+
     @InjectMocks
     private ProcedimientoPasoExamenModel procedimientoPasoExamenModel;
 
@@ -49,13 +54,10 @@ public class ProcedimientoPasoExamenModelTest {
      */
     @Test
     public void testInitYCargarDatos() {
-        // Now it uses inicializarLazyModel() which initializes lazyModel instead of registros
-        
-        // Let's call init or anything, maybe it will just initialize lazy model
-        try {
-            // We just ensure it runs without exception
-            // We cannot test getLazyModel() != null ? 1 : 0 easily because it uses lazy model
-        } catch (Exception e) {}
+        procedimientoPasoExamenModel.init();
+        assertNotNull(procedimientoPasoExamenModel.getLazyModel());
+        assertNull(procedimientoPasoExamenModel.getRegistros());
+
     }
 
     /**
@@ -132,8 +134,7 @@ public class ProcedimientoPasoExamenModelTest {
 
         procedimientoPasoExamenModel.guardar();
 
-        verify(procedimientoPasoExamenDAO)
-                .create(any(ProcedimientoPasoExamen.class));
+        verify(asignacionService).guardarExamen(any(ProcedimientoPasoExamen.class), eq(true));
         assertEquals(
                 Estado.NINGUNO,
                 procedimientoPasoExamenModel.getEstado()
@@ -156,7 +157,7 @@ public class ProcedimientoPasoExamenModelTest {
         procedimientoPasoExamenModel.seleccionar(asociacion);
         procedimientoPasoExamenModel.guardar();
 
-        verify(procedimientoPasoExamenDAO).update(asociacion);
+        verify(asignacionService).guardarExamen(asociacion, false);
         assertEquals(
                 Estado.NINGUNO,
                 procedimientoPasoExamenModel.getEstado()

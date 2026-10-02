@@ -8,7 +8,7 @@ import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoExamen;
 
 /**
- * Acceso a datos para la entidad .
+ * Acceso a datos para la entidad TipoExamen.
  */
 @ApplicationScoped
 public class TipoExamenDAO extends DefaultDAO<TipoExamen, UUID> implements Serializable {
@@ -38,14 +38,6 @@ public class TipoExamenDAO extends DefaultDAO<TipoExamen, UUID> implements Seria
     }
 
 
-    public java.util.List<TipoExamen> buscarParaAutocompletar(String filtro, int max) {
-        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
-        return getEntityManager().createQuery(
-                "SELECT e FROM TipoExamen e",
-                TipoExamen.class)
-                .setMaxResults(max)
-                .getResultList();
-    }
 
     /**
      * Devuelve todos los tipos de examen activos, para alimentar selectores de FK

@@ -46,21 +46,30 @@ public class ConsultaProcedimientoPasoDAO extends DefaultDAO<ConsultaProcedimien
      * @return lista de coincidencias
      */
     public List<ConsultaProcedimientoPaso> buscarParaAutocompletar(String filtro, int max) {
-        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
+        String texto = normalizarFiltro(filtro);
+        if (texto == null || texto.length() < 2) {
+            return java.util.List.of();
+        }
+        String patron = patronBusqueda(texto);
         return getEntityManager().createQuery(
                 "SELECT cpp FROM ConsultaProcedimientoPaso cpp"
-                + " LEFT JOIN cpp.idConsultaProcedimiento cp"
-                + " LEFT JOIN cp.idProcedimiento proc"
-                + " LEFT JOIN cpp.idPersonaRol pr"
-                + " LEFT JOIN pr.idPersona p"
-                + " WHERE LOWER(proc.nombre) LIKE :patron"
-                + " OR LOWER(cpp.estado) LIKE :patron"
-                + " OR LOWER(p.nombres) LIKE :patron"
-                + " OR LOWER(p.apellidos) LIKE :patron"
-                + " ORDER BY cpp.fechaInicio DESC",
+                + " LEFT JOIN FETCH cpp.idConsultaProcedimiento cp"
+                + " LEFT JOIN FETCH cp.idProcedimiento proc"
+                + " LEFT JOIN FETCH cpp.idPersonaRol pr"
+                + " LEFT JOIN FETCH pr.idPersona p"
+                + " WHERE LOWER(proc.nombre) LIKE :patron ESCAPE '\\'"
+                + " OR LOWER(cpp.estado) LIKE :patron ESCAPE '\\'"
+                + " OR LOWER(p.nombres) LIKE :patron ESCAPE '\\'"
+                + " OR LOWER(p.apellidos) LIKE :patron ESCAPE '\\'"
+                + " ORDER BY cpp.fechaInicio DESC, cpp.idConsultaProcedimientoPaso",
                 ConsultaProcedimientoPaso.class)
                 .setParameter("patron", patron)
-                .setMaxResults(max)
+                .setMaxResults(limitarAutocompletado(max))
                 .getResultList();
+    }
+
+    @Override
+    protected java.util.List<String> getRelacionesCarga() {
+        return java.util.List.of("idConsultaProcedimiento.idProcedimiento", "idPersonaRol.idPersona", "idPersonaRol.idRol");
     }
 }

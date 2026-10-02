@@ -16,13 +16,13 @@
                          styleClass="ui-button-success"
                          action="#{cc.attrs.model.guardar()}"
                          process="#{cc.attrs.process}"
-                         update="#{cc.attrs.update}"
-                         oncomplete="if(!args.validationFailed) PF('#{cc.attrs.dialog}').hide()"/>
+                         update="#{cc.attrs.update} @([id$=msgForm])"
+                         oncomplete="if(args &amp;&amp; !args.validationFailed) PF('#{cc.attrs.dialog}').hide()"/>
         <p:commandButton value="Cancelar" icon="pi pi-times"
                          styleClass="ui-button-secondary"
                          action="#{cc.attrs.model.cancelar()}"
                          process="@this"
-                         update="#{cc.attrs.update}"
+                         update="#{cc.attrs.update} @([id$=msgForm])"
                          oncomplete="PF('#{cc.attrs.dialog}').hide()"
                          immediate="true"/>
     </cc:implementation>

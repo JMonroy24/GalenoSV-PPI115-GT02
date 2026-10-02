@@ -1,5 +1,8 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.view.ViewScoped;
@@ -40,6 +43,9 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
     private TipoExamen tipoSeleccionado;
     private String observacionesTipo;
 
+    @Inject
+    protected AsignacionService asignacionService;
+
     @PostConstruct
     public void init() {
         inicializarLazyModel();
@@ -69,6 +75,7 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
      */
     @Override
     public void seleccionar(Examen examen) {
+        if (examen == null) return;
         super.seleccionar(examen);
         tiposAsignados = examenTipoExamenDAO.findByExamen(examen.getIdExamen());
         limpiarSeleccionTipo();
@@ -94,21 +101,9 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
      */
     public void agregarTipo() {
         if (!isEstadoModificar() || getRegistroActual() == null
-                || tipoSeleccionado == null) {
+                || tipoSeleccionado == null || tipoSeleccionado.getIdTipoExamen() == null) {
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Tipo de examen",
                     "Seleccione un tipo para un examen guardado.");
-            return;
-        }
-
-        UUID idTipo = tipoSeleccionado.getIdTipoExamen();
-        boolean yaAsignado = tiposAsignados.stream()
-                .anyMatch(asignacion -> asignacion.getIdTipoExamen() != null
-                && idTipo.equals(
-                        asignacion.getIdTipoExamen().getIdTipoExamen()));
-
-        if (yaAsignado) {
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Tipo de examen",
-                    "Este tipo ya está asignado al examen.");
             return;
         }
 
@@ -119,13 +114,17 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
         asignacion.setObservaciones(observacionesTipo);
 
         try {
-            examenTipoExamenDAO.create(asignacion);
+            asignacionService.guardarTipo(asignacion, true);
             tiposAsignados = examenTipoExamenDAO.findByExamen(
                     getRegistroActual().getIdExamen());
             limpiarSeleccionTipo();
             agregarMensaje(FacesMessage.SEVERITY_INFO, "Tipo de examen",
                     "Tipo asignado correctamente.");
+        } catch (ValidacionNegocioException e) {
+            agregarMensaje(FacesMessage.SEVERITY_WARN, "Validación", e.getMessage());
+            marcarValidacionFallida();
         } catch (Exception e) {
+            marcarValidacionFallida();
             LOGGER.log(Level.SEVERE, "Error al asignar un tipo al examen", e);
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Tipo de examen",
                     clasificarError(e));
@@ -154,7 +153,11 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
                     getRegistroActual().getIdExamen());
             agregarMensaje(FacesMessage.SEVERITY_INFO, "Tipo de examen",
                     "Tipo quitado correctamente.");
+        } catch (ValidacionNegocioException e) {
+            agregarMensaje(FacesMessage.SEVERITY_WARN, "Validación", e.getMessage());
+            marcarValidacionFallida();
         } catch (Exception e) {
+            marcarValidacionFallida();
             LOGGER.log(Level.SEVERE, "Error al quitar un tipo del examen", e);
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Tipo de examen",
                     clasificarError(e));
@@ -203,4 +206,13 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
     public java.util.List<Examen> getExamenesActivos() {
         return examenDAO.findAllActivos();
     }
+
+    @Override
+    protected void validarNegocio(Examen registro) {
+        registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre"));
+        if (examenDAO.existePorCampo("nombre", registro.getNombre(), registro.getIdExamen())) {
+            throw new ValidacionNegocioException("Ya existe un registro con este nombre.");
+        }
+    }
+
 }

@@ -3,18 +3,13 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
 import jakarta.persistence.EntityManager;
-import java.util.List;
 import jakarta.persistence.PersistenceContext;
-import java.util.List;
 import java.io.Serializable;
-import java.util.List;
 import java.util.UUID;
-import java.util.List;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Documento;
-import java.util.List;
 
 /**
- * Acceso a datos para la entidad .
+ * Acceso a datos para la entidad Documento.
  */
 @ApplicationScoped
 public class DocumentoDAO extends DefaultDAO<Documento, UUID> implements Serializable {
@@ -43,12 +38,20 @@ public class DocumentoDAO extends DefaultDAO<Documento, UUID> implements Seriali
         return List.of("valor");
     }
 
-    public java.util.List<Documento> buscarParaAutocompletar(String filtro, int max) {
-        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
-        return getEntityManager().createQuery(
-                "SELECT e FROM Documento e",
-                Documento.class)
-                .setMaxResults(max)
-                .getResultList();
+
+    @Override
+    protected java.util.List<String> getRelacionesCarga() {
+        return java.util.List.of("idPersona", "idTipoDocumento");
+    }
+
+    public boolean existeTipoValor(UUID idTipo, String valor, UUID excluirId) {
+        if (idTipo == null || valor == null || valor.isBlank()) return false;
+        String jpql = "SELECT COUNT(d) FROM Documento d"
+                + " WHERE d.idTipoDocumento.idTipoDocumento = :tipo AND LOWER(d.valor) = :valor"
+                + (excluirId == null ? "" : " AND d.idDocumento <> :excluir");
+        var query = getEntityManager().createQuery(jpql, Long.class)
+                .setParameter("tipo", idTipo).setParameter("valor", valor.trim().toLowerCase(java.util.Locale.ROOT));
+        if (excluirId != null) query.setParameter("excluir", excluirId);
+        return query.getSingleResult() > 0;
     }
 }

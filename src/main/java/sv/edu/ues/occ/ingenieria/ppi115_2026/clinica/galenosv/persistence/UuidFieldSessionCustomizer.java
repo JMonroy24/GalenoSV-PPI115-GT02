@@ -104,7 +104,8 @@ public class UuidFieldSessionCustomizer implements SessionCustomizer {
                         && field.getColumnDefinition().toLowerCase().contains("uuid"));
         if (isUuid) {
             field.setSqlType(Types.OTHER);
-            field.setTypeName("uuid");
+            // typeName designa una clase Java en EclipseLink, no un tipo SQL.
+            // Escribir "uuid" allí provoca ClassNotFoundException al leer getType().
             field.setColumnDefinition("uuid");
             if (type == null) {
                 field.setType(UUID.class);

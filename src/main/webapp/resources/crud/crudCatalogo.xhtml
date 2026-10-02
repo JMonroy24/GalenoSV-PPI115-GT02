@@ -59,6 +59,7 @@
                   modal="true" responsive="true"
                   width="550" closable="true" appendTo="@(body)">
             <h:form id="frmDialogo">
+                <p:messages id="msgForm" showDetail="true" closable="true"/>
                 <p:outputPanel id="pnlFormulario">
                     <p:outputPanel rendered="#{cc.attrs.model.registroActual != null}">
                         <cc:renderFacet name="formulario"/>
@@ -68,7 +69,7 @@
 
                     <p:toolbar>
                         <p:toolbarGroup align="right">
-                            <crud:botonesFormulario model="#{cc.attrs.model}" update="@([id$=tabla]) @([id$=mensajes])" process="@all" dialog="dlgFormularioCat" />
+                            <crud:botonesFormulario model="#{cc.attrs.model}" update="@([id$=tabla]) @([id$=mensajes])" process="@form" dialog="dlgFormularioCat" />
                         </p:toolbarGroup>
                     </p:toolbar>
                 </p:outputPanel>

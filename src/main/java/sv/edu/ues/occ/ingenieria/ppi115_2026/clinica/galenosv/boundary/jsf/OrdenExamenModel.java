@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -20,6 +22,8 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExam
 @Named("ordenExamenModel")
 @ViewScoped
 public class OrdenExamenModel extends ModelTransaccional<OrdenExamen, UUID> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Inject
     protected OrdenExamenDAO ordenExamenDAO;
@@ -46,6 +50,7 @@ public class OrdenExamenModel extends ModelTransaccional<OrdenExamen, UUID> impl
 
     /** Método para p:autoComplete. Busca pasos de procedimiento de consulta. */
     public List<ConsultaProcedimientoPaso> completeConsultaProcedimientoPaso(String query) {
+        if (query == null || query.trim().length() < 2) return java.util.List.of();
         return consultaProcedimientoPasoDAO.buscarParaAutocompletar(query, 20);
     }
 
@@ -56,4 +61,11 @@ public class OrdenExamenModel extends ModelTransaccional<OrdenExamen, UUID> impl
     public void setOrdenExamenDAO(OrdenExamenDAO ordenExamenDAO) {
         this.ordenExamenDAO = ordenExamenDAO;
     }
+
+    @Override
+    protected void validarNegocio(OrdenExamen registro) {
+        registro.setIndicaciones(ValidadorComun.textoObligatorio(registro.getIndicaciones(), "Las indicaciones"));
+        ValidadorComun.requerido(registro.getIdConsultaProcedimientoPaso(), "Seleccione un paso de la consulta.");
+    }
+
 }

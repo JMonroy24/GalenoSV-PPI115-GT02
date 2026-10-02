@@ -60,4 +60,9 @@ public class OrdenExamenDAO extends DefaultDAO<OrdenExamen, UUID> implements Ser
                 .setMaxResults(max)
                 .getResultList();
     }
+
+    @Override
+    protected java.util.List<String> getRelacionesCarga() {
+        return java.util.List.of("idConsultaProcedimientoPaso.idConsultaProcedimiento.idProcedimiento");
+    }
 }

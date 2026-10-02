@@ -31,13 +31,10 @@ public class DocumentoModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        // Now it uses inicializarLazyModel() which initializes lazyModel instead of registros
-        
-        // Let's call init or anything, maybe it will just initialize lazy model
-        try {
-            // We just ensure it runs without exception
-            // We cannot test getLazyModel() != null ? 1 : 0 easily because it uses lazy model
-        } catch (Exception e) {}
+        documentoModel.init();
+        assertNotNull(documentoModel.getLazyModel());
+        assertNull(documentoModel.getRegistros());
+
     }
 
     @Test
@@ -73,6 +70,11 @@ public class DocumentoModelTest {
     public void testGuardarCrear() {
         documentoModel.prepararNuevo();
 
+        documentoModel.getRegistroActual().setValor("12345678");
+        documentoModel.getRegistroActual().setIdPersona(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona(UUID.randomUUID()));
+        var tipoValido = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoDocumento(UUID.randomUUID());
+        tipoValido.setActivo(true);
+        documentoModel.getRegistroActual().setIdTipoDocumento(tipoValido);
         documentoModel.guardar();
 
         verify(documentoDAO).create(any(Documento.class));
@@ -85,6 +87,11 @@ public class DocumentoModelTest {
         Documento d = new Documento(UUID.randomUUID());
         documentoModel.seleccionar(d);
 
+        documentoModel.getRegistroActual().setValor("12345678");
+        documentoModel.getRegistroActual().setIdPersona(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona(UUID.randomUUID()));
+        var tipoValido = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoDocumento(UUID.randomUUID());
+        tipoValido.setActivo(true);
+        documentoModel.getRegistroActual().setIdTipoDocumento(tipoValido);
         documentoModel.guardar();
 
         verify(documentoDAO).update(d);

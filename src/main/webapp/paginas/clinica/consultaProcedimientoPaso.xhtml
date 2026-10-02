@@ -15,7 +15,7 @@
                                 lazyModel="#{consultaProcedimientoPasoModel.lazyModel}"
                                 titulo="Pasos de Procedimiento de Consulta">
 
-            <p:column headerText="Procedimiento">
+            <p:column headerText="Procedimiento" sortBy="#{registro.idConsultaProcedimiento.idProcedimiento.nombre}">
                 <h:outputText value="#{registro.idConsultaProcedimiento.idProcedimiento.nombre}"/>
             </p:column>
 
@@ -23,23 +23,23 @@
                 <h:outputText value="#{registro.idPersonaRol.idPersona.nombres} #{registro.idPersonaRol.idPersona.apellidos}"/>
             </p:column>
 
-            <p:column headerText="Rol">
+            <p:column headerText="Rol" sortBy="#{registro.idPersonaRol.idRol.nombre}">
                 <h:outputText value="#{registro.idPersonaRol.idRol.nombre}"/>
             </p:column>
 
-            <p:column headerText="Inicio" width="150">
+            <p:column headerText="Inicio" width="150" sortBy="#{registro.fechaInicio}">
                 <h:outputText value="#{registro.fechaInicio}">
                     <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
                 </h:outputText>
             </p:column>
 
-            <p:column headerText="Fin" width="150">
+            <p:column headerText="Fin" width="150" sortBy="#{registro.fechaFin}">
                 <h:outputText value="#{registro.fechaFin}">
                     <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
                 </h:outputText>
             </p:column>
 
-            <p:column headerText="Estado" width="120">
+            <p:column headerText="Estado" width="120" sortBy="#{registro.estado}">
                 <h:outputText value="#{registro.estado}"/>
             </p:column>
 
@@ -54,7 +54,7 @@
                                 itemValue="#{cp}"
                                 converter="#{entityConverter}"
                                 forceSelection="true" required="true" requiredMessage="Seleccione un procedimiento de consulta." scrollHeight="250"
-                                placeholder="Escriba procedimiento o nombre de persona..."/>
+                                placeholder="Escriba procedimiento o nombre de persona..." label="Procedimiento de consulta" minQueryLength="2"/>
 
                 <p:outputLabel value="Responsable (persona / rol):" for="idPersonaRol"/>
                 <p:autoComplete id="idPersonaRol" value="#{consultaProcedimientoPasoModel.registroActual.idPersonaRol}"
@@ -64,23 +64,23 @@
                                 itemValue="#{pr}"
                                 converter="#{entityConverter}"
                                 forceSelection="true" required="true" requiredMessage="Seleccione un responsable." scrollHeight="250"
-                                placeholder="Escriba nombre, apellido, rol o clínica..."/>
+                                placeholder="Escriba nombre, apellido, rol o clínica..." label="Responsable (persona / rol)" minQueryLength="2"/>
 
                 <p:outputLabel value="Fecha de inicio:" for="fechaInicio"/>
                 <p:datePicker id="fechaInicio" value="#{consultaProcedimientoPasoModel.registroActual.fechaInicio}"
                               showTime="true" showIcon="true" pattern="dd/MM/yyyy HH:mm"
                               required="true" requiredMessage="La fecha de inicio es obligatoria."
-                              appendTo="@(body)"/>
+                              appendTo="@(body)" label="Fecha de inicio"/>
 
                 <p:outputLabel value="Fecha de fin:" for="fechaFin"/>
                 <p:datePicker id="fechaFin" value="#{consultaProcedimientoPasoModel.registroActual.fechaFin}"
                               showTime="true" showIcon="true" pattern="dd/MM/yyyy HH:mm"
-                              appendTo="@(body)"/>
+                              appendTo="@(body)" label="Fecha de fin" mindate="#{consultaProcedimientoPasoModel.registroActual.fechaInicio}"/>
 
                 <p:outputLabel value="Estado:" for="estado"/>
                 <p:inputText id="estado" value="#{consultaProcedimientoPasoModel.registroActual.estado}"
                              required="true" requiredMessage="El estado es obligatorio."
-                             maxlength="20" placeholder="Máximo 20 caracteres"/>
+                             maxlength="20" placeholder="Máximo 20 caracteres" label="Estado"/>
 
             </f:facet>
 

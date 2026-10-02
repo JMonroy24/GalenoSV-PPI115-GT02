@@ -27,13 +27,19 @@
                   httpPort="9080"
                   httpsPort="9443"/>
 
+    <variable name="GALENOSV_DB_HOST" defaultValue="localhost"/>
+    <variable name="GALENOSV_DB_PORT" defaultValue="5432"/>
+    <variable name="GALENOSV_DB_NAME" defaultValue="galenoSV"/>
+    <variable name="GALENOSV_DB_USER" defaultValue="admin"/>
+    <variable name="GALENOSV_WAR" defaultValue="GalenoSV.war"/>
+
     <dataSource id="galenoSV" jndiName="jdbc/galenoSV">
         <jdbcDriver libraryRef="PostgreSQLLib"/>
         <properties.postgresql
-            serverName="localhost"
-            portNumber="5432"
-            databaseName="galenoSV"
-            user="admin"
+            serverName="${GALENOSV_DB_HOST}"
+            portNumber="${GALENOSV_DB_PORT}"
+            databaseName="${GALENOSV_DB_NAME}"
+            user="${GALENOSV_DB_USER}"
             password="${env.GALENOSV_DB_PASSWORD}"/>
     </dataSource>
 
@@ -41,7 +47,7 @@
         <fileset dir="${server.config.dir}/lib" includes="postgresql-*.jar"/>
     </library>
 
-    <webApplication location="GalenoSV-1.0-SNAPSHOT.war" contextRoot="/galenoSV">
+    <webApplication location="${GALENOSV_WAR}" contextRoot="/galenoSV">
     <classloader apiTypeVisibility="spec,ibm-api,api,third-party"/>
 </webApplication>
 

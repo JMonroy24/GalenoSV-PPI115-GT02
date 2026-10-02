@@ -7,48 +7,54 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
+import jakarta.persistence.PrePersist;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "medio_contacto")
-@NamedQueries({
-    @NamedQuery(name = "MedioContacto.findAll", query = "SELECT m FROM MedioContacto m"),
-    @NamedQuery(name = "MedioContacto.findByValor", query = "SELECT m FROM MedioContacto m WHERE m.valor = :valor"),
-    @NamedQuery(name = "MedioContacto.findByFechaCreacion", query = "SELECT m FROM MedioContacto m WHERE m.fechaCreacion = :fechaCreacion")})
-public class MedioContacto implements Serializable, IdentificableEntity {
+public class MedioContacto extends EntidadVersionada implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
+    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
-    @NotNull
     @Column(name = "id_medio_contacto")
     private UUID idMedioContacto;
 
-    @Size(max = 2147483647)
-    @Column(name = "valor")
+    @NotBlank(message = "{medioContacto.valor.obligatorio}")
+    @Size(max = 255, message = "{medioContacto.valor.longitud}")
+    @Column(name = "valor", nullable = false, length = 255)
     private String valor;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", nullable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaCreacion;
 
-    @JoinColumn(name = "id_persona", referencedColumnName = "id_persona")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull(message = "{medioContacto.idPersona.obligatorio}")
+    @JoinColumn(name = "id_persona", referencedColumnName = "id_persona", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Persona idPersona;
 
-    @JoinColumn(name = "id_tipo_medio_contacto", referencedColumnName = "id_tipo_medio_contacto")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull(message = "{medioContacto.idTipoMedioContacto.obligatorio}")
+    @JoinColumn(name = "id_tipo_medio_contacto", referencedColumnName = "id_tipo_medio_contacto", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private TipoMedioContacto idTipoMedioContacto;
+
+    /** Conserva fechas importadas y asigna la creación en todos los flujos JPA. */
+    @PrePersist
+    protected void asignarFechaCreacion() {
+        if (fechaCreacion == null) {
+            fechaCreacion = new Date();
+        }
+    }
 
     public MedioContacto() {
     }
@@ -97,12 +103,12 @@ public class MedioContacto implements Serializable, IdentificableEntity {
         this.idTipoMedioContacto = idTipoMedioContacto;
     }
 
-        @Override
+    @Override
     public String getIdKey() {
         return idMedioContacto != null ? idMedioContacto.toString() : "";
     }
 
-@Override
+    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idMedioContacto != null ? idMedioContacto.hashCode() : 0);

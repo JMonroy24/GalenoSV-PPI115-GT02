@@ -7,37 +7,34 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import jakarta.validation.constraints.NotBlank;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.validation.PeriodoFechas;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.validation.RangoFechasValido;
 
 @Entity
+@RangoFechasValido
 @Table(name = "consulta_procedimiento_paso")
-@NamedQueries({
-    @NamedQuery(name = "ConsultaProcedimientoPaso.findAll", query = "SELECT c FROM ConsultaProcedimientoPaso c"),
-    @NamedQuery(name = "ConsultaProcedimientoPaso.findByFechaInicio", query = "SELECT c FROM ConsultaProcedimientoPaso c WHERE c.fechaInicio = :fechaInicio"),
-    @NamedQuery(name = "ConsultaProcedimientoPaso.findByFechaFin", query = "SELECT c FROM ConsultaProcedimientoPaso c WHERE c.fechaFin = :fechaFin"),
-    @NamedQuery(name = "ConsultaProcedimientoPaso.findByEstado", query = "SELECT c FROM ConsultaProcedimientoPaso c WHERE c.estado = :estado")})
-public class ConsultaProcedimientoPaso implements Serializable, IdentificableEntity {
+public class ConsultaProcedimientoPaso extends EntidadVersionada implements IdentificableEntity, PeriodoFechas {
 
     private static final long serialVersionUID = 1L;
 
+    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
-    @NotNull
     @Column(name = "id_consulta_procedimiento_paso")
     private UUID idConsultaProcedimientoPaso;
 
-    @Column(name = "fecha_inicio")
+    @NotNull(message = "{consultaProcedimientoPaso.fechaInicio.obligatorio}")
+    @Column(name = "fecha_inicio", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaInicio;
 
@@ -45,16 +42,19 @@ public class ConsultaProcedimientoPaso implements Serializable, IdentificableEnt
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaFin;
 
-    @Size(max = 20)
-    @Column(name = "estado")
+    @NotBlank(message = "{consultaProcedimientoPaso.estado.obligatorio}")
+    @Size(max = 20, message = "{consultaProcedimientoPaso.estado.longitud}")
+    @Column(name = "estado", nullable = false, length = 20)
     private String estado;
 
-    @JoinColumn(name = "id_consulta_procedimiento", referencedColumnName = "id_consulta_procedimiento")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull(message = "{consultaProcedimientoPaso.idConsultaProcedimiento.obligatorio}")
+    @JoinColumn(name = "id_consulta_procedimiento", referencedColumnName = "id_consulta_procedimiento", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private ConsultaProcedimiento idConsultaProcedimiento;
 
-    @JoinColumn(name = "id_persona_rol", referencedColumnName = "id_persona_rol")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull(message = "{consultaProcedimientoPaso.idPersonaRol.obligatorio}")
+    @JoinColumn(name = "id_persona_rol", referencedColumnName = "id_persona_rol", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private PersonaRol idPersonaRol;
 
     @OneToMany(mappedBy = "idConsultaProcedimientoPaso", fetch = FetchType.LAZY)
@@ -123,12 +123,12 @@ public class ConsultaProcedimientoPaso implements Serializable, IdentificableEnt
         this.ordenExamenList = ordenExamenList;
     }
 
-        @Override
+    @Override
     public String getIdKey() {
         return idConsultaProcedimientoPaso != null ? idConsultaProcedimientoPaso.toString() : "";
     }
 
-@Override
+    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idConsultaProcedimientoPaso != null ? idConsultaProcedimientoPaso.hashCode() : 0);

@@ -7,37 +7,33 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.validation.PeriodoFechas;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.validation.RangoFechasValido;
 
 @Entity
+@RangoFechasValido
 @Table(name = "consulta_procedimiento")
-@NamedQueries({
-    @NamedQuery(name = "ConsultaProcedimiento.findAll", query = "SELECT c FROM ConsultaProcedimiento c"),
-    @NamedQuery(name = "ConsultaProcedimiento.findByFechaInicio", query = "SELECT c FROM ConsultaProcedimiento c WHERE c.fechaInicio = :fechaInicio"),
-    @NamedQuery(name = "ConsultaProcedimiento.findByFechaFin", query = "SELECT c FROM ConsultaProcedimiento c WHERE c.fechaFin = :fechaFin"),
-    @NamedQuery(name = "ConsultaProcedimiento.findByObservaciones", query = "SELECT c FROM ConsultaProcedimiento c WHERE c.observaciones = :observaciones")})
-public class ConsultaProcedimiento implements Serializable, IdentificableEntity {
+public class ConsultaProcedimiento extends EntidadVersionada implements IdentificableEntity, PeriodoFechas {
 
     private static final long serialVersionUID = 1L;
 
+    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
-    @NotNull
     @Column(name = "id_consulta_procedimiento")
     private UUID idConsultaProcedimiento;
 
-    @Column(name = "fecha_inicio")
+    @NotNull(message = "{consultaProcedimiento.fechaInicio.obligatorio}")
+    @Column(name = "fecha_inicio", nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaInicio;
 
@@ -45,19 +41,21 @@ public class ConsultaProcedimiento implements Serializable, IdentificableEntity 
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaFin;
 
-    @Size(max = 2147483647)
-    @Column(name = "observaciones")
+    @Size(max = 2000, message = "{consultaProcedimiento.observaciones.longitud}")
+    @Column(name = "observaciones", length = 2000)
     private String observaciones;
 
     @OneToMany(mappedBy = "idConsultaProcedimiento", fetch = FetchType.LAZY)
     private List<ConsultaProcedimientoPaso> consultaProcedimientoPasoList;
 
-    @JoinColumn(name = "id_consulta", referencedColumnName = "id_consulta")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull(message = "{consultaProcedimiento.idConsulta.obligatorio}")
+    @JoinColumn(name = "id_consulta", referencedColumnName = "id_consulta", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Consulta idConsulta;
 
-    @JoinColumn(name = "id_procedimiento", referencedColumnName = "id_procedimiento")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull(message = "{consultaProcedimiento.idProcedimiento.obligatorio}")
+    @JoinColumn(name = "id_procedimiento", referencedColumnName = "id_procedimiento", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Procedimiento idProcedimiento;
 
     public ConsultaProcedimiento() {
@@ -123,12 +121,12 @@ public class ConsultaProcedimiento implements Serializable, IdentificableEntity 
         this.idProcedimiento = idProcedimiento;
     }
 
-        @Override
+    @Override
     public String getIdKey() {
         return idConsultaProcedimiento != null ? idConsultaProcedimiento.toString() : "";
     }
 
-@Override
+    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idConsultaProcedimiento != null ? idConsultaProcedimiento.hashCode() : 0);

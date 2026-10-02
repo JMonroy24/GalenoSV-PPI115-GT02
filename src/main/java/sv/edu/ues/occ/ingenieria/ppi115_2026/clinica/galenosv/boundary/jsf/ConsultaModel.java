@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -20,6 +22,8 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRo
 @Named("consultaModel")
 @ViewScoped
 public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Inject
     protected ConsultaDAO consultaDAO;
@@ -46,6 +50,7 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
 
     /** Método para p:autoComplete. Busca asignaciones Persona/Rol. */
     public List<PersonaRol> completePersonaRol(String query) {
+        if (query == null || query.trim().length() < 2) return java.util.List.of();
         return personaRolDAO.buscarParaAutocompletar(query, 20);
     }
 
@@ -56,4 +61,10 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
     public void setConsultaDAO(ConsultaDAO consultaDAO) {
         this.consultaDAO = consultaDAO;
     }
+
+    @Override
+    protected void validarNegocio(Consulta registro) {
+        ValidadorComun.rangoFechas(registro.getFechaInicio(), registro.getFechaFin());
+    }
+
 }

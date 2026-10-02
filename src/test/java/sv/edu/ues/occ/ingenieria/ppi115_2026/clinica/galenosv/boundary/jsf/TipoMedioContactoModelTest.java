@@ -33,13 +33,10 @@ public class TipoMedioContactoModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        // Now it uses inicializarLazyModel() which initializes lazyModel instead of registros
-        
-        // Let's call init or anything, maybe it will just initialize lazy model
-        try {
-            // We just ensure it runs without exception
-            // We cannot test getLazyModel() != null ? 1 : 0 easily because it uses lazy model
-        } catch (Exception e) {}
+        tipoMedioContactoModel.init();
+        assertNotNull(tipoMedioContactoModel.getLazyModel());
+        assertNull(tipoMedioContactoModel.getRegistros());
+
     }
 
     @Test
@@ -77,6 +74,7 @@ public class TipoMedioContactoModelTest {
         tipoMedioContactoModel.prepararNuevo();
         tipoMedioContactoModel.getRegistroActual().setNombre("Telefono");
 
+        tipoMedioContactoModel.getRegistroActual().setNombre("Registro válido");
         tipoMedioContactoModel.guardar();
 
         verify(tipoMedioContactoDAO).create(any(TipoMedioContacto.class));
@@ -90,6 +88,7 @@ public class TipoMedioContactoModelTest {
         TipoMedioContacto tmc = new TipoMedioContacto(UUID.randomUUID());
         tipoMedioContactoModel.seleccionar(tmc);
 
+        tipoMedioContactoModel.getRegistroActual().setNombre("Registro válido");
         tipoMedioContactoModel.guardar();
 
         verify(tipoMedioContactoDAO).update(tmc);

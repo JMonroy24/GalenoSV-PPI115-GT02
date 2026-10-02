@@ -5,47 +5,43 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
+import jakarta.validation.constraints.NotBlank;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.validation.RegexValido;
 
 @Entity
 @Table(name = "tipo_medio_contacto")
-@NamedQueries({
-    @NamedQuery(name = "TipoMedioContacto.findAll", query = "SELECT t FROM TipoMedioContacto t"),
-    @NamedQuery(name = "TipoMedioContacto.findByNombre", query = "SELECT t FROM TipoMedioContacto t WHERE t.nombre = :nombre"),
-    @NamedQuery(name = "TipoMedioContacto.findByIndicaciones", query = "SELECT t FROM TipoMedioContacto t WHERE t.indicaciones = :indicaciones"),
-    @NamedQuery(name = "TipoMedioContacto.findByExpresionRegular", query = "SELECT t FROM TipoMedioContacto t WHERE t.expresionRegular = :expresionRegular"),
-    @NamedQuery(name = "TipoMedioContacto.findByActivo", query = "SELECT t FROM TipoMedioContacto t WHERE t.activo = :activo")})
-public class TipoMedioContacto implements Serializable, IdentificableEntity {
+public class TipoMedioContacto extends EntidadVersionada implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
+    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
-    @NotNull
     @Column(name = "id_tipo_medio_contacto")
     private UUID idTipoMedioContacto;
 
-    @Size(max = 155)
-    @Column(name = "nombre")
+    @NotBlank(message = "{tipoMedioContacto.nombre.obligatorio}")
+    @Size(max = 155, message = "{tipoMedioContacto.nombre.longitud}")
+    @Column(name = "nombre", nullable = false, length = 155)
     private String nombre;
 
-    @Size(max = 2147483647)
-    @Column(name = "indicaciones")
+    @Size(max = 2000, message = "{tipoMedioContacto.indicaciones.longitud}")
+    @Column(name = "indicaciones", length = 2000)
     private String indicaciones;
 
-    @Size(max = 2147483647)
-    @Column(name = "expresion_regular")
+    @Size(max = 500, message = "{tipoMedioContacto.expresionRegular.longitud}")
+    @RegexValido
+    @Column(name = "expresion_regular", length = 500)
     private String expresionRegular;
 
-    @Column(name = "activo")
+    @NotNull(message = "{tipoMedioContacto.activo.obligatorio}")
+    @Column(name = "activo", nullable = false)
     private Boolean activo;
 
     @OneToMany(mappedBy = "idTipoMedioContacto", fetch = FetchType.LAZY)
@@ -106,12 +102,12 @@ public class TipoMedioContacto implements Serializable, IdentificableEntity {
         this.medioContactoList = medioContactoList;
     }
 
-        @Override
+    @Override
     public String getIdKey() {
         return idTipoMedioContacto != null ? idTipoMedioContacto.toString() : "";
     }
 
-@Override
+    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idTipoMedioContacto != null ? idTipoMedioContacto.hashCode() : 0);

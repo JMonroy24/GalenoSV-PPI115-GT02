@@ -14,15 +14,15 @@
                            titulo="Pasos de Procedimiento"
                            anchoDialogo="900">
 
-            <p:column headerText="Nombre">
+            <p:column headerText="Nombre" sortBy="#{registro.nombre}">
                 <h:outputText value="#{registro.nombre}"/>
             </p:column>
 
-            <p:column headerText="Procedimiento">
+            <p:column headerText="Procedimiento" sortBy="#{registro.idProcedimiento.nombre}">
                 <h:outputText value="#{registro.idProcedimiento.nombre}"/>
             </p:column>
 
-            <p:column headerText="Rol">
+            <p:column headerText="Rol" sortBy="#{registro.idRol.nombre}">
                 <h:outputText value="#{registro.idRol.nombre}"/>
             </p:column>
 
@@ -36,7 +36,7 @@
                              value="#{procedimientoPasoModel.registroActual.nombre}"
                              required="true"
                              requiredMessage="Ingrese el nombre del paso."
-                             maxlength="155"/>
+                             maxlength="155" label="Nombre del paso"/>
 
                 <p:outputLabel for="idProcedimiento"
                                value="Procedimiento:"/>
@@ -45,7 +45,7 @@
                                  converter="#{entityConverter}"
                                  required="true"
                                  requiredMessage="Seleccione un procedimiento."
-                                 filter="true">
+                                 filter="true" label="Procedimiento">
                     <f:selectItem itemLabel="Seleccione un procedimiento..."
                                   itemValue="#{null}"
                                   noSelectionOption="true"/>
@@ -59,7 +59,7 @@
                 <p:selectOneMenu id="idRol"
                                  value="#{procedimientoPasoModel.registroActual.idRol}"
                                  converter="#{entityConverter}"
-                                 filter="true">
+                                 filter="true" label="Rol">
                     <f:selectItem itemLabel="Sin rol asignado"
                                   itemValue="#{null}"
                                   noSelectionOption="true"/>
@@ -118,7 +118,7 @@
                             <p:selectOneMenu id="examenSeleccionado"
                                              value="#{procedimientoPasoModel.examenSeleccionado}"
                                              converter="#{entityConverter}"
-                                             filter="true">
+                                             filter="true" label="Agregar examen">
                                 <f:selectItem itemLabel="Seleccione un examen..."
                                               itemValue="#{null}"
                                               noSelectionOption="true"/>
@@ -138,7 +138,7 @@
                             <p:inputTextarea id="observacionesExamen"
                                              value="#{procedimientoPasoModel.observacionesExamen}"
                                              rows="2"
-                                             autoResize="false"/>
+                                             autoResize="false" label="Observaciones" maxlength="2000"/>
 
                             <h:outputText value=""/>
                             <p:commandButton value="Asignar examen"
@@ -186,7 +186,7 @@
                             <p:selectOneMenu id="pasoReferencia"
                                              value="#{procedimientoPasoModel.pasoReferenciaSeleccionado}"
                                              converter="#{entityConverter}"
-                                             filter="true">
+                                             filter="true" label="Paso de referencia">
                                 <f:selectItem itemLabel="Seleccione otro paso..."
                                               itemValue="#{null}"
                                               noSelectionOption="true"/>
@@ -200,7 +200,7 @@
                                            value="Tipo de secuencia:"/>
                             <p:inputText id="tipoSecuencia"
                                          value="#{procedimientoPasoModel.tipoSecuencia}"
-                                         maxlength="20"/>
+                                         maxlength="20" label="Tipo de secuencia"/>
 
                             <h:outputText value=""/>
                             <p:commandButton value="Agregar secuencia"

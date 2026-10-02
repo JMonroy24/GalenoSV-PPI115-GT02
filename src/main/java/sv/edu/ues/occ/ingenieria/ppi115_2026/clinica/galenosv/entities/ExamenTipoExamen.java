@@ -7,48 +7,52 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
+import jakarta.persistence.PrePersist;
 
 @Entity
 @Table(name = "examen_tipo_examen")
-@NamedQueries({
-    @NamedQuery(name = "ExamenTipoExamen.findAll", query = "SELECT e FROM ExamenTipoExamen e"),
-    @NamedQuery(name = "ExamenTipoExamen.findByFechaCreacion", query = "SELECT e FROM ExamenTipoExamen e WHERE e.fechaCreacion = :fechaCreacion"),
-    @NamedQuery(name = "ExamenTipoExamen.findByObservaciones", query = "SELECT e FROM ExamenTipoExamen e WHERE e.observaciones = :observaciones")})
-public class ExamenTipoExamen implements Serializable, IdentificableEntity {
+public class ExamenTipoExamen extends EntidadVersionada implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
+    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
-    @NotNull
     @Column(name = "id_examen_tipo_examen")
     private UUID idExamenTipoExamen;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", nullable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaCreacion;
 
-    @Size(max = 2147483647)
-    @Column(name = "observaciones")
+    @Size(max = 2000, message = "{examenTipoExamen.observaciones.longitud}")
+    @Column(name = "observaciones", length = 2000)
     private String observaciones;
 
-    @JoinColumn(name = "id_examen", referencedColumnName = "id_examen")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull(message = "{examenTipoExamen.idExamen.obligatorio}")
+    @JoinColumn(name = "id_examen", referencedColumnName = "id_examen", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Examen idExamen;
 
-    @JoinColumn(name = "id_tipo_examen", referencedColumnName = "id_tipo_examen")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull(message = "{examenTipoExamen.idTipoExamen.obligatorio}")
+    @JoinColumn(name = "id_tipo_examen", referencedColumnName = "id_tipo_examen", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private TipoExamen idTipoExamen;
+
+    /** Conserva fechas importadas y asigna la creación en todos los flujos JPA. */
+    @PrePersist
+    protected void asignarFechaCreacion() {
+        if (fechaCreacion == null) {
+            fechaCreacion = new Date();
+        }
+    }
 
     public ExamenTipoExamen() {
     }
@@ -97,12 +101,12 @@ public class ExamenTipoExamen implements Serializable, IdentificableEntity {
         this.idTipoExamen = idTipoExamen;
     }
 
-        @Override
+    @Override
     public String getIdKey() {
         return idExamenTipoExamen != null ? idExamenTipoExamen.toString() : "";
     }
 
-@Override
+    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idExamenTipoExamen != null ? idExamenTipoExamen.hashCode() : 0);

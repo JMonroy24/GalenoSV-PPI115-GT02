@@ -1,5 +1,6 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -84,4 +85,18 @@ public class ProcedimientoPasoSecuenciaModel
         this.procedimientoPasoSecuenciaDAO =
                 procedimientoPasoSecuenciaDAO;
     }
+
+    @Inject
+    protected AsignacionService asignacionService;
+
+    @Override
+    protected void persistirNuevo(ProcedimientoPasoSecuencia registro) {
+        asignacionService.guardarSecuencia(registro, true);
+    }
+
+    @Override
+    protected void persistirCambios(ProcedimientoPasoSecuencia registro) {
+        asignacionService.guardarSecuencia(registro, false);
+    }
+
 }

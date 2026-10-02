@@ -33,13 +33,10 @@ public class TipoDocumentoModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        // Now it uses inicializarLazyModel() which initializes lazyModel instead of registros
-        
-        // Let's call init or anything, maybe it will just initialize lazy model
-        try {
-            // We just ensure it runs without exception
-            // We cannot test getLazyModel() != null ? 1 : 0 easily because it uses lazy model
-        } catch (Exception e) {}
+        tipoDocumentoModel.init();
+        assertNotNull(tipoDocumentoModel.getLazyModel());
+        assertNull(tipoDocumentoModel.getRegistros());
+
     }
 
     @Test
@@ -77,6 +74,7 @@ public class TipoDocumentoModelTest {
         tipoDocumentoModel.prepararNuevo();
         tipoDocumentoModel.getRegistroActual().setNombre("DUI");
 
+        tipoDocumentoModel.getRegistroActual().setNombre("Registro válido");
         tipoDocumentoModel.guardar();
 
         verify(tipoDocumentoDAO).create(any(TipoDocumento.class));
@@ -90,6 +88,7 @@ public class TipoDocumentoModelTest {
         TipoDocumento td = new TipoDocumento(UUID.randomUUID());
         tipoDocumentoModel.seleccionar(td);
 
+        tipoDocumentoModel.getRegistroActual().setNombre("Registro válido");
         tipoDocumentoModel.guardar();
 
         verify(tipoDocumentoDAO).update(td);

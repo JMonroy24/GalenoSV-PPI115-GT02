@@ -5,42 +5,37 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "examen")
-@NamedQueries({
-    @NamedQuery(name = "Examen.findAll", query = "SELECT e FROM Examen e"),
-    @NamedQuery(name = "Examen.findByNombre", query = "SELECT e FROM Examen e WHERE e.nombre = :nombre"),
-    @NamedQuery(name = "Examen.findByActivo", query = "SELECT e FROM Examen e WHERE e.activo = :activo"),
-    @NamedQuery(name = "Examen.findByObservaciones", query = "SELECT e FROM Examen e WHERE e.observaciones = :observaciones")})
-public class Examen implements Serializable, IdentificableEntity {
+public class Examen extends EntidadVersionada implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
+    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
-    @NotNull
     @Column(name = "id_examen")
     private UUID idExamen;
 
-    @Size(max = 255)
-    @Column(name = "nombre")
+    @NotBlank(message = "{examen.nombre.obligatorio}")
+    @Size(max = 255, message = "{examen.nombre.longitud}")
+    @Column(name = "nombre", nullable = false, length = 255)
     private String nombre;
 
-    @Column(name = "activo")
+    @NotNull(message = "{examen.activo.obligatorio}")
+    @Column(name = "activo", nullable = false)
     private Boolean activo;
 
-    @Size(max = 2147483647)
-    @Column(name = "observaciones")
+    @Size(max = 2000, message = "{examen.observaciones.longitud}")
+    @Column(name = "observaciones", length = 2000)
     private String observaciones;
 
     @OneToMany(mappedBy = "idExamen", fetch = FetchType.LAZY)
@@ -104,12 +99,12 @@ public class Examen implements Serializable, IdentificableEntity {
         this.procedimientoPasoExamenList = procedimientoPasoExamenList;
     }
 
-        @Override
+    @Override
     public String getIdKey() {
         return idExamen != null ? idExamen.toString() : "";
     }
 
-@Override
+    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idExamen != null ? idExamen.hashCode() : 0);

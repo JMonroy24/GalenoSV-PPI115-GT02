@@ -79,6 +79,7 @@ class ProcedimientoModelTest {
         procedimientoModel.prepararNuevo();
         procedimientoModel.getRegistroActual().setNombre("Toma de muestra sanguínea");
 
+        procedimientoModel.getRegistroActual().setNombre("Registro válido");
         procedimientoModel.guardar();
 
         verify(procedimientoDAO).create(any(Procedimiento.class));
@@ -91,6 +92,7 @@ class ProcedimientoModelTest {
                 Procedimiento procedimiento = new Procedimiento(UUID.randomUUID());
 
         procedimientoModel.seleccionar(procedimiento);
+        procedimientoModel.getRegistroActual().setNombre("Registro válido");
         procedimientoModel.guardar();
 
         verify(procedimientoDAO).update(procedimiento);

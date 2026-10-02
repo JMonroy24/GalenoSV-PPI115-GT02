@@ -3,14 +3,14 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 import jakarta.faces.component.UIComponent;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.convert.Converter;
-import jakarta.faces.convert.FacesConverter;
+import jakarta.faces.convert.ConverterException;
+import jakarta.faces.application.FacesMessage;
 import jakarta.inject.Named;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.IdentificableEntity;
 
 /**
  * Convertidor JSF genérico para entidades JPA basado en UUID.
@@ -20,14 +20,12 @@ import java.util.logging.Logger;
 @RequestScoped
 public class EntityConverter implements Converter<Object> {
 
-    private static final Logger LOGGER = Logger.getLogger(EntityConverter.class.getName());
-
     @PersistenceContext
     private EntityManager em;
 
     @Override
     public Object getAsObject(FacesContext context, UIComponent component, String value) {
-        if (value == null || value.trim().isEmpty() || "null".equals(value)) {
+        if (value == null || value.isBlank()) {
             return null;
         }
         try {
@@ -36,14 +34,20 @@ public class EntityConverter implements Converter<Object> {
             if (colonIndex > 0) {
                 String className = value.substring(0, colonIndex);
                 String idStr = value.substring(colonIndex + 1);
-                Class<?> entityClass = Class.forName(className);
                 UUID id = UUID.fromString(idStr);
-                return em.find(entityClass, id);
+                if (!id.toString().equalsIgnoreCase(idStr)) throw seleccionInvalida();
+                Class<?> entityClass = em.getMetamodel().getEntities().stream()
+                        .map(e -> e.getJavaType())
+                        .filter(c -> c.getName().equals(className) && IdentificableEntity.class.isAssignableFrom(c))
+                        .findFirst().orElseThrow(this::seleccionInvalida);
+                Object entidad = em.find(entityClass, id);
+                if (entidad == null) throw seleccionInvalida();
+                return entidad;
             }
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error al convertir cadena a entidad: {0}", value);
+        } catch (IllegalArgumentException e) {
+            throw seleccionInvalida();
         }
-        return null;
+        throw seleccionInvalida();
     }
 
     @Override
@@ -51,16 +55,17 @@ public class EntityConverter implements Converter<Object> {
         if (value == null) {
             return "";
         }
-        try {
-            // Asume que todas las entidades tienen un método getId que retorna UUID
-            // Usaremos la API de JPA para obtener el identificador primario de forma genérica
-            Object id = em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier(value);
-            if (id != null) {
-                return value.getClass().getName() + ":" + id.toString();
-            }
-        } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error al convertir entidad a cadena: {0}", value);
+        if (value instanceof IdentificableEntity entidad && entidad.getIdKey() != null
+                && !entidad.getIdKey().isBlank()) {
+            Class<?> tipo = em.getMetamodel().getEntities().stream().map(e -> e.getJavaType())
+                    .filter(c -> c.isInstance(value)).findFirst().orElseThrow(this::seleccionInvalida);
+            return tipo.getName() + ":" + entidad.getIdKey();
         }
-        return value.toString();
+        throw seleccionInvalida();
+    }
+
+    private ConverterException seleccionInvalida() {
+        return new ConverterException(new FacesMessage(FacesMessage.SEVERITY_ERROR,
+                "Selección no válida", "Seleccione nuevamente un registro de la lista."));
     }
 }

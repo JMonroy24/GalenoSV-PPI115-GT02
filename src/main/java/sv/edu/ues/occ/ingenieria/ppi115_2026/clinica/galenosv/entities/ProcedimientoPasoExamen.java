@@ -7,52 +7,56 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
+import jakarta.persistence.PrePersist;
 
 @Entity
 @Table(name = "procedimiento_paso_examen")
-@NamedQueries({
-    @NamedQuery(name = "ProcedimientoPasoExamen.findAll", query = "SELECT p FROM ProcedimientoPasoExamen p"),
-    @NamedQuery(name = "ProcedimientoPasoExamen.findByFechaCreacion", query = "SELECT p FROM ProcedimientoPasoExamen p WHERE p.fechaCreacion = :fechaCreacion"),
-    @NamedQuery(name = "ProcedimientoPasoExamen.findByActivo", query = "SELECT p FROM ProcedimientoPasoExamen p WHERE p.activo = :activo"),
-    @NamedQuery(name = "ProcedimientoPasoExamen.findByObservaciones", query = "SELECT p FROM ProcedimientoPasoExamen p WHERE p.observaciones = :observaciones")})
-public class ProcedimientoPasoExamen implements Serializable, IdentificableEntity {
+public class ProcedimientoPasoExamen extends EntidadVersionada implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
+    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
-    @NotNull
     @Column(name = "id_procedimiento_paso_examen")
     private UUID idProcedimientoPasoExamen;
 
-    @Column(name = "fecha_creacion")
+    @Column(name = "fecha_creacion", nullable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaCreacion;
 
-    @Column(name = "activo")
+    @NotNull(message = "{procedimientoPasoExamen.activo.obligatorio}")
+    @Column(name = "activo", nullable = false)
     private Boolean activo;
 
-    @Size(max = 2147483647)
-    @Column(name = "observaciones")
+    @Size(max = 2000, message = "{procedimientoPasoExamen.observaciones.longitud}")
+    @Column(name = "observaciones", length = 2000)
     private String observaciones;
 
-    @JoinColumn(name = "id_examen", referencedColumnName = "id_examen")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull(message = "{procedimientoPasoExamen.idExamen.obligatorio}")
+    @JoinColumn(name = "id_examen", referencedColumnName = "id_examen", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Examen idExamen;
 
-    @JoinColumn(name = "id_procedimiento_paso", referencedColumnName = "id_procedimiento_paso")
-    @ManyToOne(fetch = FetchType.LAZY)
+    @NotNull(message = "{procedimientoPasoExamen.idProcedimientoPaso.obligatorio}")
+    @JoinColumn(name = "id_procedimiento_paso", referencedColumnName = "id_procedimiento_paso", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private ProcedimientoPaso idProcedimientoPaso;
+
+    /** Conserva fechas importadas y asigna la creación en todos los flujos JPA. */
+    @PrePersist
+    protected void asignarFechaCreacion() {
+        if (fechaCreacion == null) {
+            fechaCreacion = new Date();
+        }
+    }
 
     public ProcedimientoPasoExamen() {
     }
@@ -109,12 +113,12 @@ public class ProcedimientoPasoExamen implements Serializable, IdentificableEntit
         this.idProcedimientoPaso = idProcedimientoPaso;
     }
 
-        @Override
+    @Override
     public String getIdKey() {
         return idProcedimientoPasoExamen != null ? idProcedimientoPasoExamen.toString() : "";
     }
 
-@Override
+    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idProcedimientoPasoExamen != null ? idProcedimientoPasoExamen.hashCode() : 0);

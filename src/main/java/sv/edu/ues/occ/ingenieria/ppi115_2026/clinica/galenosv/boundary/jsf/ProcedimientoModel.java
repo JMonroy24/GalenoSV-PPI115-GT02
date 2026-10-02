@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -61,4 +63,13 @@ public class ProcedimientoModel extends ModelTransaccional<Procedimiento, UUID>
     public void setProcedimientoDAO(ProcedimientoDAO procedimientoDAO) {
         this.procedimientoDAO = procedimientoDAO;
     }
+
+    @Override
+    protected void validarNegocio(Procedimiento registro) {
+        registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre"));
+        if (procedimientoDAO.existePorCampo("nombre", registro.getNombre(), registro.getIdProcedimiento())) {
+            throw new ValidacionNegocioException("Ya existe un registro con este nombre.");
+        }
+    }
+
 }

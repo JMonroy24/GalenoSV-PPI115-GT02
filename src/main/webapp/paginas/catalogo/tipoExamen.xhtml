@@ -14,7 +14,7 @@
         <crud:crudTransaccional model="#{tipoExamenModel}" lazyModel="#{tipoExamenModel.lazyModel}"
                                 titulo="Tipos de Examen">
                                 
-            <p:column headerText="Nombre">
+            <p:column headerText="Nombre" sortBy="#{registro.nombre}">
                 <h:outputText value="#{registro.nombre}"/>
             </p:column>
             
@@ -22,7 +22,7 @@
                 <h:outputText value="#{registro.activo ? 'Sí' : 'No'}"/>
             </p:column>
             
-            <p:column headerText="Observaciones">
+            <p:column headerText="Observaciones" sortBy="#{registro.observaciones}">
                 <h:outputText value="#{registro.observaciones}"/>
             </p:column>
 
@@ -30,10 +30,10 @@
                 <h:panelGrid columns="2" cellpadding="7" columnClasses="ui-grid-col-4,ui-grid-col-8" style="width:100%">
                 
                 <p:outputLabel value="Nombre:" for="nombre"/>
-                <p:inputText id="nombre" value="#{tipoExamenModel.registroActual.nombre}" required="true"/>
+                <p:inputText id="nombre" value="#{tipoExamenModel.registroActual.nombre}" required="true" label="Nombre" requiredMessage="Complete el campo nombre." maxlength="255"/>
                 
                 <p:outputLabel value="Observaciones:" for="observaciones"/>
-                <p:inputTextarea id="observaciones" value="#{tipoExamenModel.registroActual.observaciones}"/>
+                <p:inputTextarea id="observaciones" value="#{tipoExamenModel.registroActual.observaciones}" label="Observaciones" maxlength="2000"/>
                 
                 <p:outputLabel value="Activo:" for="activo"/>
                 <p:selectBooleanCheckbox id="activo" value="#{tipoExamenModel.registroActual.activo}"/>

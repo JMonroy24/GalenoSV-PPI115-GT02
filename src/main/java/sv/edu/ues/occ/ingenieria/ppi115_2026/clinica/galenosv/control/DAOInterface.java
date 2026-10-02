@@ -84,4 +84,11 @@ public interface DAOInterface<T, ID extends Serializable> {
     default long count(String filtroGlobal) {
         return count();
     }
+
+    /** Página con filtros de columna y orden explícitos; el DAO añade un desempate por ID. */
+    List<T> findRange(int first, int max, String filtroGlobal,
+            List<OrdenConsulta> orden, List<FiltroConsulta> filtros);
+
+    /** Cuenta con exactamente los mismos filtros utilizados al cargar la página. */
+    long count(String filtroGlobal, List<FiltroConsulta> filtros);
 }
