@@ -3,6 +3,10 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
@@ -86,5 +90,17 @@ public class PersonaRolDAO extends DefaultDAO<PersonaRol, UUID> implements Seria
         if (idClinica != null) query.setParameter("clinica", idClinica);
         if (excluirId != null) query.setParameter("excluir", excluirId);
         return query.getSingleResult() > 0;
+    }
+    
+    
+    public List<PersonaRol> findByPersona(UUID idPersona) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<PersonaRol> cq = cb.createQuery(PersonaRol.class);
+        Root<PersonaRol> root = cq.from(PersonaRol.class);
+        root.fetch("idRol", JoinType.LEFT);
+        root.fetch("idClinica", JoinType.LEFT);
+        cq.select(root).where(
+                cb.equal(root.get("idPersona").get("idPersona"), idPersona));
+        return em.createQuery(cq).getResultList();
     }
 }

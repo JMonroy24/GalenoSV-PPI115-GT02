@@ -3,6 +3,10 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
@@ -70,5 +74,17 @@ public class ConsultaProcedimientoDAO extends DefaultDAO<ConsultaProcedimiento, 
     @Override
     protected java.util.List<String> getRelacionesCarga() {
         return java.util.List.of("idConsulta.idPersonaRol.idPersona", "idConsulta.idPersonaRol.idRol", "idProcedimiento");
+    }
+    
+    public List<ConsultaProcedimiento> findByConsulta(UUID idConsulta) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<ConsultaProcedimiento> cq =
+                cb.createQuery(ConsultaProcedimiento.class);
+        Root<ConsultaProcedimiento> root = cq.from(ConsultaProcedimiento.class);
+        root.fetch("idProcedimiento", JoinType.LEFT);
+        cq.select(root)
+                .where(cb.equal(root.get("idConsulta").get("idConsulta"), idConsulta))
+                .orderBy(cb.asc(root.get("fechaInicio")));
+        return em.createQuery(cq).getResultList();
     }
 }

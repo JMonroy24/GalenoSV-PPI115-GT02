@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,6 +21,9 @@ public class ConsultaModelTest {
 
     @Mock
     private ConsultaDAO consultaDAO;
+
+    @Mock
+    private ConsultaProcedimientoDAO consultaProcedimientoDAO;
 
     @InjectMocks
     private ConsultaModel consultaModel;

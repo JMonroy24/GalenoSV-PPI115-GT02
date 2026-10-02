@@ -7,7 +7,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DocumentoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.MedioContactoDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,6 +23,15 @@ public class PersonaModelTest {
 
     @Mock
     private PersonaDAO personaDAO;
+
+    @Mock
+    private DocumentoDAO documentoDAO;
+
+    @Mock
+    private MedioContactoDAO medioContactoDAO;
+
+    @Mock
+    private PersonaRolDAO personaRolDAO;
 
     @InjectMocks
     private PersonaModel personaModel;

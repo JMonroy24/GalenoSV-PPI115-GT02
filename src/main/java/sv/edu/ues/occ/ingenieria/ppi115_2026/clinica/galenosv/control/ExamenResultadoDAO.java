@@ -1,11 +1,14 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import java.util.List;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import java.io.Serializable;
 import java.util.UUID;
+import java.util.List;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ExamenResultado;
 
 /**
@@ -42,5 +45,15 @@ public class ExamenResultadoDAO extends DefaultDAO<ExamenResultado, UUID> implem
     @Override
     protected java.util.List<String> getRelacionesCarga() {
         return java.util.List.of("idOrdenExamen.idConsultaProcedimientoPaso.idConsultaProcedimiento.idProcedimiento");
+    }
+    
+   public List<ExamenResultado> findByOrdenExamen(UUID idOrdenExamen) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<ExamenResultado> cq = cb.createQuery(ExamenResultado.class);
+        Root<ExamenResultado> root = cq.from(ExamenResultado.class);
+        cq.select(root)
+                .where(cb.equal(root.get("idOrdenExamen").get("idOrdenExamen"), idOrdenExamen))
+                .orderBy(cb.asc(root.get("fechaCreacion")));
+        return em.createQuery(cq).getResultList();
     }
 }

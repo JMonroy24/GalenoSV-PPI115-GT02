@@ -163,8 +163,6 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
         }
     }
 
-    // ─── Manejo de errores ───────────────────────────────────────────
-
     /**
      * Extrae y clasifica la causa raíz de una excepción JPA/PostgreSQL
      * para retornar un mensaje amigable al usuario.
@@ -222,8 +220,30 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
         if (contexto != null) contexto.addMessage(null, new FacesMessage(severidad, titulo, detalle));
     }
 
-    // ─── Estado ──────────────────────────────────────────────────────
+    /** @return true si se está creando un registro */
+    /** Verifica que el padre esté guardado y en edición; si no, avisa. */
+    protected boolean relacionesHabilitadas(String titulo) {
+        if (!isEstadoModificar() || getRegistroActual() == null) {
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, titulo,
+                    "Guarde el registro antes de administrar sus relaciones.");
+            return false;
+        }
+        return true;
+    }
 
+    /** Ejecuta una operación sobre una relación con manejo uniforme de errores. */
+    protected void ejecutarRelacion(String titulo, Runnable accion, String mensajeOk) {
+        try {
+            accion.run();
+            agregarMensaje(FacesMessage.SEVERITY_INFO, titulo, mensajeOk);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error en relación: " + titulo, e);
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, titulo, clasificarError(e));
+        }
+    }
+    
+    
+    
     /** @return true si se está creando un registro */
     public boolean isEstadoCrear() { return estado == Estado.CREAR; }
 

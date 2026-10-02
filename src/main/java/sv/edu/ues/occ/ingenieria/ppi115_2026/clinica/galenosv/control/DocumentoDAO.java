@@ -1,11 +1,15 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import java.util.List;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
 import java.io.Serializable;
 import java.util.UUID;
+import java.util.List;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Documento;
 
 /**
@@ -53,5 +57,15 @@ public class DocumentoDAO extends DefaultDAO<Documento, UUID> implements Seriali
                 .setParameter("tipo", idTipo).setParameter("valor", valor.trim().toLowerCase(java.util.Locale.ROOT));
         if (excluirId != null) query.setParameter("excluir", excluirId);
         return query.getSingleResult() > 0;
+    }
+    
+    public List<Documento> findByPersona(UUID idPersona) {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<Documento> cq = cb.createQuery(Documento.class);
+        Root<Documento> root = cq.from(Documento.class);
+        root.fetch("idTipoDocumento", JoinType.LEFT);
+        cq.select(root).where(
+                cb.equal(root.get("idPersona").get("idPersona"), idPersona));
+        return em.createQuery(cq).getResultList();
     }
 }

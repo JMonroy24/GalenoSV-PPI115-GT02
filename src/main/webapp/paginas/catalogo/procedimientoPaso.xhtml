@@ -11,8 +11,8 @@
 
     <ui:define name="contenido">
         <crud:crudTransaccional model="#{procedimientoPasoModel}" lazyModel="#{procedimientoPasoModel.lazyModel}"
-                           titulo="Pasos de Procedimiento"
-                           anchoDialogo="900">
+                                titulo="Pasos de Procedimiento"
+                                anchoDialogo="900">
 
             <p:column headerText="Nombre" sortBy="#{registro.nombre}">
                 <h:outputText value="#{registro.nombre}"/>
@@ -198,9 +198,9 @@
 
                             <p:outputLabel for="tipoSecuencia"
                                            value="Tipo de secuencia:"/>
-                            <p:inputText id="tipoSecuencia"
-                                         value="#{procedimientoPasoModel.tipoSecuencia}"
-                                         maxlength="20" label="Tipo de secuencia"/>
+                            <p:selectOneMenu id="tipoSecuencia" value="#{procedimientoPasoModel.tipoSecuencia}" label="Tipo de secuencia">
+                                <f:selectItem itemLabel="SIGUIENTE" itemValue="SIGUIENTE"/>
+                            </p:selectOneMenu>
 
                             <h:outputText value=""/>
                             <p:commandButton value="Agregar secuencia"

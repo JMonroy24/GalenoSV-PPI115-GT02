@@ -35,8 +35,8 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
         implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER =
-            Logger.getLogger(ProcedimientoPasoModel.class.getName());
+    private static final Logger LOGGER
+            = Logger.getLogger(ProcedimientoPasoModel.class.getName());
 
     @Inject
     protected ProcedimientoPasoDAO procedimientoPasoDAO;
@@ -47,10 +47,10 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
     @Inject
     protected ProcedimientoPasoSecuenciaDAO procedimientoPasoSecuenciaDAO;
 
-    private List<ProcedimientoPasoExamen> examenesAsignados =
-            Collections.emptyList();
-    private List<ProcedimientoPasoSecuencia> secuencias =
-            Collections.emptyList();
+    private List<ProcedimientoPasoExamen> examenesAsignados
+            = Collections.emptyList();
+    private List<ProcedimientoPasoSecuencia> secuencias
+            = Collections.emptyList();
 
     private Examen examenSeleccionado;
     private String observacionesExamen;
@@ -124,8 +124,19 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
             return;
         }
 
-        ProcedimientoPasoExamen asignacion =
-                new ProcedimientoPasoExamen(UUID.randomUUID());
+        UUID idExamen = examenSeleccionado.getIdExamen();
+        boolean yaAsignado = examenesAsignados.stream()
+                .anyMatch(asignacion -> asignacion.getIdExamen() != null
+                && idExamen.equals(asignacion.getIdExamen().getIdExamen()));
+
+        if (yaAsignado) {
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Examen del paso",
+                    "Este examen ya está asignado al paso.");
+            return;
+        }
+
+        ProcedimientoPasoExamen asignacion
+                = new ProcedimientoPasoExamen(UUID.randomUUID());
         asignacion.setIdProcedimientoPaso(getRegistroActual());
         asignacion.setIdExamen(examenSeleccionado);
         asignacion.setFechaCreacion(new Date());
@@ -158,10 +169,10 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
     public void quitarExamen(ProcedimientoPasoExamen asignacion) {
         if (!isEstadoModificar() || getRegistroActual() == null
                 || asignacion == null
-                || examenesAsignados.stream().noneMatch(actual ->
-                        Objects.equals(
-                                actual.getIdProcedimientoPasoExamen(),
-                                asignacion.getIdProcedimientoPasoExamen()))) {
+                || examenesAsignados.stream().noneMatch(actual
+                        -> Objects.equals(
+                        actual.getIdProcedimientoPasoExamen(),
+                        asignacion.getIdProcedimientoPasoExamen()))) {
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Examen del paso",
                     "Seleccione un examen asignado a este paso.");
             return;
@@ -185,9 +196,9 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
     }
 
     /**
-     * Devuelve los demás pasos del mismo procedimiento para elegir
-     * una referencia válida de secuencia. Consulta el DAO directamente
-     * porque en modelos transaccionales getRegistros() siempre es null.
+     * Devuelve los demás pasos del mismo procedimiento para elegir una
+     * referencia válida de secuencia. Consulta el DAO directamente porque en
+     * modelos transaccionales getRegistros() siempre es null.
      *
      * @return pasos del mismo procedimiento, sin el paso actual
      */
@@ -231,10 +242,38 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
         }
 
         String tipo = tipoSecuencia.trim();
-        UUID idReferencia = pasoReferenciaSeleccionado.getIdProcedimientoPaso();
+        if (tipo.length() > 20) {
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Secuencia",
+                    "El tipo de secuencia no puede superar 20 caracteres.");
+            return;
+        }
 
-        ProcedimientoPasoSecuencia secuencia =
-                new ProcedimientoPasoSecuencia(UUID.randomUUID());
+        UUID idReferencia
+                = pasoReferenciaSeleccionado.getIdProcedimientoPaso();
+        boolean referenciaValida = getPasosReferenciaDisponibles().stream()
+                .anyMatch(paso -> Objects.equals(
+                paso.getIdProcedimientoPaso(), idReferencia));
+
+        if (!referenciaValida) {
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Secuencia",
+                    "El paso de referencia debe pertenecer al mismo procedimiento.");
+            return;
+        }
+
+        boolean yaExiste = secuencias.stream()
+                .anyMatch(secuencia -> Objects.equals(
+                secuencia.getIdProcedimientoPasoReferencia(),
+                idReferencia)
+                && tipo.equalsIgnoreCase(secuencia.getTipoSecuencia()));
+
+        if (yaExiste) {
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Secuencia",
+                    "Esta relación de secuencia ya existe.");
+            return;
+        }
+
+        ProcedimientoPasoSecuencia secuencia
+                = new ProcedimientoPasoSecuencia(UUID.randomUUID());
         secuencia.setIdProcedimientoPaso(getRegistroActual());
         secuencia.setIdProcedimientoPasoReferencia(idReferencia);
         secuencia.setTipoSecuencia(tipo);
@@ -265,10 +304,10 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
     public void quitarSecuencia(ProcedimientoPasoSecuencia secuencia) {
         if (!isEstadoModificar() || getRegistroActual() == null
                 || secuencia == null
-                || secuencias.stream().noneMatch(actual ->
-                        Objects.equals(
-                                actual.getIdProcedimientoPasoSecuencia(),
-                                secuencia.getIdProcedimientoPasoSecuencia()))) {
+                || secuencias.stream().noneMatch(actual
+                        -> Objects.equals(
+                        actual.getIdProcedimientoPasoSecuencia(),
+                        secuencia.getIdProcedimientoPasoSecuencia()))) {
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Secuencia",
                     "Seleccione una secuencia perteneciente al paso.");
             return;
@@ -298,9 +337,9 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
     }
 
     private void limpiarCamposSecuencia() {
-        pasoReferenciaSeleccionado = null;
-        tipoSecuencia = null;
-    }
+    pasoReferenciaSeleccionado = null;
+    tipoSecuencia = "SIGUIENTE";
+        }
 
     private void limpiarCamposRelaciones() {
         limpiarCamposExamen();
@@ -364,6 +403,8 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
             ProcedimientoPasoDAO procedimientoPasoDAO) {
         this.procedimientoPasoDAO = procedimientoPasoDAO;
     }
+    
+    
 
     @Override
     protected void validarNegocio(ProcedimientoPaso registro) {
