@@ -131,4 +131,23 @@ public class AsignacionService {
             }
         }
     }
+
+    /** Padre e inicio se confirman juntos: un fallo del paso revierte ambos. */
+    @Transactional
+    public void crearProcedimientoConPaso(ConsultaProcedimiento procedimiento, ConsultaProcedimientoPaso paso) {
+        paso.setIdConsultaProcedimiento(procedimiento);
+        em.persist(procedimiento);
+        em.persist(paso);
+        em.flush();
+    }
+
+    /** Crea el examen y su tipo inicial en una única transacción. */
+    @Transactional
+    public void crearExamenConTipo(Examen examen, ExamenTipoExamen tipo) {
+        tipo.setIdExamen(examen);
+        em.persist(examen);
+        em.persist(tipo);
+        em.flush();
+    }
+
 }

@@ -58,6 +58,18 @@ public class DocumentoDAO extends DefaultDAO<Documento, UUID> implements Seriali
         if (excluirId != null) query.setParameter("excluir", excluirId);
         return query.getSingleResult() > 0;
     }
+
+    /** Solo impide repetir el mismo documento dentro de una persona. */
+    public boolean existePersonaTipoValor(UUID idPersona, UUID idTipo, String valor, UUID excluirId) {
+        if (idPersona == null || idTipo == null || valor == null || valor.isBlank()) return false;
+        String jpql = "SELECT COUNT(d) FROM Documento d"
+                + " WHERE d.idPersona.idPersona = :persona AND d.idTipoDocumento.idTipoDocumento = :tipo"
+                + " AND LOWER(d.valor) = :valor" + (excluirId == null ? "" : " AND d.idDocumento <> :excluir");
+        var query = getEntityManager().createQuery(jpql, Long.class).setParameter("persona", idPersona)
+                .setParameter("tipo", idTipo).setParameter("valor", valor.trim().toLowerCase(java.util.Locale.ROOT));
+        if (excluirId != null) query.setParameter("excluir", excluirId);
+        return query.getSingleResult() > 0;
+    }
     
     public List<Documento> findByPersona(UUID idPersona) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
