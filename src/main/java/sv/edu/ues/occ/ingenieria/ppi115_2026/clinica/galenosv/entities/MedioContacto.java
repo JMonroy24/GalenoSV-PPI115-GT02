@@ -19,7 +19,7 @@ import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "medio_contacto")
-public class MedioContacto extends EntidadVersionada implements IdentificableEntity {
+public class MedioContacto implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 

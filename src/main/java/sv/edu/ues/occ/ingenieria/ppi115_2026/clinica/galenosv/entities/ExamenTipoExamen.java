@@ -18,7 +18,7 @@ import jakarta.persistence.PrePersist;
 
 @Entity
 @Table(name = "examen_tipo_examen")
-public class ExamenTipoExamen extends EntidadVersionada implements IdentificableEntity {
+public class ExamenTipoExamen implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 

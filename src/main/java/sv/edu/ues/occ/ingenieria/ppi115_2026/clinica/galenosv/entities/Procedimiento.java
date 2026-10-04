@@ -15,7 +15,7 @@ import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "procedimiento")
-public class Procedimiento extends EntidadVersionada implements IdentificableEntity {
+public class Procedimiento implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 

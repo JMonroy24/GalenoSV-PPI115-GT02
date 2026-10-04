@@ -23,7 +23,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.validatio
 @Entity
 @RangoFechasValido
 @Table(name = "consulta_procedimiento_paso")
-public class ConsultaProcedimientoPaso extends EntidadVersionada implements IdentificableEntity, PeriodoFechas {
+public class ConsultaProcedimientoPaso implements IdentificableEntity, PeriodoFechas {
 
     private static final long serialVersionUID = 1L;
 

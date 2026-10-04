@@ -12,7 +12,7 @@ import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.util.Date;
-import java.time.LocalDate;
+
 import java.util.List;
 import java.util.UUID;
 import jakarta.persistence.PrePersist;
@@ -21,7 +21,7 @@ import jakarta.validation.constraints.Past;
 
 @Entity
 @Table(name = "persona")
-public class Persona extends EntidadVersionada implements IdentificableEntity {
+public class Persona implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -43,7 +43,8 @@ public class Persona extends EntidadVersionada implements IdentificableEntity {
 
     @Past(message = "{persona.fechaNacimiento.pasada}")
     @Column(name = "fecha_nacimiento")
-    private LocalDate fechaNacimiento;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date fechaNacimiento;
 
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     @Temporal(TemporalType.TIMESTAMP)
@@ -97,11 +98,11 @@ public class Persona extends EntidadVersionada implements IdentificableEntity {
         this.apellidos = apellidos;
     }
 
-    public LocalDate getFechaNacimiento() {
+    public Date getFechaNacimiento() {
         return fechaNacimiento;
     }
 
-    public void setFechaNacimiento(LocalDate fechaNacimiento) {
+    public void setFechaNacimiento(Date fechaNacimiento) {
         this.fechaNacimiento = fechaNacimiento;
     }
 
