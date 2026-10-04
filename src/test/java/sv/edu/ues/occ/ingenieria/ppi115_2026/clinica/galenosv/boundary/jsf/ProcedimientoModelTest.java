@@ -23,12 +23,23 @@ class ProcedimientoModelTest {
     @Mock
     private ProcedimientoDAO procedimientoDAO;
 
+    @Mock
+    private ProcedimientoPasoModel procedimientoPasoModel;
+
+    @Mock
+    private sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoDAO procedimientoPasoDAO;
+
     @InjectMocks
     private ProcedimientoModel procedimientoModel;
 
     @BeforeEach
     void setUp() {
         procedimientoModel.setProcedimientoDAO(procedimientoDAO);
+        procedimientoModel.setProcedimientoPasoModel(procedimientoPasoModel);
+        procedimientoModel.setProcedimientoPasoDAO(procedimientoPasoDAO);
+        
+        sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPaso pasoMock = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPaso();
+        when(procedimientoPasoModel.getRegistroActual()).thenReturn(pasoMock);
     }
 
     @Test

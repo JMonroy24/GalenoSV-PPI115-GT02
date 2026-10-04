@@ -61,13 +61,13 @@ public class DocumentoModel extends ModelTransaccional<Documento, UUID> implemen
     @Override
     protected void validarNegocio(Documento registro) {
         registro.setValor(ValidadorComun.textoObligatorio(registro.getValor(), "El documento"));
-        ValidadorComun.requerido(registro.getIdPersona(), "Seleccione una persona.");
+        var persona = ValidadorComun.requerido(registro.getIdPersona(), "Seleccione una persona.");
         var tipo = ValidadorComun.requerido(registro.getIdTipoDocumento(), "Seleccione un tipo de documento.");
         ValidadorComun.requerido(tipo.getIdTipoDocumento(), "Seleccione un tipo de documento válido.");
         ValidadorComun.activo(tipo.getActivo(), "El tipo de documento");
         ValidadorComun.formato(registro.getValor(), tipo.getExpresionRegular(), tipo.getIndicaciones());
-        if (documentoDAO.existeTipoValor(tipo.getIdTipoDocumento(), registro.getValor(), registro.getIdDocumento())) {
-            throw new ValidacionNegocioException("Ya existe un documento de este tipo con el mismo valor.");
+        if (documentoDAO.existePersonaTipoValor(persona.getIdPersona(), tipo.getIdTipoDocumento(), registro.getValor(), registro.getIdDocumento())) {
+            throw new ValidacionNegocioException("La persona ya tiene un documento de este tipo con el mismo valor.");
         }
     }
 

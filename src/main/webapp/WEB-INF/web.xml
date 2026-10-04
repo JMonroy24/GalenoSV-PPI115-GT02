@@ -20,7 +20,11 @@
     
     <context-param>
         <param-name>jakarta.faces.PROJECT_STAGE</param-name>
-        <param-value>Production</param-value>
+        <param-value>Development</param-value>
+    </context-param>
+    <context-param>
+        <param-name>jakarta.faces.FACELETS_REFRESH_PERIOD</param-name>
+        <param-value>0</param-value>
     </context-param>
     <context-param>
         <param-name>jakarta.faces.INTERPRET_EMPTY_STRING_SUBMITTED_VALUES_AS_NULL</param-name>
@@ -30,29 +34,4 @@
         <param-name>jakarta.faces.DATETIMECONVERTER_DEFAULT_TIMEZONE_IS_SYSTEM_TIMEZONE</param-name>
         <param-value>true</param-value>
     </context-param>
-    <security-constraint>
-        <web-resource-collection>
-            <web-resource-name>Aplicación GalenoSV</web-resource-name>
-            <url-pattern>/paginas/*</url-pattern>
-        </web-resource-collection>
-        <auth-constraint>
-            <role-name>ADMINISTRADOR</role-name>
-            <role-name>PERSONAL_CLINICO</role-name>
-        </auth-constraint>
-        <user-data-constraint>
-            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-        </user-data-constraint>
-    </security-constraint>
-
-    <login-config>
-        <auth-method>BASIC</auth-method>
-        <realm-name>GalenoSV</realm-name>
-    </login-config>
-
-    <security-role>
-        <role-name>ADMINISTRADOR</role-name>
-    </security-role>
-    <security-role>
-        <role-name>PERSONAL_CLINICO</role-name>
-    </security-role>
 </web-app>

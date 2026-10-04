@@ -11,9 +11,11 @@
 
     <ui:define name="contenido">
 
-        <crud:crudTransaccional model="#{ordenExamenModel}"
+        <h:form id="frmPrincipal">
+<crud:crudTransaccional model="#{ordenExamenModel}"
                                 lazyModel="#{ordenExamenModel.lazyModel}"
-                                titulo="Órdenes de Examen">
+                                titulo="Órdenes de Examen"
+                                anchoDialogo="800">
 
             <p:column headerText="Procedimiento" sortBy="#{registro.idConsultaProcedimientoPaso.idConsultaProcedimiento.idProcedimiento.nombre}">
                 <h:outputText value="#{registro.idConsultaProcedimientoPaso.idConsultaProcedimiento.idProcedimiento.nombre}"/>
@@ -37,7 +39,7 @@
 
                 <p:outputLabel value="Paso de procedimiento:" for="idConsultaProcedimientoPaso"/>
                 <p:autoComplete id="idConsultaProcedimientoPaso"
-                                value="#{ordenExamenModel.registroActual.idConsultaProcedimientoPaso}"
+                                disabled="#{ordenExamenModel.estadoModificar}" value="#{ordenExamenModel.registroActual.idConsultaProcedimientoPaso}"
                                 completeMethod="#{ordenExamenModel.completeConsultaProcedimientoPaso}"
                                 var="cpp"
                                 itemLabel="#{cpp.idConsultaProcedimiento.idProcedimiento.nombre} — #{cpp.idPersonaRol.idPersona.nombres} #{cpp.idPersonaRol.idPersona.apellidos}#{empty cpp.estado ? '' : ' ('}#{cpp.estado}#{empty cpp.estado ? '' : ')'}"
@@ -54,7 +56,75 @@
 
             </f:facet>
 
+
+
+            <f:facet name="relaciones">
+
+                <p:outputPanel rendered="#{ordenExamenModel.estadoCrear}">
+                    <h:outputText value="Guarde la orden para poder registrar resultados."/>
+                </p:outputPanel>
+
+                <p:outputPanel rendered="#{ordenExamenModel.estadoModificar}">
+                    <p:panel header="Resultados del examen">
+                        <p:outputPanel id="pnlResultados">
+
+                            <p:dataTable value="#{ordenExamenModel.resultados}" var="res"
+                                         emptyMessage="Esta orden aún no tiene resultados." size="small">
+                                <p:column headerText="Fecha" width="140">
+                                    <h:outputText value="#{res.fechaCreacion}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="Resultado">
+                                    <h:outputText value="#{res.resultado}"/>
+                                </p:column>
+                                <p:column headerText="Interpretación">
+                                    <h:outputText value="#{res.interpretacion}"/>
+                                </p:column>
+                                <p:column headerText="Atestado">
+                                    <h:outputText value="#{res.rutaAtestado}"/>
+                                </p:column>
+                                <p:column headerText="Acción" width="70">
+                                    <p:commandButton icon="pi pi-trash" title="Quitar resultado"
+                                                     styleClass="ui-button-danger"
+                                                     action="#{ordenExamenModel.quitarResultado(res)}"
+                                                     process="@this"
+                                                     update="pnlResultados">
+                                        <p:confirm header="Quitar resultado"
+                                                   message="¿Desea quitar este resultado?"
+                                                   icon="pi pi-exclamation-triangle"/>
+                                    </p:commandButton>
+                                </p:column>
+                            </p:dataTable>
+
+                            <p:panelGrid columns="2" style="width:100%; margin-top:1rem">
+                                <p:outputLabel for="resTexto" value="Resultado:"/>
+                                <p:inputTextarea id="resTexto" value="#{ordenExamenModel.resultadoNuevo.resultado}"
+                                                 rows="3" autoResize="false"/>
+
+                                <p:outputLabel for="resInterp" value="Interpretación:"/>
+                                <p:inputTextarea id="resInterp" value="#{ordenExamenModel.resultadoNuevo.interpretacion}"
+                                                 rows="3" autoResize="false"/>
+
+                                <p:outputLabel for="resRuta" value="Ruta del atestado:"/>
+                                <p:inputText id="resRuta" value="#{ordenExamenModel.resultadoNuevo.rutaAtestado}"
+                                             maxlength="255"/>
+
+                                <h:outputText value=""/>
+                                <p:commandButton value="Agregar resultado" icon="pi pi-plus"
+                                                 styleClass="ui-button-success"
+                                                 action="#{ordenExamenModel.agregarResultado()}"
+                                                 process="@this resTexto resInterp resRuta"
+                                                 update="pnlResultados"/>
+                            </p:panelGrid>
+
+                        </p:outputPanel>
+                    </p:panel>
+                </p:outputPanel>
+
+            </f:facet>
         </crud:crudTransaccional>
+</h:form>
 
     </ui:define>
 

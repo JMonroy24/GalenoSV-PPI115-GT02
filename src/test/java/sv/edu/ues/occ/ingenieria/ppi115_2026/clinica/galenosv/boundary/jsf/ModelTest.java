@@ -2,7 +2,7 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
-import jakarta.persistence.OptimisticLockException;
+
 import jakarta.persistence.PersistenceException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -180,10 +180,10 @@ class ModelTest {
     }
 
     @Test
-    void bloqueoOptimistaAnidadoExplicaComoRecuperarse() {
-        String mensaje = model.clasificarError(new PersistenceException(new OptimisticLockException("stale")));
-        assertTrue(mensaje.contains("Otro usuario modificó"));
-        assertTrue(mensaje.contains("Vuelva a cargarlo"));
+    void errorDePersistenciaNoExponeDetalleInterno() {
+        String mensaje = model.clasificarError(new PersistenceException("detalle interno"));
+        assertTrue(mensaje.contains("No fue posible"));
+        assertFalse(mensaje.contains("detalle interno"));
     }
 
     @Test

@@ -36,7 +36,9 @@ public class ClinicaModel extends ModelTransaccional<Clinica, UUID> implements S
 
     @Override
     protected Clinica crearNuevoRegistro() {
-        return new Clinica(UUID.randomUUID());
+        Clinica registro = new Clinica(UUID.randomUUID());
+        registro.setActivo(true);
+        return registro;
     }
 
     public ClinicaDAO getClinicaDAO() {
@@ -50,6 +52,7 @@ public class ClinicaModel extends ModelTransaccional<Clinica, UUID> implements S
     @Override
     protected void validarNegocio(Clinica registro) {
         registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre"));
+        registro.setTipo(ValidadorComun.textoObligatorio(registro.getTipo(), "El tipo de clínica"));
         if (clinicaDAO.existePorCampo("nombre", registro.getNombre(), registro.getIdClinica())) {
             throw new ValidacionNegocioException("Ya existe un registro con este nombre.");
         }

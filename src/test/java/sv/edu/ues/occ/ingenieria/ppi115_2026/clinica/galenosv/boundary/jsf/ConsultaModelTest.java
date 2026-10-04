@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,12 +22,19 @@ public class ConsultaModelTest {
     @Mock
     private ConsultaDAO consultaDAO;
 
+    @Mock
+    private ConsultaProcedimientoDAO consultaProcedimientoDAO;
+
     @InjectMocks
     private ConsultaModel consultaModel;
 
     @BeforeEach
     public void setUp() {
         consultaModel.setConsultaDAO(consultaDAO);
+        consultaModel.sesionBean = new SesionBean();
+        var clinica = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica(UUID.randomUUID());
+        clinica.setActivo(true);
+        consultaModel.sesionBean.setClinicaActual(clinica);
     }
 
     @Test
@@ -71,6 +79,11 @@ public class ConsultaModelTest {
         consultaModel.prepararNuevo();
         consultaModel.getRegistroActual().setObservaciones("Consulta general");
 
+        var paciente = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRol(UUID.randomUUID());
+        paciente.setIdClinica(consultaModel.sesionBean.getClinicaActual());
+        var rol = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol(UUID.randomUUID());
+        rol.setActivo(true); rol.setNombre("Paciente"); paciente.setIdRol(rol);
+        consultaModel.getRegistroActual().setIdPersonaRol(paciente);
         consultaModel.guardar();
 
         verify(consultaDAO).create(any(Consulta.class));
@@ -83,6 +96,11 @@ public class ConsultaModelTest {
         Consulta c = new Consulta(UUID.randomUUID());
         consultaModel.seleccionar(c);
 
+        var paciente = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRol(UUID.randomUUID());
+        paciente.setIdClinica(consultaModel.sesionBean.getClinicaActual());
+        var rol = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol(UUID.randomUUID());
+        rol.setActivo(true); rol.setNombre("Paciente"); paciente.setIdRol(rol);
+        consultaModel.getRegistroActual().setIdPersonaRol(paciente);
         consultaModel.guardar();
 
         verify(consultaDAO).update(c);

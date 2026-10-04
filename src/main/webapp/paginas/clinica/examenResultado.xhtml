@@ -11,7 +11,8 @@
 
     <ui:define name="contenido">
 
-        <crud:crudTransaccional model="#{examenResultadoModel}"
+        <h:form id="frmPrincipal">
+<crud:crudTransaccional model="#{examenResultadoModel}"
                                 lazyModel="#{examenResultadoModel.lazyModel}"
                                 titulo="Resultados de Examen">
 
@@ -40,7 +41,7 @@
             <f:facet name="formulario">
 
                 <p:outputLabel value="Orden de examen:" for="idOrdenExamen"/>
-                <p:autoComplete id="idOrdenExamen" value="#{examenResultadoModel.registroActual.idOrdenExamen}"
+                <p:autoComplete id="idOrdenExamen" disabled="#{examenResultadoModel.estadoModificar}" value="#{examenResultadoModel.registroActual.idOrdenExamen}"
                                 completeMethod="#{examenResultadoModel.completeOrdenExamen}"
                                 var="o"
                                 itemLabel="#{o.idConsultaProcedimientoPaso.idConsultaProcedimiento.idProcedimiento.nombre}#{empty o.indicaciones ? '' : ' — '}#{o.indicaciones}"
@@ -67,6 +68,7 @@
             </f:facet>
 
         </crud:crudTransaccional>
+</h:form>
 
     </ui:define>
 

@@ -19,7 +19,8 @@
             });
         </h:outputScript>
 
-        <crud:crudTransaccional model="#{consultaProcedimientoModel}"
+        <h:form id="frmPrincipal">
+<crud:crudTransaccional model="#{consultaProcedimientoModel}"
                                 lazyModel="#{consultaProcedimientoModel.lazyModel}"
                                 titulo="Procedimientos de Consulta">
 
@@ -51,7 +52,7 @@
                 <p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank ui-fluid" columnClasses="ui-grid-col-4,ui-grid-col-8">
 
                     <p:outputLabel value="Consulta:" for="idConsulta"/>
-                    <p:autoComplete id="idConsulta" value="#{consultaProcedimientoModel.registroActual.idConsulta}"
+                    <p:autoComplete id="idConsulta" disabled="#{consultaProcedimientoModel.estadoModificar}" value="#{consultaProcedimientoModel.registroActual.idConsulta}"
                                     completeMethod="#{consultaProcedimientoModel.completeConsulta}"
                                     var="c"
                                     itemLabel="#{c.idPersonaRol.idPersona.nombres} #{c.idPersonaRol.idPersona.apellidos}#{empty c.referenciaExterna ? '' : ' — '}#{c.referenciaExterna}"
@@ -61,7 +62,7 @@
                                     placeholder="Escriba nombre, apellido o referencia..." label="Consulta" minQueryLength="2"/>
 
                     <p:outputLabel value="Procedimiento:" for="idProcedimiento"/>
-                    <p:selectOneMenu id="idProcedimiento" value="#{consultaProcedimientoModel.registroActual.idProcedimiento}"
+                    <p:selectOneMenu id="idProcedimiento" disabled="#{consultaProcedimientoModel.estadoModificar}" value="#{consultaProcedimientoModel.registroActual.idProcedimiento}"
                                      converter="#{entityConverter}" required="true" requiredMessage="Seleccione un procedimiento." filter="true" label="Procedimiento">
                         <f:selectItem itemLabel="Seleccione un procedimiento..." itemValue="#{null}" noSelectionOption="true"/>
                         <f:selectItems value="#{procedimientoModel.procedimientosActivos}" var="pr"
@@ -87,6 +88,7 @@
             </f:facet>
 
         </crud:crudTransaccional>
+</h:form>
 
     </ui:define>
 

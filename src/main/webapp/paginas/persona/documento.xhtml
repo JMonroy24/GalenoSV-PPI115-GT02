@@ -11,7 +11,8 @@
 
     <ui:define name="contenido">
         
-        <crud:crudTransaccional model="#{documentoModel}"
+        <h:form id="frmPrincipal">
+<crud:crudTransaccional model="#{documentoModel}"
                                 lazyModel="#{documentoModel.lazyModel}"
                                 titulo="Documentos">
                                 
@@ -36,7 +37,7 @@
                 <h:panelGrid columns="2" cellpadding="7" columnClasses="ui-grid-col-4,ui-grid-col-8" style="width:100%">
                 
                 <p:outputLabel value="Persona:" for="idPersona"/>
-                <p:autoComplete id="idPersona" value="#{documentoModel.registroActual.idPersona}"
+                <p:autoComplete id="idPersona" disabled="#{documentoModel.estadoModificar}" value="#{documentoModel.registroActual.idPersona}"
                                 completeMethod="#{documentoModel.completePersona}"
                                 var="p" itemLabel="#{p.nombres} #{p.apellidos}" itemValue="#{p}"
                                 converter="#{entityConverter}"
@@ -44,7 +45,7 @@
                                 placeholder="Escriba un nombre para buscar..." label="Persona" requiredMessage="Complete el campo persona." minQueryLength="2"/>
                 
                 <p:outputLabel value="Tipo de Documento:" for="idTipoDocumento"/>
-                <p:selectOneMenu id="idTipoDocumento" value="#{documentoModel.registroActual.idTipoDocumento}"
+                <p:selectOneMenu id="idTipoDocumento" disabled="#{documentoModel.estadoModificar}" value="#{documentoModel.registroActual.idTipoDocumento}"
                                  converter="#{entityConverter}" required="true" filter="true" label="Tipo de Documento" requiredMessage="Complete el campo tipo de documento.">
                     <f:selectItem itemLabel="Seleccione un tipo..." itemValue="#{null}" noSelectionOption="true"/>
                     <f:selectItems value="#{tipoDocumentoModel.activos}" var="td"
@@ -65,6 +66,7 @@
             </f:facet>
             
         </crud:crudTransaccional>
+</h:form>
         
     </ui:define>
 

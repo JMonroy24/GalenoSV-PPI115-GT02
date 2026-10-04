@@ -16,7 +16,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.validatio
 
 @Entity
 @Table(name = "tipo_medio_contacto")
-public class TipoMedioContacto extends EntidadVersionada implements IdentificableEntity {
+public class TipoMedioContacto implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 

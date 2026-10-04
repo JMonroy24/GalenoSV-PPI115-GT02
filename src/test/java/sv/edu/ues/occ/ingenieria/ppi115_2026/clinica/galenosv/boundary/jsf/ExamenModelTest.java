@@ -119,6 +119,7 @@ class ExamenModelTest {
     void testAgregarTipoGuardaAsociacion() {
         Examen examen = new Examen(UUID.randomUUID());
         TipoExamen tipo = new TipoExamen(UUID.randomUUID());
+        tipo.setActivo(true);
         when(examenTipoExamenDAO.findByExamen(examen.getIdExamen()))
                 .thenReturn(Collections.emptyList());
 
@@ -145,6 +146,7 @@ class ExamenModelTest {
     void testAgregarTipoImpideDuplicado() {
         Examen examen = new Examen(UUID.randomUUID());
         TipoExamen tipo = new TipoExamen(UUID.randomUUID());
+        tipo.setActivo(true);
         ExamenTipoExamen asignacion =
                 new ExamenTipoExamen(UUID.randomUUID());
         asignacion.setIdTipoExamen(tipo);

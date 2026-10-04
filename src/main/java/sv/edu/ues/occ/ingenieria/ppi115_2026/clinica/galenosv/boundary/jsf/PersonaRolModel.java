@@ -63,11 +63,9 @@ public class PersonaRolModel extends ModelTransaccional<PersonaRol, UUID> implem
         ValidadorComun.requerido(persona.getIdPersona(), "Seleccione una persona válida.");
         ValidadorComun.requerido(rol.getIdRol(), "Seleccione un rol válido.");
         ValidadorComun.activo(rol.getActivo(), "El rol");
-        UUID clinica = null;
-        if (registro.getIdClinica() != null) {
-            clinica = ValidadorComun.requerido(registro.getIdClinica().getIdClinica(), "Seleccione una clínica válida.");
-            ValidadorComun.activo(registro.getIdClinica().getActivo(), "La clínica");
-        }
+        var asignada = ValidadorComun.requerido(registro.getIdClinica(), "Seleccione la clínica del rol.");
+        UUID clinica = ValidadorComun.requerido(asignada.getIdClinica(), "Seleccione una clínica válida.");
+        ValidadorComun.activo(asignada.getActivo(), "La clínica");
         if (personaRolDAO.existeAsignacion(persona.getIdPersona(), rol.getIdRol(), clinica, registro.getIdPersonaRol())) {
             throw new ValidacionNegocioException("La persona ya tiene este rol en la clínica seleccionada.");
         }

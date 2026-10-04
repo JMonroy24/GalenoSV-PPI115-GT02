@@ -7,6 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenResultadoDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.OrdenExamenDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExamen;
 
@@ -20,6 +21,9 @@ public class OrdenExamenModelTest {
 
     @Mock
     private OrdenExamenDAO ordenExamenDAO;
+
+    @Mock
+    private ExamenResultadoDAO examenResultadoDAO;
 
     @InjectMocks
     private OrdenExamenModel ordenExamenModel;

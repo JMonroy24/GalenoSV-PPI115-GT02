@@ -8,7 +8,7 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities;
  * puede colisionar y cambia entre recargas. Implementar este método
  * retornando el UUID de la PK garantiza unicidad y estabilidad.
  */
-public interface IdentificableEntity {
+public interface IdentificableEntity extends java.io.Serializable {
 
     /**
      * Retorna el identificador único de la entidad como cadena de texto,

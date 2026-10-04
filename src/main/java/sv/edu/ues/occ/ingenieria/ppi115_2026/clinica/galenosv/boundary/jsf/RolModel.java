@@ -36,12 +36,14 @@ public class RolModel extends ModelTransaccional<Rol, UUID> implements Serializa
 
     @Override
     protected Rol crearNuevoRegistro() {
-        return new Rol(UUID.randomUUID());
+        Rol registro = new Rol(UUID.randomUUID());
+        registro.setActivo(true);
+        return registro;
     }
 
     /**
      * Fuente de opciones para selectores de FK en otras vistas.
-     * Retorna todos los roles disponibles, sin cargar el modelo completo.
+     * Retorna solo los roles activos, sin cargar el modelo completo.
      *
      * @return lista de Rol ordenada por nombre
      */

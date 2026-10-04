@@ -1,0 +1,116 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <p:panel header="Pasos de: #{procedimientoModel.registroActual.nombre}"
+             style="margin-top:1rem"
+             rendered="#{procedimientoModel.registroActual != null}">
+
+        <p:dataTable value="#{procedimientoModel.pasos}" var="paso"
+                     emptyMessage="Este procedimiento aún no tiene pasos." size="small">
+            <p:column headerText="Nombre">
+                <h:outputText value="#{paso.nombre}"/>
+            </p:column>
+            <p:column headerText="Rol">
+                <h:outputText value="#{paso.idRol.nombre}"/>
+            </p:column>
+            <p:column headerText="Fin">
+                <h:outputText value="#{paso.indicaFin eq true ? 'Sí' : 'No'}"/>
+            </p:column>
+            <p:column headerText="Acción" width="100">
+                <p:commandButton icon="pi pi-pencil" title="Editar paso"
+                                 styleClass="ui-button-warning"
+                                 action="#{procedimientoModel.procedimientoPasoModel.seleccionar(paso)}"
+                                 process="@this"
+                                 update="@form"
+                                 style="margin-right:0.5rem"/>
+                <p:commandButton icon="pi pi-trash" title="Quitar paso"
+                                 styleClass="ui-button-danger"
+                                 action="#{procedimientoModel.procedimientoPasoModel.eliminar(paso)}"
+                                 process="@this"
+                                 update="@form">
+                    <p:confirm header="Quitar paso"
+                               message="¿Desea eliminar este paso?"
+                               icon="pi pi-exclamation-triangle"/>
+                </p:commandButton>
+            </p:column>
+        </p:dataTable>
+
+        <p:panelGrid columns="2" style="width:100%; margin-top:1rem">
+            
+            <p:outputLabel for="ppNombre" value="Nombre del paso:"/>
+            <p:inputText id="ppNombre"
+                         value="#{procedimientoPasoModel.registroActual.nombre}"
+                         required="true"
+                         requiredMessage="Ingrese el nombre del paso."
+                         maxlength="155" label="Nombre del paso"/>
+
+            <p:outputLabel for="ppProcedimiento" value="Procedimiento:"/>
+            <p:selectOneMenu id="ppProcedimiento"
+                             disabled="#{procedimientoPasoModel.estadoModificar}" 
+                             value="#{procedimientoPasoModel.registroActual.idProcedimiento}"
+                             converter="#{entityConverter}"
+                             required="true"
+                             requiredMessage="Seleccione un procedimiento."
+                             filter="true" label="Procedimiento">
+                <f:selectItem itemLabel="Seleccione un procedimiento..."
+                              itemValue="#{null}"
+                              noSelectionOption="true"/>
+                <f:selectItems value="#{procedimientoModel.procedimientosActivos}"
+                               var="proc"
+                               itemLabel="#{proc.nombre}"
+                               itemValue="#{proc}"/>
+            </p:selectOneMenu>
+
+            <p:outputLabel for="ppRol" value="Rol:"/>
+            <p:selectOneMenu id="ppRol"
+                             disabled="#{procedimientoPasoModel.estadoModificar}" 
+                             value="#{procedimientoPasoModel.registroActual.idRol}"
+                             converter="#{entityConverter}"
+                             filter="true" label="Rol" required="true" requiredMessage="Seleccione un rol.">
+                <f:selectItem itemLabel="Seleccione un rol..."
+                              itemValue="#{null}"
+                              noSelectionOption="true"/>
+                <f:selectItems value="#{rolModel.rolesActivos}"
+                               var="rol"
+                               itemLabel="#{rol.nombre}"
+                               itemValue="#{rol}"/>
+            </p:selectOneMenu>
+            
+            <p:outputLabel for="ppDependeDe" value="Depende de:"/>
+            <p:selectOneMenu id="ppDependeDe"
+                             value="#{procedimientoPasoModel.pasoDependeDe}"
+                             converter="#{entityConverter}"
+                             filter="true" label="Depende de">
+                <f:selectItem itemLabel="Ninguno (Paso inicial)" itemValue="#{null}" noSelectionOption="true"/>
+                <f:selectItems value="#{procedimientoPasoModel.pasosDependeDeDisponibles}"
+                               var="pd" itemLabel="#{pd.nombre}" itemValue="#{pd}"/>
+            </p:selectOneMenu>
+
+            <p:outputLabel for="ppIndicaFin" value="Finaliza procedimiento:"/>
+            <p:selectBooleanCheckbox id="ppIndicaFin"
+                                     value="#{procedimientoPasoModel.registroActual.indicaFin}"/>
+
+            <h:outputText value=""/>
+            <h:panelGroup>
+                <p:commandButton value="#{procedimientoPasoModel.estadoModificar ? 'Actualizar paso' : 'Agregar paso'}" 
+                                 icon="#{procedimientoPasoModel.estadoModificar ? 'pi pi-save' : 'pi pi-plus'}"
+                                 styleClass="ui-button-success"
+                                 action="#{procedimientoPasoModel.guardar()}"
+                                 process="@this ppNombre ppProcedimiento ppRol ppDependeDe ppIndicaFin"
+                                 update="@form"/>
+                <p:commandButton value="Cancelar" icon="pi pi-times"
+                                 styleClass="ui-button-secondary" style="margin-left:0.5rem"
+                                 action="#{procedimientoPasoModel.prepararNuevo()}"
+                                 rendered="#{procedimientoPasoModel.estadoModificar}"
+                                 process="@this" update="@form">
+                     <!-- Override default cancelar to keep context of procedimiento -->
+                     <f:setPropertyActionListener target="#{procedimientoPasoModel.registroActual.idProcedimiento}" value="#{procedimientoModel.registroActual}" />
+                </p:commandButton>
+            </h:panelGroup>
+        </p:panelGrid>
+    </p:panel>
+
+</ui:composition>

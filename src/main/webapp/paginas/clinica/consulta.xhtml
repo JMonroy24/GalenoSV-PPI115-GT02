@@ -11,35 +11,54 @@
 
     <ui:define name="contenido">
 
-        <crud:crudTransaccional model="#{consultaModel}"
+        <h:form id="frmFiltroFechas" style="margin-bottom:1rem">
+            <p:panel header="Filtros - Clínica Activa: #{sesionBean.nombreClinica}">
+                <p:outputLabel for="desde" value="Desde:"/>
+            <p:datePicker id="desde" value="#{consultaModel.fechaDesde}" pattern="dd/MM/yyyy" timeZone="America/El_Salvador" showIcon="true"/>
+            <p:outputLabel for="hasta" value="Hasta:"/>
+            <p:datePicker id="hasta" value="#{consultaModel.fechaHasta}" pattern="dd/MM/yyyy" timeZone="America/El_Salvador" showIcon="true"/>
+            <p:commandButton value="Filtrar" action="#{consultaModel.filtrar}" process="@form"
+                             update="@([id$=tabla])"/>
+            <p:commandButton value="Limpiar" action="#{consultaModel.limpiarFiltro}" process="@this"
+                             update="@form @([id$=tabla])" resetValues="true"/>
+            </p:panel>
+        </h:form>
+
+        <h:form id="frmPrincipal">
+<crud:crudTransaccional model="#{consultaModel}"
                                 lazyModel="#{consultaModel.lazyModel}"
-                                titulo="Consultas">
+                                titulo="Consultas"
+                                anchoDialogo="950">
 
             <p:column headerText="Persona">
                 <h:outputText value="#{registro.idPersonaRol.idPersona.nombres} #{registro.idPersonaRol.idPersona.apellidos}"/>
             </p:column>
 
-            <p:column headerText="Rol" sortBy="#{registro.idPersonaRol.idRol.nombre}">
+            <p:column headerText="Información">
+                <h:outputText value="#{consultaModel.getDocumentosPersona(registro.idPersonaRol.idPersona.idPersona)}"/>
+            </p:column>
+
+            <p:column headerText="Rol">
                 <h:outputText value="#{registro.idPersonaRol.idRol.nombre}"/>
             </p:column>
 
-            <p:column headerText="Inicio" width="150" sortBy="#{registro.fechaInicio}">
+            <p:column headerText="Inicio" width="150">
                 <h:outputText value="#{registro.fechaInicio}">
                     <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
                 </h:outputText>
             </p:column>
 
-            <p:column headerText="Fin" width="150" sortBy="#{registro.fechaFin}">
+            <p:column headerText="Fin" width="150">
                 <h:outputText value="#{registro.fechaFin}">
                     <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
                 </h:outputText>
             </p:column>
 
-            <p:column headerText="Referencia externa" sortBy="#{registro.referenciaExterna}">
+            <p:column headerText="Referencia externa">
                 <h:outputText value="#{registro.referenciaExterna}"/>
             </p:column>
 
-            <p:column headerText="Observaciones" sortBy="#{registro.observaciones}">
+            <p:column headerText="Observaciones">
                 <h:outputText value="#{registro.observaciones}"/>
             </p:column>
             
@@ -56,14 +75,14 @@
                 <p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank ui-fluid" columnClasses="ui-grid-col-4,ui-grid-col-8">
 
                     <p:outputLabel value="Persona / Rol:" for="idPersonaRol"/>
-                    <p:autoComplete id="idPersonaRol" value="#{consultaModel.registroActual.idPersonaRol}"
+                    <p:autoComplete id="idPersonaRol" disabled="#{consultaModel.estadoModificar}" value="#{consultaModel.registroActual.idPersonaRol}"
                                     completeMethod="#{consultaModel.completePersonaRol}"
                                     var="pr"
                                     itemLabel="#{pr.idPersona.nombres} #{pr.idPersona.apellidos} — #{pr.idRol.nombre}"
                                     itemValue="#{pr}"
                                     converter="#{entityConverter}"
                                     forceSelection="true" required="true" requiredMessage="Seleccione una persona/rol." scrollHeight="250"
-                                    placeholder="Escriba nombre, apellido, rol o clínica..." label="Persona / Rol" minQueryLength="2"/>
+                                    placeholder="Busque un paciente de la clínica actual..." label="Persona / Rol" minQueryLength="2"/>
 
                     <p:outputLabel value="Fecha de inicio:" for="fechaInicio"/>
                     <p:datePicker id="fechaInicio" value="#{consultaModel.registroActual.fechaInicio}"
@@ -86,7 +105,165 @@
                 </p:panelGrid>
             </f:facet>
 
+
+            <f:facet name="relaciones">
+
+                <p:outputPanel rendered="#{consultaModel.estadoCrear}">
+                    <h:outputText value="Guarde la consulta para poder agregar procedimientos y pasos."/>
+                </p:outputPanel>
+
+                <p:outputPanel rendered="#{consultaModel.estadoModificar}">
+                    <p:outputPanel id="pnlRelConsulta">
+
+                        <p:panel header="Procedimientos de la consulta">
+                            <p:dataTable value="#{consultaModel.procedimientos}" var="cp"
+                                         emptyMessage="La consulta no tiene procedimientos." size="small"
+                                         rowStyleClass="#{cp.idConsultaProcedimiento eq consultaModel.procedimientoActivo.idConsultaProcedimiento ? 'ui-state-highlight' : null}">
+                                <p:column headerText="Procedimiento">
+                                    <h:outputText value="#{cp.idProcedimiento.nombre}"/>
+                                </p:column>
+                                <p:column headerText="Inicio" width="140">
+                                    <h:outputText value="#{cp.fechaInicio}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="Fin" width="140">
+                                    <h:outputText value="#{cp.fechaFin}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="Observaciones">
+                                    <h:outputText value="#{cp.observaciones}"/>
+                                </p:column>
+                                <p:column headerText="Paso actual" width="220">
+                                    <h:outputText value="#{consultaModel.getEstadoPasoActual(cp)}"/>
+                                </p:column>
+                                <p:column headerText="Acción" width="110">
+                                    <p:commandButton icon="pi pi-list" title="Ver / editar pasos"
+                                                     styleClass="ui-button-info mr-1"
+                                                     action="#{consultaModel.seleccionarProcedimiento(cp)}"
+                                                     process="@this"
+                                                     update="pnlRelConsulta"/>
+                                    <p:commandButton icon="pi pi-trash" title="Quitar procedimiento"
+                                                     styleClass="ui-button-danger"
+                                                     action="#{consultaModel.quitarProcedimiento(cp)}"
+                                                     process="@this"
+                                                     update="pnlRelConsulta">
+                                        <p:confirm header="Quitar procedimiento"
+                                                   message="¿Desea quitar este procedimiento de la consulta?"
+                                                   icon="pi pi-exclamation-triangle"/>
+                                    </p:commandButton>
+                                </p:column>
+                            </p:dataTable>
+
+                            <p:panelGrid columns="2" style="width:100%; margin-top:1rem">
+                                <p:outputLabel for="cpProc" value="Procedimiento:"/>
+                                <p:selectOneMenu id="cpProc"
+                                                 value="#{consultaModel.procedimientoNuevo.idProcedimiento}"
+                                                 converter="#{entityConverter}" filter="true">
+                                    <f:selectItem itemLabel="Seleccione un procedimiento..." itemValue="#{null}"
+                                                  noSelectionOption="true"/>
+                                    <f:selectItems value="#{procedimientoModel.procedimientosActivos}" var="proc"
+                                                   itemLabel="#{proc.nombre}" itemValue="#{proc}"/>
+                                </p:selectOneMenu>
+
+                                <p:outputLabel for="cpInicio" value="Fecha de inicio:"/>
+                                <p:datePicker id="cpInicio" value="#{consultaModel.procedimientoNuevo.fechaInicio}"
+                                              showTime="true" showIcon="true" pattern="dd/MM/yyyy HH:mm"
+                                              appendTo="@(body)"/>
+
+                                <p:outputLabel for="cpFin" value="Fecha de fin:"/>
+                                <p:datePicker id="cpFin" value="#{consultaModel.procedimientoNuevo.fechaFin}"
+                                              showTime="true" showIcon="true" pattern="dd/MM/yyyy HH:mm"
+                                              appendTo="@(body)"/>
+
+                                <p:outputLabel for="cpObs" value="Observaciones:"/>
+                                <p:inputTextarea id="cpObs" value="#{consultaModel.procedimientoNuevo.observaciones}"
+                                                 rows="2" autoResize="false"/>
+
+                                <h:outputText value=""/>
+                                <p:commandButton value="Agregar procedimiento" icon="pi pi-plus"
+                                                 styleClass="ui-button-success"
+                                                 action="#{consultaModel.agregarProcedimiento()}"
+                                                 process="@this cpProc cpInicio cpFin cpObs"
+                                                 update="pnlRelConsulta"/>
+                            </p:panelGrid>
+                        </p:panel>
+
+                        <p:panel header="Pasos de: #{consultaModel.procedimientoActivo.idProcedimiento.nombre}"
+                                 style="margin-top:1rem"
+                                 rendered="#{consultaModel.procedimientoActivo != null}">
+
+                            <p:dataTable value="#{consultaModel.pasos}" var="paso"
+                                         emptyMessage="Este procedimiento aún no tiene pasos." size="small">
+                                <p:column headerText="Responsable">
+                                    <h:outputText value="#{paso.idPersonaRol.idPersona.nombres} #{paso.idPersonaRol.idPersona.apellidos}"/>
+                                </p:column>
+                                <p:column headerText="Rol">
+                                    <h:outputText value="#{paso.idPersonaRol.idRol.nombre}"/>
+                                </p:column>
+                                <p:column headerText="Inicio" width="140">
+                                    <h:outputText value="#{paso.fechaInicio}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="Fin" width="140">
+                                    <h:outputText value="#{paso.fechaFin}">
+                                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="Estado" width="110">
+                                    <h:outputText value="#{paso.estado}"/>
+                                </p:column>
+                                <p:column headerText="Acción" width="70">
+                                    <p:commandButton icon="pi pi-trash" title="Quitar paso"
+                                                     styleClass="ui-button-danger"
+                                                     action="#{consultaModel.quitarPaso(paso)}"
+                                                     process="@this"
+                                                     update="pnlRelConsulta">
+                                        <p:confirm header="Quitar paso"
+                                                   message="¿Desea quitar este paso?"
+                                                   icon="pi pi-exclamation-triangle"/>
+                                    </p:commandButton>
+                                </p:column>
+                            </p:dataTable>
+
+                            <p:panelGrid columns="2" rendered="false" style="width:100%; margin-top:1rem">
+                                <p:outputLabel for="pasoResp" value="Responsable (persona / rol):"/>
+                                <p:autoComplete id="pasoResp" value="#{consultaModel.pasoNuevo.idPersonaRol}"
+                                                completeMethod="#{consultaModel.completePersonaRol}"
+                                                var="prol"
+                                                itemLabel="#{prol.idPersona.nombres} #{prol.idPersona.apellidos} — #{prol.idRol.nombre}"
+                                                itemValue="#{prol}"
+                                                converter="#{entityConverter}"
+                                                forceSelection="true" scrollHeight="250"
+                                                placeholder="Busque un paciente de la clínica actual..."/>
+
+                                <p:outputLabel for="pasoInicio" value="Fecha de inicio:"/>
+                                <p:datePicker id="pasoInicio" value="#{consultaModel.pasoNuevo.fechaInicio}"
+                                              showTime="true" showIcon="true" pattern="dd/MM/yyyy HH:mm"
+                                              appendTo="@(body)"/>
+
+                                <p:outputLabel for="pasoFin" value="Fecha de fin:"/>
+                                <p:datePicker id="pasoFin" value="#{consultaModel.pasoNuevo.fechaFin}"
+                                              showTime="true" showIcon="true" pattern="dd/MM/yyyy HH:mm"
+                                              appendTo="@(body)"/>
+
+                                <h:outputText value=""/>
+                                <p:commandButton value="Agregar paso" icon="pi pi-plus"
+                                                 styleClass="ui-button-success"
+                                                 action="#{consultaModel.agregarPaso()}"
+                                                 process="@this pasoResp pasoInicio pasoFin"
+                                                 update="pnlRelConsulta"/>
+                            </p:panelGrid>
+                        </p:panel>
+
+                    </p:outputPanel>
+                </p:outputPanel>
+
+            </f:facet>
         </crud:crudTransaccional>
+</h:form>
 
     </ui:define>
 

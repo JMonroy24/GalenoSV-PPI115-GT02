@@ -36,7 +36,9 @@ public class TipoDocumentoModel extends ModelTransaccional<TipoDocumento, UUID> 
 
     @Override
     protected TipoDocumento crearNuevoRegistro() {
-        return new TipoDocumento(UUID.randomUUID());
+        TipoDocumento registro = new TipoDocumento(UUID.randomUUID());
+        registro.setActivo(true);
+        return registro;
     }
 
     public TipoDocumentoDAO getTipoDocumentoDAO() {

@@ -7,3 +7,5 @@ src/main/liberty/config/lib/*.jar
 
 src/main/liberty/config/server.env
 .env
+/opencode.json
+target-*.log

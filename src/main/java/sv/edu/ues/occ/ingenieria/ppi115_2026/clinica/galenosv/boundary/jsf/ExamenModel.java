@@ -65,6 +65,7 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
     protected Examen crearNuevoRegistro() {
         Examen examen = new Examen();
         examen.setIdExamen(UUID.randomUUID());
+        examen.setActivo(true);
         return examen;
     }
 
@@ -107,6 +108,10 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
             return;
         }
 
+        if (!Boolean.TRUE.equals(tipoSeleccionado.getActivo())) {
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Tipo de examen", "No se puede asignar un tipo de examen inactivo.");
+            return;
+        }
         ExamenTipoExamen asignacion = new ExamenTipoExamen(UUID.randomUUID());
         asignacion.setIdExamen(getRegistroActual());
         asignacion.setIdTipoExamen(tipoSeleccionado);
@@ -210,9 +215,27 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
     @Override
     protected void validarNegocio(Examen registro) {
         registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre"));
+        if (isEstadoCrear() && tipoSeleccionado != null) {
+            ValidadorComun.activo(tipoSeleccionado.getActivo(), "El tipo de examen");
+        }
         if (examenDAO.existePorCampo("nombre", registro.getNombre(), registro.getIdExamen())) {
             throw new ValidacionNegocioException("Ya existe un registro con este nombre.");
         }
+    }
+
+
+    @Override
+    protected void persistirNuevo(Examen examen) {
+        if (tipoSeleccionado == null) {
+            super.persistirNuevo(examen);
+            return;
+        }
+        ExamenTipoExamen asignacion = new ExamenTipoExamen(UUID.randomUUID());
+        asignacion.setIdExamen(examen);
+        asignacion.setIdTipoExamen(tipoSeleccionado);
+        asignacion.setFechaCreacion(new Date());
+        asignacion.setObservaciones(observacionesTipo);
+        asignacionService.crearExamenConTipo(examen, asignacion);
     }
 
 }

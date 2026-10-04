@@ -19,7 +19,7 @@ import jakarta.persistence.PrePersist;
 
 @Entity
 @Table(name = "persona_rol")
-public class PersonaRol extends EntidadVersionada implements IdentificableEntity {
+public class PersonaRol implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
