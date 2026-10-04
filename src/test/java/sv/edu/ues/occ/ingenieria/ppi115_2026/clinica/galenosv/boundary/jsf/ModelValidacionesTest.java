@@ -19,6 +19,7 @@ class ModelValidacionesTest {
         registro.setNombre("   ");
         assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
         registro.setNombre("  Nombre  ");
+        registro.setTipo("GENERAL");
         assertDoesNotThrow(() -> model.validarNegocio(registro));
         assertEquals("Nombre", registro.getNombre());
         when(dao.existePorCampo("nombre", "Nombre", registro.getIdClinica())).thenReturn(true);
@@ -121,9 +122,9 @@ class ModelValidacionesTest {
         var persona = new Persona(UUID.randomUUID());
         assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(persona));
         persona.setNombres(" Ana "); persona.setApellidos(" Pérez ");
-        persona.setFechaNacimiento(model.getHoy().plusDays(1));
+        persona.setFechaNacimiento(new Date(model.getHoy().getTime() + 86400000L));
         assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(persona));
-        persona.setFechaNacimiento(java.time.LocalDate.of(1970, 1, 1));
+        persona.setFechaNacimiento(java.util.Date.from(java.time.LocalDate.of(1970, 1, 1).atStartOfDay(java.time.ZoneId.of("America/El_Salvador")).toInstant()));
         assertDoesNotThrow(() -> model.validarNegocio(persona));
         assertEquals("Ana", persona.getNombres()); assertEquals("Pérez", persona.getApellidos());
         assertNotNull(model.getHoy());
@@ -145,7 +146,7 @@ class ModelValidacionesTest {
         tipo.setActivo(false);
         assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
         tipo.setActivo(true);
-        when(dao.existeTipoValor(tipo.getIdTipoDocumento(), "12345678-9", registro.getIdDocumento())).thenReturn(true);
+        when(dao.existePersonaTipoValor(registro.getIdPersona().getIdPersona(), tipo.getIdTipoDocumento(), "12345678-9", registro.getIdDocumento())).thenReturn(true);
         assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
         assertTrue(model.completePersona(" a ").isEmpty());
     }
@@ -172,13 +173,15 @@ class ModelValidacionesTest {
     }
 
     @Test
-    void personaRolPermiteClinicaOpcionalPeroRechazaDuplicadoEInactivos() {
+    void personaRolExigeClinicaYRechazaDuplicadoEInactivos() {
         var model = new PersonaRolModel(); var dao = mock(PersonaRolDAO.class); model.setPersonaRolDAO(dao);
         var registro = new PersonaRol(UUID.randomUUID());
         var persona = new Persona(UUID.randomUUID()); registro.setIdPersona(persona);
         var rol = new Rol(UUID.randomUUID()); rol.setActivo(true); registro.setIdRol(rol);
+        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
+        var asignada = new Clinica(UUID.randomUUID()); asignada.setActivo(true); registro.setIdClinica(asignada);
         assertDoesNotThrow(() -> model.validarNegocio(registro));
-        when(dao.existeAsignacion(persona.getIdPersona(), rol.getIdRol(), null, registro.getIdPersonaRol())).thenReturn(true);
+        when(dao.existeAsignacion(persona.getIdPersona(), rol.getIdRol(), asignada.getIdClinica(), registro.getIdPersonaRol())).thenReturn(true);
         assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
         rol.setActivo(false);
         assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
@@ -192,13 +195,17 @@ class ModelValidacionesTest {
     @Test
     void losTresModelosClinicosRechazanFechasInvertidas() {
         var consulta = new Consulta(UUID.randomUUID()); consulta.setFechaInicio(new Date(100)); consulta.setFechaFin(new Date(1));
+        var modelConsulta = new ConsultaModel(); modelConsulta.sesionBean = new SesionBean();
+        var clinica = new Clinica(UUID.randomUUID()); clinica.setActivo(true); modelConsulta.sesionBean.setClinicaActual(clinica);
+        var rol = new Rol(UUID.randomUUID()); rol.setActivo(true); rol.setNombre("Paciente");
+        var paciente = new PersonaRol(UUID.randomUUID()); paciente.setIdClinica(clinica); paciente.setIdRol(rol); consulta.setIdPersonaRol(paciente);
         var cp = new ConsultaProcedimiento(UUID.randomUUID()); cp.setFechaInicio(new Date(100)); cp.setFechaFin(new Date(1));
         var paso = new ConsultaProcedimientoPaso(UUID.randomUUID()); paso.setFechaInicio(new Date(100)); paso.setFechaFin(new Date(1)); paso.setEstado("Registrado");
-        assertThrows(ValidacionNegocioException.class, () -> new ConsultaModel().validarNegocio(consulta));
+        assertThrows(ValidacionNegocioException.class, () -> modelConsulta.validarNegocio(consulta));
         assertThrows(ValidacionNegocioException.class, () -> new ConsultaProcedimientoModel().validarNegocio(cp));
         assertThrows(ValidacionNegocioException.class, () -> new ConsultaProcedimientoPasoModel().validarNegocio(paso));
         consulta.setFechaFin(new Date(100)); cp.setFechaFin(null); paso.setFechaFin(new Date(200));
-        assertDoesNotThrow(() -> new ConsultaModel().validarNegocio(consulta));
+        assertDoesNotThrow(() -> modelConsulta.validarNegocio(consulta));
         assertDoesNotThrow(() -> new ConsultaProcedimientoModel().validarNegocio(cp));
         assertDoesNotThrow(() -> new ConsultaProcedimientoPasoModel().validarNegocio(paso));
     }
@@ -239,7 +246,8 @@ class ModelValidacionesTest {
         var model = new ProcedimientoPasoModel(); var dao = mock(ProcedimientoPasoDAO.class); model.setProcedimientoPasoDAO(dao);
         var paso = new ProcedimientoPaso(UUID.randomUUID()); paso.setNombre(" Paso ");
         assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(paso));
-        var procedimiento = new Procedimiento(UUID.randomUUID()); paso.setIdProcedimiento(procedimiento);
+        var procedimiento = new Procedimiento(UUID.randomUUID()); procedimiento.setActivo(true); paso.setIdProcedimiento(procedimiento);
+        var rol = new Rol(UUID.randomUUID()); rol.setActivo(true); paso.setIdRol(rol);
         assertDoesNotThrow(() -> model.validarNegocio(paso));
         when(dao.existeNombreEnProcedimiento(procedimiento.getIdProcedimiento(), "Paso", paso.getIdProcedimientoPaso())).thenReturn(true);
         assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(paso));

@@ -111,7 +111,10 @@ class ProcedimientoPasoModelTest {
         procedimientoPasoModel.getRegistroActual()
                 .setNombre("Verificar identidad del paciente");
         procedimientoPasoModel.getRegistroActual().setNombre("Paso de prueba");
-        procedimientoPasoModel.getRegistroActual().setIdProcedimiento(new Procedimiento(UUID.randomUUID()));
+        Procedimiento procedimiento = new Procedimiento(UUID.randomUUID()); procedimiento.setActivo(true);
+        procedimientoPasoModel.getRegistroActual().setIdProcedimiento(procedimiento);
+        var rol = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol(UUID.randomUUID()); rol.setActivo(true);
+        procedimientoPasoModel.getRegistroActual().setIdRol(rol);
         procedimientoPasoModel.guardar();
 
         verify(procedimientoPasoDAO).create(any(ProcedimientoPaso.class));
@@ -132,7 +135,10 @@ class ProcedimientoPasoModelTest {
 
         procedimientoPasoModel.seleccionar(paso);
         procedimientoPasoModel.getRegistroActual().setNombre("Paso de prueba");
-        procedimientoPasoModel.getRegistroActual().setIdProcedimiento(new Procedimiento(UUID.randomUUID()));
+        Procedimiento procedimiento = new Procedimiento(UUID.randomUUID()); procedimiento.setActivo(true);
+        procedimientoPasoModel.getRegistroActual().setIdProcedimiento(procedimiento);
+        var rol = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol(UUID.randomUUID()); rol.setActivo(true);
+        procedimientoPasoModel.getRegistroActual().setIdRol(rol);
         procedimientoPasoModel.guardar();
 
         verify(procedimientoPasoDAO).update(paso);
@@ -143,6 +149,7 @@ class ProcedimientoPasoModelTest {
     void testAgregarExamenConservaDatosDeAsociacion() {
         ProcedimientoPaso paso = new ProcedimientoPaso(UUID.randomUUID());
         Examen examen = new Examen(UUID.randomUUID());
+        examen.setActivo(true);
         when(procedimientoPasoExamenDAO.findByPaso(
                 paso.getIdProcedimientoPaso()))
                 .thenReturn(Collections.emptyList());
@@ -172,6 +179,7 @@ class ProcedimientoPasoModelTest {
     void testAgregarExamenImpideDuplicado() {
         ProcedimientoPaso paso = new ProcedimientoPaso(UUID.randomUUID());
         Examen examen = new Examen(UUID.randomUUID());
+        examen.setActivo(true);
         ProcedimientoPasoExamen asignacion =
                 new ProcedimientoPasoExamen(UUID.randomUUID());
         asignacion.setIdExamen(examen);

@@ -75,6 +75,7 @@ public class ClinicaModelTest {
         clinicaModel.getRegistroActual().setNombre("Clinica Central");
 
         clinicaModel.getRegistroActual().setNombre("Registro válido");
+        clinicaModel.getRegistroActual().setTipo("GENERAL");
         clinicaModel.guardar();
 
         verify(clinicaDAO).create(any(Clinica.class));
@@ -89,6 +90,7 @@ public class ClinicaModelTest {
         clinicaModel.seleccionar(c);
 
         clinicaModel.getRegistroActual().setNombre("Registro válido");
+        clinicaModel.getRegistroActual().setTipo("GENERAL");
         clinicaModel.guardar();
 
         verify(clinicaDAO).update(c);

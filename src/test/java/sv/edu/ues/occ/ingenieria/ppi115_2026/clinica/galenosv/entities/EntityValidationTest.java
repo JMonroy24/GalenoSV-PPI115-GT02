@@ -60,10 +60,10 @@ class EntityValidationTest {
         Persona persona = personaValida();
         assertTrue(validator.validate(persona).isEmpty());
 
-        persona.setFechaNacimiento(java.time.LocalDate.of(2026, 9, 30));
+        persona.setFechaNacimiento(java.util.Date.from(java.time.LocalDate.of(2026, 9, 30).atStartOfDay(java.time.ZoneId.of("America/El_Salvador")).toInstant()));
         assertEquals(Set.of("fechaNacimiento"), propiedadesInvalidas(persona));
 
-        persona.setFechaNacimiento(java.time.LocalDate.of(1990, 1, 1));
+        persona.setFechaNacimiento(java.util.Date.from(java.time.LocalDate.of(1990, 1, 1).atStartOfDay(java.time.ZoneId.of("America/El_Salvador")).toInstant()));
         assertTrue(validator.validate(persona).isEmpty());
     }
 

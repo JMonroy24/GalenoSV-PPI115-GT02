@@ -74,6 +74,8 @@ public class PersonaRolModelTest {
         var rolValido = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol(UUID.randomUUID());
         rolValido.setActivo(true);
         personaRolModel.getRegistroActual().setIdRol(rolValido);
+        var clinica = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica(UUID.randomUUID());
+        clinica.setActivo(true); personaRolModel.getRegistroActual().setIdClinica(clinica);
         personaRolModel.guardar();
 
         verify(personaRolDAO).create(any(PersonaRol.class));
@@ -90,6 +92,8 @@ public class PersonaRolModelTest {
         var rolValido = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol(UUID.randomUUID());
         rolValido.setActivo(true);
         personaRolModel.getRegistroActual().setIdRol(rolValido);
+        var clinica = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica(UUID.randomUUID());
+        clinica.setActivo(true); personaRolModel.getRegistroActual().setIdClinica(clinica);
         personaRolModel.guardar();
 
         verify(personaRolDAO).update(pr);
