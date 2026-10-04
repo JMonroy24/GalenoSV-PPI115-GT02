@@ -12,4 +12,15 @@
                 <goal>liberty:dev</goal>
             </goals>
         </action>
+        <action>
+            <actionName>clean</actionName>
+            <packagings>
+                <packaging>war</packaging>
+                <packaging>ear</packaging>
+                <packaging>ejb</packaging>
+            </packagings>
+            <goals>
+                <goal>clean</goal>
+            </goals>
+        </action>
     </actions>

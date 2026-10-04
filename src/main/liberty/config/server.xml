@@ -6,22 +6,9 @@
         <feature>localConnector-1.0</feature>
     </featureManager>
 
-    <basicRegistry id="basic">
-        <user name="admin" password="${env.GALENO_ADMIN_PASSWORD}"/>
-        <user name="clinico" password="${env.GALENO_CLINICO_PASSWORD}"/>
-        <group name="ADMINISTRADOR">
-            <member name="admin"/>
-        </group>
-        <group name="PERSONAL_CLINICO">
-            <member name="clinico"/>
-        </group>
-    </basicRegistry>
-
-
-    <keyStore id="defaultKeyStore" password="${env.keystore_password}"/>
-
-    <!-- Permite acceso HTTP sin forzar redireccion a HTTPS en desarrollo -->
-    <webAppSecurity httpsRequired="false" ssoRequiresSSL="false"/>
+    <!-- Registro mínimo requerido por el componente ORB incluido en jakartaee-11.0.
+         La aplicación no usa EJBs remotos; este registro no otorga acceso real. -->
+    <basicRegistry id="basic" realm="BasicRealm"/>
 
     <httpEndpoint id="defaultHttpEndpoint"
                   httpPort="9080"
@@ -31,7 +18,8 @@
     <variable name="GALENOSV_DB_PORT" defaultValue="5432"/>
     <variable name="GALENOSV_DB_NAME" defaultValue="galenoSV"/>
     <variable name="GALENOSV_DB_USER" defaultValue="admin"/>
-    <variable name="GALENOSV_WAR" defaultValue="GalenoSV.war"/>
+    <variable name="GALENOSV_DB_PASSWORD" defaultValue="admin"/>
+    <variable name="GALENOSV_WAR"     defaultValue="GalenoSV.war"/>
 
     <dataSource id="galenoSV" jndiName="jdbc/galenoSV">
         <jdbcDriver libraryRef="PostgreSQLLib"/>
@@ -40,7 +28,7 @@
             portNumber="${GALENOSV_DB_PORT}"
             databaseName="${GALENOSV_DB_NAME}"
             user="${GALENOSV_DB_USER}"
-            password="${env.GALENOSV_DB_PASSWORD}"/>
+            password="${GALENOSV_DB_PASSWORD}"/>
     </dataSource>
 
     <library id="PostgreSQLLib">
@@ -48,7 +36,7 @@
     </library>
 
     <webApplication location="${GALENOSV_WAR}" contextRoot="/galenoSV">
-    <classloader apiTypeVisibility="spec,ibm-api,api,third-party"/>
-</webApplication>
+        <classloader apiTypeVisibility="spec,ibm-api,api,third-party"/>
+    </webApplication>
 
 </server>

@@ -1,140 +1,80 @@
 # GalenoSV-PPI115-GT02
 
-Sistema de gestión clínica desarrollado con Jakarta EE, Faces, JPA, EclipseLink, PostgreSQL y Open Liberty.
+Sistema de gestión clínica con Jakarta EE 11, Faces, PrimeFaces, EclipseLink,
+PostgreSQL y Open Liberty.
 
 ## Requisitos
 
-- Java 21.
-- Maven.
-- Docker.
-- PostgreSQL 15 o compatible.
-- Open Liberty 26.0.0.8 o compatible con Jakarta EE 11.
+- Java 21 y Maven.
+- Una base PostgreSQL con el esquema original `clinica_ppi115_2026_08_20.sql`.
+- Open Liberty compatible con Jakarta EE 11. El plugin Maven administra una
+  instalación en `target/liberty/wlp`; si ya tiene Liberty, configure `WLP_INSTALL_DIR`.
 
-## Base de datos local
-
-El proyecto utiliza la base de datos:
-
-```text
-Base de datos: galenoSV
-Usuario: admin
-Puerto: 5432
-```
-
-## Variables de entorno
-
-Las credenciales no se guardan en Git. Debe existir localmente el archivo:
-
-```text
-src/main/liberty/config/server.env
-```
-
-Debe contener variables con esta estructura:
-
-```text
-GALENO_ADMIN_PASSWORD=contraseña_local
-GALENO_CLINICO_PASSWORD=contraseña_local
-GALENOSV_DB_PASSWORD=contraseña_de_postgresql
-keystore_password=contraseña_del_keystore
-```
-
-El archivo debe tener permisos restringidos:
-
-```bash
-chmod 600 src/main/liberty/config/server.env
-```
+**No ejecute migraciones sobre la base del profesor.** JPA tiene
+`schema-generation.database.action=none`. El WAR no contiene Flyway ni migraciones.
+Los SQL antiguos se conservan únicamente como referencia en `docs/historico-migraciones/`.
 
 ## Ejecución local
 
-Copie `.env.example` a `.env`, asigne una contraseña local y cree PostgreSQL:
-
 ```bash
-docker compose up -d --wait db
+mvn clean verify
+mvn -DskipTests liberty:dev
 ```
 
-Para una base nueva, configure `FLYWAY_URL` (por ejemplo
-`jdbc:postgresql://localhost:5432/galenoSV`), `FLYWAY_USER` y `FLYWAY_PASSWORD`
-en su entorno y aplique el esquema:
+El WAR es `target/GalenoSV.war`. Las pantallas protegidas están en
+`https://localhost:9443/galenoSV/`; HTTP redirige a HTTPS según `web.xml`.
+No se necesita Docker ni un archivo `.env` o `server.env` para el arranque local
+con los valores de demostración. La base existente debe aceptar estos datos de conexión:
 
-```bash
-mvn flyway:migrate
-```
+| Variable | Valor local predeterminado |
+| --- | --- |
+| `GALENOSV_DB_HOST` | `localhost` |
+| `GALENOSV_DB_PORT` | `5432` |
+| `GALENOSV_DB_NAME` | `galenoSV` |
+| `GALENOSV_DB_USER` | `admin` |
+| `GALENOSV_DB_PASSWORD` | `admin` |
+| `GALENO_ADMIN_PASSWORD` | `admin` |
+| `GALENO_CLINICO_PASSWORD` | `clinico` |
+| `keystore_password` | `galeno-local-keystore` |
+| `GALENOSV_WAR` | `GalenoSV.war` |
 
-Para una base existente, consulte primero [la guía de correcciones](docs/analisis-y-correcciones.md).
-El esquema inferido debe contrastarse con su DDL; no habilite un baseline automático.
-Antes de iniciar la aplicación debe estar aplicada la versión 3 del esquema,
-que incluye las columnas de concurrencia y la fecha de nacimiento sin hora.
+Los usuarios de demostración son `admin` (ADMINISTRADOR) y `clinico`
+(PERSONAL_CLINICO). Las variables de entorno reemplazan estos valores.
+Para otra instalación, configure las credenciales que **ya tiene** su base;
+no es necesario modificar sus usuarios, tablas o datos.
+Puede usar opcionalmente `src/main/liberty/config/server.env`, excluido de Git.
+`compose.yaml` es una alternativa opcional para una base propia de desarrollo.
 
-Después, desde la raíz del proyecto, iniciar Open Liberty:
-
-```bash
-WLP_INSTALL_DIR=/opt/openliberty-26.0.0.8/wlp mvn -DskipTests liberty:dev
-```
-
-En PowerShell, asigne `$env:WLP_INSTALL_DIR` a su instalación de Liberty y ejecute
-`mvn -DskipTests liberty:dev`. Los datos de conexión admiten
-`GALENOSV_DB_HOST`, `GALENOSV_DB_PORT`, `GALENOSV_DB_NAME` y `GALENOSV_DB_USER`
-en `server.env`; use la misma base y contraseña que en Compose.
-El WAR generado es `target/GalenoSV.war`.
-
-La aplicación queda disponible en:
-
-```text
-http://localhost:9080/galenoSV/
-https://localhost:9443/galenoSV/
-```
-
-Las páginas ubicadas bajo `/paginas/*` requieren autenticación. Los usuarios locales configurados son:
-
-```text
-admin    → rol ADMINISTRADOR
-clinico  → rol PERSONAL_CLINICO
-```
-
-Las contraseñas se obtienen únicamente del archivo local `server.env`.
-
-## Seguridad
-
-- Las credenciales se leen mediante variables de entorno.
-- `server.env` está excluido de Git.
-- La aplicación utiliza `PROJECT_STAGE=Production`.
-- Las páginas protegidas requieren autenticación BASIC.
-- El acceso protegido exige HTTPS.
-- Los mensajes genéricos no exponen detalles internos de PostgreSQL.
-- El registro de EclipseLink no muestra parámetros ni SQL sensible.
-
-## Verificación
-
-Compilar el proyecto:
+## Pruebas
 
 ```bash
 mvn -DskipTests compile
+mvn test
+mvn clean verify
 ```
 
-Ejecutar las pruebas:
+`verify` empaqueta el WAR y exige cobertura de líneas del **65 %**.
+Las pruebas unitarias no se conectan a la base de trabajo.
 
-```bash
-mvn -Djacoco.skip=true test
-```
-
-Verificación completa del WAR y umbral mínimo de cobertura de líneas (65 %):
-
-```bash
-mvn verify
-```
-
-Integración con PostgreSQL 15 real en un contenedor temporal independiente
-(requiere Docker en ejecución):
+La integración con Docker crea un PostgreSQL temporal, importa una copia literal
+del SQL del profesor y ejecuta JPA con generación de esquema desactivada:
 
 ```bash
 mvn -Pintegration verify
 ```
 
-Este perfil falla si Docker no está disponible; no omite silenciosamente las pruebas.
-La integración continua ejecuta ese perfil y conserva los informes de pruebas y cobertura.
-
-Validar el estado del repositorio:
+Docker solo es necesario para este perfil por defecto. También puede ejecutar el
+perfil contra una instancia temporal propia en loopback, con una base **nueva**
+llamada `galenosv_test_<numero>` y el usuario de pruebas `galenosv_test`:
 
 ```bash
-git diff --check
-git status --short
+mvn -Pintegration verify -Dgalenosv.test.jdbc.url=jdbc:postgresql://127.0.0.1:55432/galenosv_test_20261002
 ```
+
+El perfil carga el SQL automáticamente y falla si el esquema ya existe. Use una
+base de pruebas nueva en cada ejecución. La URL de integración local rechaza los
+nombres normales de bases de trabajo. Puede configurar `galenosv.test.jdbc.user`
+y `galenosv.test.jdbc.password` para esa instancia temporal.
+
+Consulte [las correcciones y el guion manual](docs/analisis-y-correcciones.md)
+y [el detalle de archivos](docs/archivos-corregidos.md).
