@@ -10,7 +10,8 @@
     <ui:define name="titulo">Pasos de Procedimiento</ui:define>
 
     <ui:define name="contenido">
-        <crud:crudTransaccional model="#{procedimientoPasoModel}" lazyModel="#{procedimientoPasoModel.lazyModel}"
+        <h:form id="frmPrincipal">
+<crud:crudTransaccional model="#{procedimientoPasoModel}" lazyModel="#{procedimientoPasoModel.lazyModel}"
                                 titulo="Pasos de Procedimiento"
                                 anchoDialogo="900">
 
@@ -27,7 +28,7 @@
             </p:column>
 
             <p:column headerText="Finaliza procedimiento">
-                <h:outputText value="#{registro.indicaFin ? 'Sí' : 'No'}"/>
+                <h:outputText value="#{registro.indicaFin eq true ? 'Sí' : 'No'}"/>
             </p:column>
 
             <f:facet name="formulario">
@@ -41,7 +42,7 @@
                 <p:outputLabel for="idProcedimiento"
                                value="Procedimiento:"/>
                 <p:selectOneMenu id="idProcedimiento"
-                                 value="#{procedimientoPasoModel.registroActual.idProcedimiento}"
+                                 disabled="#{procedimientoPasoModel.estadoModificar}" value="#{procedimientoPasoModel.registroActual.idProcedimiento}"
                                  converter="#{entityConverter}"
                                  required="true"
                                  requiredMessage="Seleccione un procedimiento."
@@ -57,10 +58,10 @@
 
                 <p:outputLabel for="idRol" value="Rol:"/>
                 <p:selectOneMenu id="idRol"
-                                 value="#{procedimientoPasoModel.registroActual.idRol}"
+                                 disabled="#{procedimientoPasoModel.estadoModificar}" value="#{procedimientoPasoModel.registroActual.idRol}"
                                  converter="#{entityConverter}"
-                                 filter="true" label="Rol">
-                    <f:selectItem itemLabel="Sin rol asignado"
+                                 filter="true" label="Rol" required="true" requiredMessage="Seleccione un rol.">
+                    <f:selectItem itemLabel="Seleccione un rol..."
                                   itemValue="#{null}"
                                   noSelectionOption="true"/>
                     <f:selectItems value="#{rolModel.rolesActivos}"
@@ -90,7 +91,7 @@
                             </p:column>
 
                             <p:column headerText="Activo">
-                                <h:outputText value="#{asignacion.activo ? 'Sí' : 'No'}"/>
+                                <h:outputText value="#{asignacion.activo eq true ? 'Sí' : 'No'}"/>
                             </p:column>
 
                             <p:column headerText="Observaciones">
@@ -157,7 +158,7 @@
                                      emptyMessage="Este paso aún no tiene secuencias."
                                      size="small">
 
-                            <p:column headerText="Paso de referencia">
+                            <p:column headerText="Paso siguiente">
                                 <h:outputText value="#{procedimientoPasoModel.nombrePasoReferencia(secuencia.idProcedimientoPasoReferencia)}"/>
                             </p:column>
 
@@ -182,12 +183,12 @@
                         <p:panelGrid columns="2"
                                      style="width:100%; margin-top:1rem">
                             <p:outputLabel for="pasoReferencia"
-                                           value="Paso de referencia:"/>
+                                           value="Paso siguiente:"/>
                             <p:selectOneMenu id="pasoReferencia"
                                              value="#{procedimientoPasoModel.pasoReferenciaSeleccionado}"
                                              converter="#{entityConverter}"
-                                             filter="true" label="Paso de referencia">
-                                <f:selectItem itemLabel="Seleccione otro paso..."
+                                             filter="true" label="Paso siguiente">
+                                <f:selectItem itemLabel="Seleccione el paso siguiente..."
                                               itemValue="#{null}"
                                               noSelectionOption="true"/>
                                 <f:selectItems value="#{procedimientoPasoModel.pasosReferenciaDisponibles}"
@@ -216,6 +217,7 @@
             </f:facet>
 
         </crud:crudTransaccional>
+</h:form>
     </ui:define>
 
 </ui:composition>

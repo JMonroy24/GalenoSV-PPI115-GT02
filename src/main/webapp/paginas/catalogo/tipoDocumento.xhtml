@@ -11,7 +11,8 @@
 
     <ui:define name="contenido">
         
-        <crud:crudTransaccional model="#{tipoDocumentoModel}" lazyModel="#{tipoDocumentoModel.lazyModel}"
+        <h:form id="frmPrincipal">
+<crud:crudTransaccional model="#{tipoDocumentoModel}" lazyModel="#{tipoDocumentoModel.lazyModel}"
                                 titulo="Tipos de Documento">
                                 
             <p:column headerText="Nombre" sortBy="#{registro.nombre}">
@@ -23,7 +24,7 @@
             </p:column>
             
             <p:column headerText="Activo">
-                <h:outputText value="#{registro.activo ? 'Sí' : 'No'}"/>
+                <h:outputText value="#{registro.activo eq true ? 'Sí' : 'No'}"/>
             </p:column>
 
             <f:facet name="formulario">
@@ -45,6 +46,7 @@
             </f:facet>
             
         </crud:crudTransaccional>
+</h:form>
         
     </ui:define>
 

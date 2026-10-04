@@ -10,7 +10,8 @@
     <ui:define name="titulo">Procedimientos</ui:define>
 
     <ui:define name="contenido">
-        <crud:crudTransaccional model="#{procedimientoModel}" lazyModel="#{procedimientoModel.lazyModel}"
+        <h:form id="frmPrincipal">
+<crud:crudTransaccional model="#{procedimientoModel}" lazyModel="#{procedimientoModel.lazyModel}"
                            titulo="Procedimientos">
 
             <p:column headerText="Nombre" sortBy="#{registro.nombre}">
@@ -18,7 +19,7 @@
             </p:column>
 
             <p:column headerText="Activo">
-                <h:outputText value="#{registro.activo ? 'Sí' : 'No'}"/>
+                <h:outputText value="#{registro.activo eq true ? 'Sí' : 'No'}"/>
             </p:column>
 
             <p:column headerText="Observaciones" sortBy="#{registro.observaciones}">
@@ -45,7 +46,20 @@
                                  autoResize="false" label="Observaciones" maxlength="2000"/>
             </f:facet>
 
+            <f:facet name="relaciones">
+
+                <p:outputPanel rendered="#{procedimientoModel.estadoCrear}">
+                    <h:outputText value="Guarde el procedimiento para agregar pasos."/>
+                </p:outputPanel>
+
+                <p:outputPanel rendered="#{procedimientoModel.estadoModificar}">
+                    <ui:include src="/resources/crud/pasosProcedimiento.xhtml"/>
+                </p:outputPanel>
+
+            </f:facet>
+
         </crud:crudTransaccional>
+</h:form>
     </ui:define>
 
 </ui:composition>

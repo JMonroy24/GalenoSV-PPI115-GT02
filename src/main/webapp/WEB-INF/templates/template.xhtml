@@ -20,13 +20,18 @@
                 <div class="layout-topbar">
                     <span class="app-title">&#x2695; GalenoSV</span>
                     <span class="app-subtitle">Sistema de Gestión Clínica</span>
+                    <span class="app-user" style="float: right; margin-right: 20px; font-weight: bold;">
+                        <h:outputText value="#{sesionBean.displayUsuario}"/>
+                    </span>
                 </div>
+
+                
 
                 <div class="layout-menu">
                     <ui:include src="/WEB-INF/templates/menu.xhtml"/>
                 </div>
 
-                <p:growl id="growlGlobal" showDetail="true" life="4000"/>
+                <p:growl id="growlGlobal" showDetail="true" life="4000"><p:autoUpdate/></p:growl>
 
                 <div class="layout-content">
                     <ui:insert name="contenido">

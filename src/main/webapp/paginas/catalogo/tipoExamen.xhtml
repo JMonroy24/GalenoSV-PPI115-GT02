@@ -11,7 +11,8 @@
 
     <ui:define name="contenido">
         
-        <crud:crudTransaccional model="#{tipoExamenModel}" lazyModel="#{tipoExamenModel.lazyModel}"
+        <h:form id="frmPrincipal">
+<crud:crudTransaccional model="#{tipoExamenModel}" lazyModel="#{tipoExamenModel.lazyModel}"
                                 titulo="Tipos de Examen">
                                 
             <p:column headerText="Nombre" sortBy="#{registro.nombre}">
@@ -19,7 +20,7 @@
             </p:column>
             
             <p:column headerText="Activo">
-                <h:outputText value="#{registro.activo ? 'Sí' : 'No'}"/>
+                <h:outputText value="#{registro.activo eq true ? 'Sí' : 'No'}"/>
             </p:column>
             
             <p:column headerText="Observaciones" sortBy="#{registro.observaciones}">
@@ -42,6 +43,7 @@
             </f:facet>
             
         </crud:crudTransaccional>
+</h:form>
         
     </ui:define>
 

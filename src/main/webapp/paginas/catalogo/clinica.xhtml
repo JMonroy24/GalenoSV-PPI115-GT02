@@ -11,7 +11,8 @@
 
     <ui:define name="contenido">
 
-        <crud:crudTransaccional model="#{clinicaModel}" lazyModel="#{clinicaModel.lazyModel}" titulo="Clínicas">
+        <h:form id="frmPrincipal">
+<crud:crudTransaccional model="#{clinicaModel}" lazyModel="#{clinicaModel.lazyModel}" titulo="Clínicas">
 
             <!-- Columnas de la tabla -->
             <p:column headerText="Nombre" sortBy="#{registro.nombre}">
@@ -23,7 +24,7 @@
             </p:column>
 
             <p:column headerText="Activo" width="90" style="text-align:center">
-                <h:outputText value="#{registro.activo ? 'Sí' : 'No'}"/>
+                <h:outputText value="#{registro.activo eq true ? 'Sí' : 'No'}"/>
             </p:column>
 
             <p:column headerText="Comentarios" sortBy="#{registro.comentarios}">
@@ -42,10 +43,13 @@
                              placeholder="Nombre de la clínica" label="Nombre"/>
 
                 <p:outputLabel value="Tipo:" for="tipo"/>
-                <p:inputText id="tipo"
-                             value="#{clinicaModel.registroActual.tipo}"
-                             maxlength="20"
-                             placeholder="Ej. GENERAL, ESPECIALIZADA" label="Tipo"/>
+                <p:selectOneMenu id="tipo" required="true" requiredMessage="El tipo de clínica es obligatorio."
+                                 value="#{clinicaModel.registroActual.tipo}" label="Tipo">
+                    <f:selectItem itemLabel="Seleccione un tipo..." itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItem itemLabel="Hospital Nivel 1" itemValue="HOSPITAL_NIVEL_1"/>
+                    <f:selectItem itemLabel="Hospital Nivel 2" itemValue="HOSPITAL_NIVEL_2"/>
+                    <f:selectItem itemLabel="Clínica Privada" itemValue="CLINICA_PRIVADA"/>
+                </p:selectOneMenu>
 
                 <p:outputLabel value="Activo:" for="activo"/>
                 <p:selectBooleanCheckbox id="activo"
@@ -61,6 +65,7 @@
             </f:facet>
 
         </crud:crudTransaccional>
+</h:form>
 
     </ui:define>
 

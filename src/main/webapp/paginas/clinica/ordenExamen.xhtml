@@ -11,7 +11,8 @@
 
     <ui:define name="contenido">
 
-        <crud:crudTransaccional model="#{ordenExamenModel}"
+        <h:form id="frmPrincipal">
+<crud:crudTransaccional model="#{ordenExamenModel}"
                                 lazyModel="#{ordenExamenModel.lazyModel}"
                                 titulo="Órdenes de Examen"
                                 anchoDialogo="800">
@@ -38,7 +39,7 @@
 
                 <p:outputLabel value="Paso de procedimiento:" for="idConsultaProcedimientoPaso"/>
                 <p:autoComplete id="idConsultaProcedimientoPaso"
-                                value="#{ordenExamenModel.registroActual.idConsultaProcedimientoPaso}"
+                                disabled="#{ordenExamenModel.estadoModificar}" value="#{ordenExamenModel.registroActual.idConsultaProcedimientoPaso}"
                                 completeMethod="#{ordenExamenModel.completeConsultaProcedimientoPaso}"
                                 var="cpp"
                                 itemLabel="#{cpp.idConsultaProcedimiento.idProcedimiento.nombre} — #{cpp.idPersonaRol.idPersona.nombres} #{cpp.idPersonaRol.idPersona.apellidos}#{empty cpp.estado ? '' : ' ('}#{cpp.estado}#{empty cpp.estado ? '' : ')'}"
@@ -88,7 +89,7 @@
                                                      styleClass="ui-button-danger"
                                                      action="#{ordenExamenModel.quitarResultado(res)}"
                                                      process="@this"
-                                                     update="pnlResultados @([id$=mensajes])">
+                                                     update="pnlResultados">
                                         <p:confirm header="Quitar resultado"
                                                    message="¿Desea quitar este resultado?"
                                                    icon="pi pi-exclamation-triangle"/>
@@ -114,7 +115,7 @@
                                                  styleClass="ui-button-success"
                                                  action="#{ordenExamenModel.agregarResultado()}"
                                                  process="@this resTexto resInterp resRuta"
-                                                 update="pnlResultados @([id$=mensajes])"/>
+                                                 update="pnlResultados"/>
                             </p:panelGrid>
 
                         </p:outputPanel>
@@ -123,6 +124,7 @@
 
             </f:facet>
         </crud:crudTransaccional>
+</h:form>
 
     </ui:define>
 

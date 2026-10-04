@@ -10,7 +10,8 @@
     <ui:define name="titulo">Exámenes</ui:define>
 
     <ui:define name="contenido">
-        <crud:crudTransaccional model="#{examenModel}" lazyModel="#{examenModel.lazyModel}"
+        <h:form id="frmPrincipal">
+<crud:crudTransaccional model="#{examenModel}" lazyModel="#{examenModel.lazyModel}"
                            titulo="Exámenes"
                            anchoDialogo="800">
 
@@ -19,7 +20,7 @@
             </p:column>
 
             <p:column headerText="Activo">
-                <h:outputText value="#{registro.activo ? 'Sí' : 'No'}"/>
+                <h:outputText value="#{registro.activo eq true ? 'Sí' : 'No'}"/>
             </p:column>
 
             <p:column headerText="Observaciones" sortBy="#{registro.observaciones}">
@@ -27,6 +28,15 @@
             </p:column>
 
             <f:facet name="formulario">
+                <p:outputPanel rendered="#{examenModel.estadoCrear}">
+                    <p:outputLabel for="tipoInicial" value="Tipo de examen:"/>
+                    <p:selectOneMenu id="tipoInicial" value="#{examenModel.tipoSeleccionado}" converter="#{entityConverter}">
+                        <f:selectItem itemLabel="Seleccione un tipo..." itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItems value="#{tipoExamenModel.tiposActivos}" var="tipo" itemLabel="#{tipo.nombre}" itemValue="#{tipo}"/>
+                    </p:selectOneMenu>
+                    <p:outputLabel for="obsTipoInicial" value="Observaciones del tipo:"/>
+                    <p:inputTextarea id="obsTipoInicial" value="#{examenModel.observacionesTipo}" rows="2" maxlength="2000"/>
+                </p:outputPanel>
                 <p:outputLabel for="nombre" value="Nombre:"/>
                 <p:inputText id="nombre"
                              value="#{examenModel.registroActual.nombre}"
@@ -115,6 +125,7 @@
             </f:facet>
 
         </crud:crudTransaccional>
+</h:form>
     </ui:define>
 
 </ui:composition>

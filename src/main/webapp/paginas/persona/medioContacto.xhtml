@@ -11,7 +11,8 @@
 
     <ui:define name="contenido">
         
-        <crud:crudTransaccional model="#{medioContactoModel}"
+        <h:form id="frmPrincipal">
+<crud:crudTransaccional model="#{medioContactoModel}"
                                 lazyModel="#{medioContactoModel.lazyModel}"
                                 titulo="Medios de Contacto">
                                 
@@ -31,7 +32,7 @@
                 <h:panelGrid columns="2" cellpadding="7" columnClasses="ui-grid-col-4,ui-grid-col-8" style="width:100%">
                 
                 <p:outputLabel value="Persona:" for="idPersona"/>
-                <p:autoComplete id="idPersona" value="#{medioContactoModel.registroActual.idPersona}"
+                <p:autoComplete id="idPersona" disabled="#{medioContactoModel.estadoModificar}" value="#{medioContactoModel.registroActual.idPersona}"
                                 completeMethod="#{medioContactoModel.completePersona}"
                                 var="p" itemLabel="#{p.nombres} #{p.apellidos}" itemValue="#{p}"
                                 converter="#{entityConverter}"
@@ -39,7 +40,7 @@
                                 placeholder="Escriba un nombre para buscar..." label="Persona" requiredMessage="Complete el campo persona." minQueryLength="2"/>
                 
                 <p:outputLabel value="Tipo de Medio:" for="idTipoMedioContacto"/>
-                <p:selectOneMenu id="idTipoMedioContacto" value="#{medioContactoModel.registroActual.idTipoMedioContacto}"
+                <p:selectOneMenu id="idTipoMedioContacto" disabled="#{medioContactoModel.estadoModificar}" value="#{medioContactoModel.registroActual.idTipoMedioContacto}"
                                  converter="#{entityConverter}" required="true" filter="true" label="Tipo de Medio" requiredMessage="Complete el campo tipo de medio.">
                     <f:selectItem itemLabel="Seleccione un tipo..." itemValue="#{null}" noSelectionOption="true"/>
                     <f:selectItems value="#{tipoMedioContactoModel.activos}" var="tmc"
@@ -57,6 +58,7 @@
             </f:facet>
             
         </crud:crudTransaccional>
+</h:form>
         
     </ui:define>
 

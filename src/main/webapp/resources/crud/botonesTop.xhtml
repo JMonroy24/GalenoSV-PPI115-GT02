@@ -16,14 +16,14 @@
                          action="#{cc.attrs.model.prepararNuevo()}"
                          process="@this"
                          update="#{cc.attrs.update}"
-                         oncomplete="PF('#{cc.attrs.dialog}').show()"/>
+                         />
                          
         <p:commandButton value="Editar" icon="pi pi-pencil"
                          styleClass="ui-button-warning mr-2"
                          action="#{cc.attrs.model.seleccionar(cc.attrs.model.seleccion)}"
                          process="@this"
                          update="#{cc.attrs.update}"
-                         oncomplete="PF('#{cc.attrs.dialog}').show()"
+                         
                          disabled="#{cc.attrs.model.seleccion == null}"/>
                          
         <p:commandButton value="Eliminar" icon="pi pi-trash"

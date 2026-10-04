@@ -11,7 +11,8 @@
 
     <ui:define name="contenido">
 
-        <crud:crudTransaccional model="#{consultaProcedimientoPasoModel}"
+        <h:form id="frmPrincipal">
+<crud:crudTransaccional model="#{consultaProcedimientoPasoModel}"
                                 lazyModel="#{consultaProcedimientoPasoModel.lazyModel}"
                                 titulo="Pasos de Procedimiento de Consulta">
 
@@ -47,7 +48,7 @@
 
                 <p:outputLabel value="Procedimiento de consulta:" for="idConsultaProcedimiento"/>
                 <p:autoComplete id="idConsultaProcedimiento"
-                                value="#{consultaProcedimientoPasoModel.registroActual.idConsultaProcedimiento}"
+                                disabled="#{consultaProcedimientoPasoModel.estadoModificar}" value="#{consultaProcedimientoPasoModel.registroActual.idConsultaProcedimiento}"
                                 completeMethod="#{consultaProcedimientoPasoModel.completeConsultaProcedimiento}"
                                 var="cp"
                                 itemLabel="#{cp.idProcedimiento.nombre} — #{cp.idConsulta.idPersonaRol.idPersona.nombres} #{cp.idConsulta.idPersonaRol.idPersona.apellidos}"
@@ -57,7 +58,7 @@
                                 placeholder="Escriba procedimiento o nombre de persona..." label="Procedimiento de consulta" minQueryLength="2"/>
 
                 <p:outputLabel value="Responsable (persona / rol):" for="idPersonaRol"/>
-                <p:autoComplete id="idPersonaRol" value="#{consultaProcedimientoPasoModel.registroActual.idPersonaRol}"
+                <p:autoComplete id="idPersonaRol" disabled="#{consultaProcedimientoPasoModel.estadoModificar}" value="#{consultaProcedimientoPasoModel.registroActual.idPersonaRol}"
                                 completeMethod="#{consultaProcedimientoPasoModel.completePersonaRol}"
                                 var="pr"
                                 itemLabel="#{pr.idPersona.nombres} #{pr.idPersona.apellidos} — #{pr.idRol.nombre}"
@@ -85,6 +86,7 @@
             </f:facet>
 
         </crud:crudTransaccional>
+</h:form>
 
     </ui:define>
 

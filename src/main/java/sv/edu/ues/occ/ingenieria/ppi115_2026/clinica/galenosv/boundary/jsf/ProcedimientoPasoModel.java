@@ -56,6 +56,7 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
     private String observacionesExamen;
     private boolean examenActivo = true;
 
+    private ProcedimientoPaso pasoDependeDe;
     private ProcedimientoPaso pasoReferenciaSeleccionado;
     private String tipoSecuencia;
 
@@ -79,7 +80,9 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
      */
     @Override
     protected ProcedimientoPaso crearNuevoRegistro() {
-        return new ProcedimientoPaso(UUID.randomUUID());
+        ProcedimientoPaso paso = new ProcedimientoPaso(UUID.randomUUID());
+        paso.setIndicaFin(false);
+        return paso;
     }
 
     /**
@@ -100,6 +103,7 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
     @Override
     public void prepararNuevo() {
         super.prepararNuevo();
+        pasoDependeDe = null;
         examenesAsignados = Collections.emptyList();
         secuencias = Collections.emptyList();
         limpiarCamposRelaciones();
@@ -108,6 +112,7 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
     @Override
     public void cancelar() {
         super.cancelar();
+        pasoDependeDe = null;
         examenesAsignados = Collections.emptyList();
         secuencias = Collections.emptyList();
         limpiarCamposRelaciones();
@@ -124,6 +129,10 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
             return;
         }
 
+        if (!Boolean.TRUE.equals(examenSeleccionado.getActivo())) {
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Examen del paso", "No se puede asignar un examen inactivo.");
+            return;
+        }
         UUID idExamen = examenSeleccionado.getIdExamen();
         boolean yaAsignado = examenesAsignados.stream()
                 .anyMatch(asignacion -> asignacion.getIdExamen() != null
@@ -378,6 +387,22 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
         this.examenActivo = examenActivo;
     }
 
+    
+    public ProcedimientoPaso getPasoDependeDe() {
+        return pasoDependeDe;
+    }
+
+    public void setPasoDependeDe(ProcedimientoPaso pasoDependeDe) {
+        this.pasoDependeDe = pasoDependeDe;
+    }
+
+    public List<ProcedimientoPaso> getPasosDependeDeDisponibles() {
+        if (getRegistroActual() == null || getRegistroActual().getIdProcedimiento() == null) {
+            return Collections.emptyList();
+        }
+        return procedimientoPasoDAO.findByProcedimiento(getRegistroActual().getIdProcedimiento().getIdProcedimiento(), null);
+    }
+    
     public ProcedimientoPaso getPasoReferenciaSeleccionado() {
         return pasoReferenciaSeleccionado;
     }
@@ -407,14 +432,55 @@ public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso
     
 
     @Override
+    protected void persistirNuevo(ProcedimientoPaso registro) {
+        super.persistirNuevo(registro);
+        if (pasoDependeDe != null) {
+            ProcedimientoPasoSecuencia secuencia = new ProcedimientoPasoSecuencia(UUID.randomUUID());
+            secuencia.setIdProcedimientoPaso(pasoDependeDe);
+            secuencia.setIdProcedimientoPasoReferencia(registro.getIdProcedimientoPaso());
+            secuencia.setTipoSecuencia("SIGUIENTE");
+            try {
+                asignacionService.guardarSecuencia(secuencia, true);
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "Error al guardar la dependencia del nuevo paso", e);
+                throw new ValidacionNegocioException("Se creó el paso pero no se pudo guardar su dependencia.");
+            }
+        }
+    }
+
+    @Override
     protected void validarNegocio(ProcedimientoPaso registro) {
         registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre del paso"));
         var procedimiento = ValidadorComun.requerido(registro.getIdProcedimiento(), "Seleccione un procedimiento.");
         ValidadorComun.requerido(procedimiento.getIdProcedimiento(), "Seleccione un procedimiento válido.");
+        ValidadorComun.activo(procedimiento.getActivo(), "El procedimiento");
+        var rol = ValidadorComun.requerido(registro.getIdRol(), "Cada paso debe tener un rol responsable.");
+        ValidadorComun.requerido(rol.getIdRol(), "Seleccione un rol válido.");
+        ValidadorComun.activo(rol.getActivo(), "El rol");
+        if (isEstadoCrear() && procedimientoPasoDAO.findByProcedimiento(procedimiento.getIdProcedimiento(), null)
+                .stream().anyMatch(paso -> paso.getIdRol() != null
+                        && rol.getIdRol().equals(paso.getIdRol().getIdRol()))) {
+            throw new ValidacionNegocioException("Cada paso del procedimiento debe tener un rol distinto.");
+        }
         if (procedimientoPasoDAO.existeNombreEnProcedimiento(procedimiento.getIdProcedimiento(),
                 registro.getNombre(), registro.getIdProcedimientoPaso())) {
             throw new ValidacionNegocioException("Ya existe un paso con este nombre en el procedimiento.");
         }
+
+        if (isEstadoCrear()) {
+            List<ProcedimientoPaso> pasosExistentes = procedimientoPasoDAO.findByProcedimiento(procedimiento.getIdProcedimiento(), null);
+            if (!pasosExistentes.isEmpty()) {
+                ValidadorComun.requerido(pasoDependeDe, "Depende de es obligatorio, ya que el procedimiento ya tiene pasos.");
+                if (pasoDependeDe.getIdProcedimiento() == null || !procedimiento.getIdProcedimiento().equals(pasoDependeDe.getIdProcedimiento().getIdProcedimiento())) {
+                    throw new ValidacionNegocioException("La lista 'Depende de' solo ofrece pasos del mismo procedimiento.");
+                }
+            } else {
+                if (pasoDependeDe != null) {
+                    throw new ValidacionNegocioException("El primer paso no lleva dependencia, ya que es el inicial.");
+                }
+            }
+        }
     }
+
 
 }

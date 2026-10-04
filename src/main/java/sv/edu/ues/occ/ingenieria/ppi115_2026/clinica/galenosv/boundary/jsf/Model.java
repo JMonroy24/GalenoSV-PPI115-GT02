@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
-import jakarta.persistence.OptimisticLockException;
+
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
 import java.util.List;
 import java.util.logging.Level;
@@ -124,7 +124,7 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
             cargarDatos();
             cancelar(); 
         } catch (ValidacionNegocioException e) {
-            agregarMensaje(FacesMessage.SEVERITY_WARN, "Validación", e.getMessage());
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Validación", e.getMessage());
             marcarValidacionFallida();
         } catch (Exception e) {
             registrarError("guardar registro", e);
@@ -177,9 +177,6 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
             if (causa instanceof ConstraintViolationException cve && !cve.getConstraintViolations().isEmpty()) {
                 return cve.getConstraintViolations().stream().map(ConstraintViolation::getMessage)
                         .distinct().sorted().collect(Collectors.joining("; "));
-            }
-            if (causa instanceof OptimisticLockException) {
-                return "Otro usuario modificó este registro. Vuelva a cargarlo y revise los cambios antes de guardar.";
             }
             if (causa instanceof SQLException sql) {
                 Set<SQLException> sqlVisitadas = Collections.newSetFromMap(new IdentityHashMap<>());

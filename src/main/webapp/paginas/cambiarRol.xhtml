@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition template="/WEB-INF/templates/template.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+    <ui:define name="titulo">Cambiar Rol</ui:define>
+
+    <ui:define name="contenido">
+        <h:form id="frmCambiarRol">
+            <p:panel header="Selección de Contexto" style="max-width: 600px; margin: 2rem auto;">
+                <p:panelGrid columns="2" layout="flex" contentStyleClass="ui-fluid" style="width: 100%;">
+                    
+                    <p:outputLabel for="selClinica" value="Clínica Activa:"/>
+                    <p:selectOneMenu id="selClinica" value="#{sesionBean.clinicaTemp}" converter="#{entityConverter}" filter="true">
+                        <f:selectItem itemLabel="Seleccione una clínica..." itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItems value="#{sesionBean.clinicasActivas}" var="clinica"
+                                       itemLabel="#{clinica.nombre}" itemValue="#{clinica}"/>
+                        <p:ajax event="change" update="selPersona" listener="#{sesionBean.onChangeClinicaRol}"/>
+                    </p:selectOneMenu>
+
+                    <p:outputLabel for="selRol" value="Rol:"/>
+                    <p:selectOneMenu id="selRol" value="#{sesionBean.rolTemp}" converter="#{entityConverter}" filter="true">
+                        <f:selectItem itemLabel="Seleccione un rol..." itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItems value="#{sesionBean.rolesActivos}" var="rol"
+                                       itemLabel="#{rol.nombre}" itemValue="#{rol}"/>
+                        <p:ajax event="change" update="selPersona" listener="#{sesionBean.onChangeClinicaRol}"/>
+                    </p:selectOneMenu>
+
+                    <p:outputLabel for="selPersona" value="Persona:"/>
+                    <p:selectOneMenu id="selPersona" value="#{sesionBean.personaTemp}" converter="#{entityConverter}" filter="true">
+                        <f:selectItem itemLabel="Seleccione una persona..." itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItems value="#{sesionBean.personasDisponibles}" var="persona"
+                                       itemLabel="#{persona.nombres} #{persona.apellidos}" itemValue="#{persona}"/>
+                    </p:selectOneMenu>
+                    
+                </p:panelGrid>
+                
+                <f:facet name="footer">
+                    <p:commandButton value="Aplicar" icon="pi pi-check" action="#{sesionBean.aplicarCambios}" 
+                                     styleClass="ui-button-success" update="@form"
+                                     oncomplete="if (!args.validationFailed) window.location.reload()"/>
+                </f:facet>
+            </p:panel>
+        </h:form>
+    </ui:define>
+
+</ui:composition>

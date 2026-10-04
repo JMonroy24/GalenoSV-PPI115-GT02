@@ -36,7 +36,9 @@ public class TipoExamenModel extends ModelTransaccional<TipoExamen, UUID> implem
 
     @Override
     protected TipoExamen crearNuevoRegistro() {
-        return new TipoExamen(UUID.randomUUID());
+        TipoExamen registro = new TipoExamen(UUID.randomUUID());
+        registro.setActivo(true);
+        return registro;
     }
 
     /**

@@ -2,6 +2,8 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.view.ViewScoped;
@@ -12,6 +14,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DocumentoDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoPasoDAO;
@@ -35,12 +38,20 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
 
     @Inject
     protected ConsultaDAO consultaDAO;
+    @Inject protected SesionBean sesionBean;
+    @Inject protected ProcedimientoPasoDAO procedimientoPasoDAO;
+    @Inject protected AsignacionService asignacionService;
+    private Date fechaDesde;
+    private Date fechaHasta;
+    private GenericLazyDataModel<Consulta> consultasFiltradas;
     @Inject
     protected PersonaRolDAO personaRolDAO;
     @Inject
     protected ConsultaProcedimientoDAO consultaProcedimientoDAO;
     @Inject
     protected ConsultaProcedimientoPasoDAO consultaProcedimientoPasoDAO;
+    @Inject
+    protected DocumentoDAO documentoDAO;
 
     private List<ConsultaProcedimiento> procedimientos = Collections.emptyList();
     private ConsultaProcedimiento procedimientoNuevo;
@@ -71,7 +82,8 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
     /** Método para p:autoComplete. Busca asignaciones Persona/Rol. */
     public List<PersonaRol> completePersonaRol(String query) {
         if (query == null || query.trim().length() < 2) return java.util.List.of();
-        return personaRolDAO.buscarParaAutocompletar(query, 20);
+        if (idClinicaActual() == null) return List.of();
+        return personaRolDAO.buscarPacientes(query, idClinicaActual(), 20);
     }
 
 
@@ -147,10 +159,33 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
                     "La fecha de fin no puede ser anterior a la de inicio.");
             return;
         }
+        final PersonaRol responsable;
+        try {
+            validarPaciente(getRegistroActual());
+            ValidadorComun.activo(procedimientoNuevo.getIdProcedimiento().getActivo(), "El procedimiento");
+            ValidadorComun.dentroDelPeriodo(procedimientoNuevo.getFechaInicio(), procedimientoNuevo.getFechaFin(),
+                    getRegistroActual().getFechaInicio(), getRegistroActual().getFechaFin());
+            var inicio = ValidadorComun.requerido(procedimientoPasoDAO.findPasoInicial(
+                    procedimientoNuevo.getIdProcedimiento().getIdProcedimiento()), "El procedimiento no tiene pasos definidos.");
+            var rol = ValidadorComun.requerido(inicio.getIdRol(), "El paso inicial debe tener un rol responsable.");
+            ValidadorComun.activo(rol.getActivo(), "El rol del paso inicial");
+            responsable = ValidadorComun.requerido(personaRolDAO.findResponsable(idClinicaActual(), rol.getIdRol()),
+                    "No hay una persona con el rol requerido en la clínica actual.");
+        } catch (ValidacionNegocioException e) {
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Procedimiento", e.getMessage());
+            return;
+        }
         procedimientoNuevo.setIdConsulta(getRegistroActual());
         ejecutarRelacion("Procedimiento", () -> {
-            consultaProcedimientoDAO.create(procedimientoNuevo);
+            ConsultaProcedimientoPaso inicio = new ConsultaProcedimientoPaso(UUID.randomUUID());
+            inicio.setEstado(EstadoPaso.PENDIENTE.name());
+            inicio.setFechaInicio(procedimientoNuevo.getFechaInicio());
+            inicio.setIdPersonaRol(responsable);
+            inicio.setIdConsultaProcedimiento(procedimientoNuevo);
+            asignacionService.crearProcedimientoConPaso(procedimientoNuevo, inicio);
+            procedimientoActivo = procedimientoNuevo;
             recargarProcedimientos();
+            recargarPasos();
             ConsultaProcedimiento cp = new ConsultaProcedimiento(UUID.randomUUID());
             cp.setFechaInicio(new Date());
             procedimientoNuevo = cp;
@@ -260,6 +295,79 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
 
     @Override
     protected void validarNegocio(Consulta registro) {
+        validarPaciente(registro);
         ValidadorComun.rangoFechas(registro.getFechaInicio(), registro.getFechaFin());
     }
+
+    private UUID idClinicaActual() {
+        var clinica = sesionBean == null ? null : sesionBean.getClinicaActual();
+        return clinica == null || !Boolean.TRUE.equals(clinica.getActivo()) ? null : clinica.getIdClinica();
+    }
+
+    private void validarPaciente(Consulta registro) {
+        UUID clinica = ValidadorComun.requerido(idClinicaActual(),
+                "Seleccione una clínica de trabajo antes de crear consultas.");
+        var personaRol = registro.getIdPersonaRol();
+        var rol = personaRol == null ? null : personaRol.getIdRol();
+        if (personaRol == null || personaRol.getIdClinica() == null
+                || !clinica.equals(personaRol.getIdClinica().getIdClinica())
+                || rol == null || !Boolean.TRUE.equals(rol.getActivo()) || rol.getNombre() == null
+                || !rol.getNombre().toLowerCase(java.util.Locale.ROOT).contains(PersonaRolDAO.ROL_PACIENTE)) {
+            throw new ValidacionNegocioException("La persona debe ser paciente de la clínica de trabajo.");
+        }
+    }
+
+    @Override
+    protected void inicializarLazyModel() {
+        consultasFiltradas = new GenericLazyDataModel<>(consultaDAO) {
+            private static final long serialVersionUID = 1L;
+            @Override
+            public int count(java.util.Map<String, org.primefaces.model.FilterMeta> filtros) {
+                if (!rangoFiltroValido()) return 0;
+                return Math.toIntExact(consultaDAO.countFiltrado(idClinicaActual(), inicioDia(fechaDesde),
+                        finDia(fechaHasta), getFiltroGlobal()));
+            }
+            @Override
+            public List<Consulta> load(int first, int max,
+                    java.util.Map<String, org.primefaces.model.SortMeta> orden,
+                    java.util.Map<String, org.primefaces.model.FilterMeta> filtros) {
+                if (!rangoFiltroValido()) return List.of();
+                return consultaDAO.findRangeFiltrado(first, max, idClinicaActual(), inicioDia(fechaDesde),
+                        finDia(fechaHasta), getFiltroGlobal());
+            }
+        };
+    }
+
+    @Override
+    public GenericLazyDataModel<Consulta> getLazyModel() { return consultasFiltradas; }
+    public Date getFechaDesde() { return fechaDesde; }
+    public void setFechaDesde(Date fechaDesde) { this.fechaDesde = fechaDesde; }
+    public Date getFechaHasta() { return fechaHasta; }
+    public void setFechaHasta(Date fechaHasta) { this.fechaHasta = fechaHasta; }
+
+    private Date inicioDia(Date fecha) {
+        if (fecha == null) return null;
+        var zona = java.time.ZoneId.of("America/El_Salvador");
+        return Date.from(fecha.toInstant().atZone(zona).toLocalDate().atStartOfDay(zona).toInstant());
+    }
+
+    private Date finDia(Date fecha) {
+        if (fecha == null) return null;
+        return new Date(inicioDia(fecha).getTime() + java.time.Duration.ofDays(1).toMillis() - 1);
+    }
+
+    private boolean rangoFiltroValido() {
+        return fechaDesde == null || fechaHasta == null || !finDia(fechaHasta).before(inicioDia(fechaDesde));
+    }
+
+    public void filtrar() {
+        setSeleccion(null);
+        if (!rangoFiltroValido()) {
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Fechas", "La fecha hasta no puede ser anterior a desde.");
+            marcarValidacionFallida();
+        }
+    }
+
+    public void limpiarFiltro() { fechaDesde = null; fechaHasta = null; filtrar(); }
+
 }

@@ -11,7 +11,8 @@
 
     <ui:define name="contenido">
 
-        <crud:crudTransaccional model="#{personaModel}"
+        <h:form id="frmPrincipal">
+<crud:crudTransaccional model="#{personaModel}"
                                 lazyModel="#{personaModel.lazyModel}"
                                 titulo="Personas"
                                 anchoDialogo="850">
@@ -26,7 +27,7 @@
 
             <p:column headerText="Fecha de Nacimiento" sortBy="#{registro.fechaNacimiento}">
                 <h:outputText value="#{registro.fechaNacimiento}">
-                    <f:convertDateTime type="localDate" pattern="dd/MM/yyyy"/>
+                    <f:convertDateTime pattern="dd/MM/yyyy" timeZone="America/El_Salvador"/>
                 </h:outputText>
             </p:column>
 
@@ -73,7 +74,7 @@
                                                          styleClass="ui-button-danger"
                                                          action="#{personaModel.quitarDocumento(doc)}"
                                                          process="@this"
-                                                         update="pnlDocumentos @([id$=mensajes])">
+                                                         update="pnlDocumentos">
                                             <p:confirm header="Quitar documento"
                                                        message="¿Desea quitar este documento?"
                                                        icon="pi pi-exclamation-triangle"/>
@@ -103,7 +104,7 @@
                                                      styleClass="ui-button-success"
                                                      action="#{personaModel.agregarDocumento()}"
                                                      process="@this docTipo docValor docRuta"
-                                                     update="pnlDocumentos @([id$=mensajes])"/>
+                                                     update="pnlDocumentos"/>
                                 </p:panelGrid>
                             </p:outputPanel>
                         </p:tab>
@@ -123,7 +124,7 @@
                                                          styleClass="ui-button-danger"
                                                          action="#{personaModel.quitarMedioContacto(medio)}"
                                                          process="@this"
-                                                         update="pnlMedios @([id$=mensajes])">
+                                                         update="pnlMedios">
                                             <p:confirm header="Quitar medio de contacto"
                                                        message="¿Desea quitar este medio de contacto?"
                                                        icon="pi pi-exclamation-triangle"/>
@@ -150,7 +151,7 @@
                                                      styleClass="ui-button-success"
                                                      action="#{personaModel.agregarMedioContacto()}"
                                                      process="@this medTipo medValor"
-                                                     update="pnlMedios @([id$=mensajes])"/>
+                                                     update="pnlMedios"/>
                                 </p:panelGrid>
                             </p:outputPanel>
                         </p:tab>
@@ -170,7 +171,7 @@
                                                          styleClass="ui-button-danger"
                                                          action="#{personaModel.quitarRol(rol)}"
                                                          process="@this"
-                                                         update="pnlRoles @([id$=mensajes])">
+                                                         update="pnlRoles">
                                             <p:confirm header="Quitar rol"
                                                        message="¿Desea quitar este rol?"
                                                        icon="pi pi-exclamation-triangle"/>
@@ -191,7 +192,7 @@
                                     <p:outputLabel for="rolClinica" value="Clínica:"/>
                                     <p:selectOneMenu id="rolClinica" value="#{personaModel.rolNuevo.idClinica}"
                                                      converter="#{entityConverter}" filter="true">
-                                        <f:selectItem itemLabel="Ninguna" itemValue="#{null}"
+                                        <f:selectItem itemLabel="Seleccione una clínica..." itemValue="#{null}"
                                                       noSelectionOption="true"/>
                                         <f:selectItems value="#{personaModel.clinicas}" var="c"
                                                        itemLabel="#{c.nombre}" itemValue="#{c}"/>
@@ -202,7 +203,7 @@
                                                      styleClass="ui-button-success"
                                                      action="#{personaModel.agregarRol()}"
                                                      process="@this rolSel rolClinica"
-                                                     update="pnlRoles @([id$=mensajes])"/>
+                                                     update="pnlRoles"/>
                                 </p:panelGrid>
                             </p:outputPanel>
                         </p:tab>
@@ -212,6 +213,7 @@
 
             </f:facet>
         </crud:crudTransaccional>
+</h:form>
 
     </ui:define>
 

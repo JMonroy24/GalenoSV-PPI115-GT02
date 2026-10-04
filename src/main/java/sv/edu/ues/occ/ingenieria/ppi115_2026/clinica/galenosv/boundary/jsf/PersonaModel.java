@@ -145,6 +145,14 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
             return;
         }
         String valor = documentoNuevo.getValor().trim();
+        try {
+            var tipo = documentoNuevo.getIdTipoDocumento();
+            ValidadorComun.activo(tipo.getActivo(), "El tipo de documento");
+            ValidadorComun.formato(valor, tipo.getExpresionRegular(), tipo.getIndicaciones());
+        } catch (ValidacionNegocioException e) {
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Documento", e.getMessage());
+            return;
+        }
         boolean duplicado = documentos.stream().anyMatch(d
                 -> Objects.equals(d.getIdTipoDocumento(), documentoNuevo.getIdTipoDocumento())
                 && valor.equalsIgnoreCase(d.getValor()));
@@ -187,6 +195,14 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
                     "Seleccione el tipo e ingrese el valor del medio de contacto.");
             return;
         }
+        try {
+            var tipo = medioNuevo.getIdTipoMedioContacto();
+            ValidadorComun.activo(tipo.getActivo(), "El tipo de contacto");
+            ValidadorComun.formato(medioNuevo.getValor().trim(), tipo.getExpresionRegular(), tipo.getIndicaciones());
+        } catch (ValidacionNegocioException e) {
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Medio de contacto", e.getMessage());
+            return;
+        }
         medioNuevo.setValor(medioNuevo.getValor().trim());
         medioNuevo.setIdPersona(getRegistroActual());
         medioNuevo.setFechaCreacion(new Date());
@@ -219,6 +235,14 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
         }
         if (rolNuevo.getIdRol() == null) {
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Rol", "Seleccione un rol.");
+            return;
+        }
+        try {
+            ValidadorComun.activo(rolNuevo.getIdRol().getActivo(), "El rol");
+            var clinica = ValidadorComun.requerido(rolNuevo.getIdClinica(), "Seleccione la clínica del rol.");
+            ValidadorComun.activo(clinica.getActivo(), "La clínica");
+        } catch (ValidacionNegocioException e) {
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Rol", e.getMessage());
             return;
         }
         boolean duplicado = roles.stream().anyMatch(r
@@ -256,14 +280,14 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
 
     public List<TipoDocumento> getTiposDocumento() {
         if (tiposDocumento == null) {
-            tiposDocumento = tipoDocumentoDAO.findAll();
+            tiposDocumento = tipoDocumentoDAO.findAllActivos();
         }
         return tiposDocumento;
     }
 
     public List<TipoMedioContacto> getTiposMedioContacto() {
         if (tiposMedioContacto == null) {
-            tiposMedioContacto = tipoMedioContactoDAO.findAll();
+            tiposMedioContacto = tipoMedioContactoDAO.findAllActivos();
         }
         return tiposMedioContacto;
     }
@@ -277,7 +301,7 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
 
     public List<Clinica> getClinicas() {
         if (clinicas == null) {
-            clinicas = clinicaDAO.findAll();
+            clinicas = clinicaDAO.findAllActivos();
         }
         return clinicas;
     }
@@ -301,15 +325,18 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
 
     @Override
     protected void validarNegocio(Persona registro) {
-        registro.setNombres(ValidadorComun.textoObligatorio(registro.getNombres(), "Los nombres"));
-        registro.setApellidos(ValidadorComun.textoObligatorio(registro.getApellidos(), "Los apellidos"));
-        if (registro.getFechaNacimiento() != null && !registro.getFechaNacimiento().isBefore(getHoy())) {
+        java.util.logging.Logger.getLogger("persona").info(
+            "guardar id=" + registro.getIdPersona() + " nombres=[" + registro.getNombres() + "] crear=" + isEstadoCrear());
+        registro.setNombres(ValidadorComun.textoObligatorio(registro.getNombres(), "El campo Nombres"));
+        registro.setApellidos(ValidadorComun.textoObligatorio(registro.getApellidos(), "El campo Apellidos"));
+        if (registro.getFechaNacimiento() != null && !registro.getFechaNacimiento().before(getHoy())) {
             throw new ValidacionNegocioException("La fecha de nacimiento debe estar en el pasado.");
         }
     }
 
-    public java.time.LocalDate getHoy() {
-        return java.time.LocalDate.now(java.time.ZoneId.of("America/El_Salvador"));
+    public Date getHoy() {
+        var zona = java.time.ZoneId.of("America/El_Salvador");
+        return Date.from(java.time.LocalDate.now(zona).atStartOfDay(zona).toInstant());
     }
 
 }

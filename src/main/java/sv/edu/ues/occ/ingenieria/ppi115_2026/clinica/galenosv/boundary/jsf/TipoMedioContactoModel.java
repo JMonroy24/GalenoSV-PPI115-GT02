@@ -36,7 +36,9 @@ public class TipoMedioContactoModel extends ModelTransaccional<TipoMedioContacto
 
     @Override
     protected TipoMedioContacto crearNuevoRegistro() {
-        return new TipoMedioContacto(UUID.randomUUID());
+        TipoMedioContacto registro = new TipoMedioContacto(UUID.randomUUID());
+        registro.setActivo(true);
+        return registro;
     }
 
     public TipoMedioContactoDAO getTipoMedioContactoDAO() {
