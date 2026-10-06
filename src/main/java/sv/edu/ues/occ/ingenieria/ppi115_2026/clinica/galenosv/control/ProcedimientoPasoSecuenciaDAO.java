@@ -61,4 +61,11 @@ public class ProcedimientoPasoSecuenciaDAO
 
         return em.createQuery(cq).getResultList();
     }
+    /** Una consulta para todas las relaciones PADRE → HIJO del procedimiento. */
+    public List<ProcedimientoPasoSecuencia> findByProcedimiento(UUID idProcedimiento) {
+        return em.createQuery("SELECT s FROM ProcedimientoPasoSecuencia s "
+                + "JOIN FETCH s.idProcedimientoPaso p "
+                + "WHERE p.idProcedimiento.idProcedimiento = :id", ProcedimientoPasoSecuencia.class)
+                .setParameter("id", idProcedimiento).getResultList();
+    }
 }

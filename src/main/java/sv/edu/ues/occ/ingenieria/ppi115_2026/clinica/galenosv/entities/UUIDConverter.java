@@ -4,7 +4,8 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 import java.util.UUID;
 
-@Converter(autoApply = true)
+/** Conversión opcional para columnas de texto; las columnas UUID nativas usan el mapeo JPA. */
+@Converter(autoApply = false)
 public class UUIDConverter implements AttributeConverter<UUID, String> {
 
     @Override

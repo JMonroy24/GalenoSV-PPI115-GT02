@@ -60,4 +60,13 @@ public class ProcedimientoPasoDAO
 
         return em.createQuery(cq).getResultList();
     }
+    /** Carga los pasos, roles y exámenes del procedimiento sin consultas por fila. */
+    public List<ProcedimientoPaso> findByProcedimiento(UUID idProcedimiento) {
+        return em.createQuery("SELECT DISTINCT p FROM ProcedimientoPaso p "
+                + "LEFT JOIN FETCH p.idProcedimiento LEFT JOIN FETCH p.idRol "
+                + "LEFT JOIN FETCH p.procedimientoPasoExamenList a "
+                + "LEFT JOIN FETCH a.idExamen "
+                + "WHERE p.idProcedimiento.idProcedimiento = :id", ProcedimientoPaso.class)
+                .setParameter("id", idProcedimiento).getResultList();
+    }
 }

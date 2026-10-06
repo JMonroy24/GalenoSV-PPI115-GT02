@@ -1,292 +1,131 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoExamenDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoSecuenciaDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Examen;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Procedimiento;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPaso;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPasoExamen;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPasoSecuencia;
-
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.*;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ProcedimientoPasoModelTest {
-
-    @Mock
-    private ProcedimientoPasoDAO procedimientoPasoDAO;
-
-    @Mock
-    private ProcedimientoPasoExamenDAO procedimientoPasoExamenDAO;
-
-    @Mock
-    private ProcedimientoPasoSecuenciaDAO procedimientoPasoSecuenciaDAO;
-
-    @InjectMocks
-    private ProcedimientoPasoModel procedimientoPasoModel;
-
-    @BeforeEach
-    void setUp() {
-        procedimientoPasoModel.setProcedimientoPasoDAO(procedimientoPasoDAO);
+    @Mock ProcedimientoPasoDAO procedimientoPasoDAO;
+    @Mock ProcedimientoPasoExamenDAO procedimientoPasoExamenDAO;
+    @Mock ProcedimientoPasoSecuenciaDAO procedimientoPasoSecuenciaDAO;
+    @Mock AsignacionService asignacionService;
+    @Mock RolDAO rolDAO;
+    @Mock ExamenDAO examenDAO;
+    @InjectMocks ProcedimientoPasoModel model;
+    Procedimiento procedimiento;
+    Rol rol;
+    @BeforeEach void preparar() {
+        procedimiento = new Procedimiento(UUID.randomUUID());
+        rol = new Rol(UUID.randomUUID()); rol.setActivo(true);
+        model.abrirProcedimiento(procedimiento);
+        model.getRegistroActual().setNombre("Recepción");
+        model.getRegistroActual().setIdRol(rol);
+        lenient().when(rolDAO.findById(rol.getIdRol())).thenReturn(rol);
     }
-
-    @Test
-    void testInitYCargarDatos() {
+    ProcedimientoPaso padre() {
         ProcedimientoPaso paso = new ProcedimientoPaso(UUID.randomUUID());
-        when(procedimientoPasoDAO.findAll()).thenReturn(List.of(paso));
-
-        procedimientoPasoModel.init();
-
-        assertEquals(1, procedimientoPasoModel.getRegistros().size());
-        verify(procedimientoPasoDAO).findAll();
+        paso.setIdProcedimiento(procedimiento); paso.setNombre("Padre");
+        paso.setIdRol(new Rol(UUID.randomUUID())); paso.setIndicaFin(false);
+        return paso;
     }
-
-    @Test
-    void testPrepararNuevo() {
-        procedimientoPasoModel.prepararNuevo();
-
-        assertNotNull(procedimientoPasoModel.getRegistroActual());
-        assertNotNull(procedimientoPasoModel.getRegistroActual()
-                .getIdProcedimientoPaso());
-        assertEquals(Estado.CREAR, procedimientoPasoModel.getEstado());
-        assertTrue(procedimientoPasoModel.getExamenesAsignados().isEmpty());
-        assertTrue(procedimientoPasoModel.getSecuencias().isEmpty());
+    ProcedimientoPasoSecuencia relacion(ProcedimientoPaso padre, ProcedimientoPaso hijo) {
+        ProcedimientoPasoSecuencia s = new ProcedimientoPasoSecuencia(UUID.randomUUID());
+        s.setIdProcedimientoPaso(padre); s.setIdProcedimientoPasoReferencia(hijo.getIdProcedimientoPaso());
+        s.setTipoSecuencia("SIGUIENTE"); return s;
     }
-
-    @Test
-    void testSeleccionarCargaLasDosRelaciones() {
-        ProcedimientoPaso paso = new ProcedimientoPaso(UUID.randomUUID());
-        when(procedimientoPasoExamenDAO.findByPaso(
-                paso.getIdProcedimientoPaso()))
-                .thenReturn(Collections.emptyList());
-        when(procedimientoPasoSecuenciaDAO.findByPaso(
-                paso.getIdProcedimientoPaso()))
-                .thenReturn(Collections.emptyList());
-
-        procedimientoPasoModel.seleccionar(paso);
-
-        assertEquals(paso, procedimientoPasoModel.getRegistroActual());
-        assertEquals(Estado.MODIFICAR, procedimientoPasoModel.getEstado());
-        verify(procedimientoPasoExamenDAO)
-                .findByPaso(paso.getIdProcedimientoPaso());
-        verify(procedimientoPasoSecuenciaDAO)
-                .findByPaso(paso.getIdProcedimientoPaso());
+    @Test void primerPasoSinDependencia() {
+        assertTrue(model.guardarPaso());
+        verify(asignacionService).guardarPaso(any(), eq(true), isNull(), eq(List.of()));
+        assertEquals(Estado.CREAR, model.getEstado());
+        assertEquals(procedimiento, model.getRegistroActual().getIdProcedimiento());
     }
-
-    @Test
-    void testCancelarLimpiaRelaciones() {
-        procedimientoPasoModel.prepararNuevo();
-        procedimientoPasoModel.cancelar();
-
-        assertNull(procedimientoPasoModel.getRegistroActual());
-        assertEquals(Estado.NINGUNO, procedimientoPasoModel.getEstado());
-        assertTrue(procedimientoPasoModel.getExamenesAsignados().isEmpty());
-        assertTrue(procedimientoPasoModel.getSecuencias().isEmpty());
+    @Test void primerPasoRechazaDependencia() {
+        model.setDependeDe(padre()); assertFalse(model.guardarPaso());
+        verifyNoInteractions(asignacionService);
     }
-
-    @Test
-    void testGuardarCrear() {
-        when(procedimientoPasoDAO.findAll())
-                .thenReturn(Collections.emptyList());
-
-        procedimientoPasoModel.prepararNuevo();
-        procedimientoPasoModel.getRegistroActual()
-                .setNombre("Verificar identidad del paciente");
-        procedimientoPasoModel.guardar();
-
-        verify(procedimientoPasoDAO).create(any(ProcedimientoPaso.class));
-        assertEquals(Estado.NINGUNO, procedimientoPasoModel.getEstado());
+    @Test void siguientesExigenPadreDelMismoProcedimiento() {
+        ProcedimientoPaso padre = padre();
+        when(procedimientoPasoDAO.findByProcedimiento(procedimiento.getIdProcedimiento())).thenReturn(List.of(padre));
+        assertFalse(model.guardarPaso());
+        model.setDependeDe(new ProcedimientoPaso(UUID.randomUUID())); assertFalse(model.guardarPaso());
+        model.setDependeDe(padre); assertTrue(model.guardarPaso());
+        verify(asignacionService).guardarPaso(any(), eq(true), eq(padre), anyList());
     }
-
-    @Test
-    void testGuardarModificar() {
-        ProcedimientoPaso paso = new ProcedimientoPaso(UUID.randomUUID());
-        when(procedimientoPasoExamenDAO.findByPaso(
-                paso.getIdProcedimientoPaso()))
-                .thenReturn(Collections.emptyList());
-        when(procedimientoPasoSecuenciaDAO.findByPaso(
-                paso.getIdProcedimientoPaso()))
-                .thenReturn(Collections.emptyList());
-        when(procedimientoPasoDAO.findAll())
-                .thenReturn(Collections.emptyList());
-
-        procedimientoPasoModel.seleccionar(paso);
-        procedimientoPasoModel.guardar();
-
-        verify(procedimientoPasoDAO).update(paso);
-        assertEquals(Estado.NINGUNO, procedimientoPasoModel.getEstado());
+    @Test void rechazaRolInactivoYRepetido() {
+        rol.setActivo(false); assertFalse(model.guardarPaso()); rol.setActivo(true);
+        ProcedimientoPaso padre = padre(); padre.setIdRol(rol);
+        when(procedimientoPasoDAO.findByProcedimiento(procedimiento.getIdProcedimiento())).thenReturn(List.of(padre));
+        model.setDependeDe(padre); assertFalse(model.guardarPaso()); verifyNoInteractions(asignacionService);
     }
-
-    @Test
-    void testAgregarExamenConservaDatosDeAsociacion() {
-        ProcedimientoPaso paso = new ProcedimientoPaso(UUID.randomUUID());
-        Examen examen = new Examen(UUID.randomUUID());
-        when(procedimientoPasoExamenDAO.findByPaso(
-                paso.getIdProcedimientoPaso()))
-                .thenReturn(Collections.emptyList());
-
-        procedimientoPasoModel.seleccionar(paso);
-        procedimientoPasoModel.setExamenSeleccionado(examen);
-        procedimientoPasoModel.setObservacionesExamen(
-                "Solicitar antes del siguiente paso");
-        procedimientoPasoModel.setExamenActivo(true);
-        procedimientoPasoModel.agregarExamen();
-
-        ArgumentCaptor<ProcedimientoPasoExamen> captor =
-                ArgumentCaptor.forClass(ProcedimientoPasoExamen.class);
-        verify(procedimientoPasoExamenDAO).create(captor.capture());
-
-        ProcedimientoPasoExamen asignacion = captor.getValue();
-        assertNotNull(asignacion.getIdProcedimientoPasoExamen());
-        assertNotNull(asignacion.getFechaCreacion());
-        assertEquals(paso, asignacion.getIdProcedimientoPaso());
-        assertEquals(examen, asignacion.getIdExamen());
-        assertEquals(Boolean.TRUE, asignacion.getActivo());
-        assertEquals("Solicitar antes del siguiente paso",
-                asignacion.getObservaciones());
+    @Test void noAgregarHijoAPasoDeFin() {
+        ProcedimientoPaso padre = padre(); padre.setIndicaFin(true);
+        when(procedimientoPasoDAO.findByProcedimiento(procedimiento.getIdProcedimiento())).thenReturn(List.of(padre));
+        model.setDependeDe(padre); assertFalse(model.guardarPaso());
     }
-
-    @Test
-    void testAgregarExamenImpideDuplicado() {
-        ProcedimientoPaso paso = new ProcedimientoPaso(UUID.randomUUID());
-        Examen examen = new Examen(UUID.randomUUID());
-        ProcedimientoPasoExamen asignacion =
-                new ProcedimientoPasoExamen(UUID.randomUUID());
-        asignacion.setIdExamen(examen);
-
-        when(procedimientoPasoExamenDAO.findByPaso(
-                paso.getIdProcedimientoPaso()))
-                .thenReturn(List.of(asignacion));
-
-        procedimientoPasoModel.seleccionar(paso);
-        procedimientoPasoModel.setExamenSeleccionado(examen);
-        procedimientoPasoModel.agregarExamen();
-
-        verify(procedimientoPasoExamenDAO, never())
-                .create(any(ProcedimientoPasoExamen.class));
+    @Test void noMarcarFinSiTieneHijos() {
+        ProcedimientoPaso paso = model.getRegistroActual(); paso.setIndicaFin(true);
+        when(procedimientoPasoSecuenciaDAO.findByProcedimiento(procedimiento.getIdProcedimiento()))
+                .thenReturn(List.of(relacion(paso, padre())));
+        assertFalse(model.guardarPaso());
     }
-
-    @Test
-    void testQuitarExamenAsignado() {
-        ProcedimientoPaso paso = new ProcedimientoPaso(UUID.randomUUID());
-        ProcedimientoPasoExamen asignacion =
-                new ProcedimientoPasoExamen(UUID.randomUUID());
-        when(procedimientoPasoExamenDAO.findByPaso(
-                paso.getIdProcedimientoPaso()))
-                .thenReturn(List.of(asignacion), Collections.emptyList());
-
-        procedimientoPasoModel.seleccionar(paso);
-        procedimientoPasoModel.quitarExamen(asignacion);
-
-        verify(procedimientoPasoExamenDAO).delete(asignacion);
-        assertTrue(procedimientoPasoModel.getExamenesAsignados().isEmpty());
+    @Test void noCrearCiclo() {
+        ProcedimientoPaso padre = padre();
+        when(procedimientoPasoDAO.findByProcedimiento(procedimiento.getIdProcedimiento())).thenReturn(List.of(padre));
+        when(procedimientoPasoSecuenciaDAO.findByProcedimiento(procedimiento.getIdProcedimiento()))
+                .thenReturn(List.of(relacion(model.getRegistroActual(), padre)));
+        model.setDependeDe(padre); assertFalse(model.guardarPaso());
     }
-
-    @Test
-    void testAgregarSecuenciaEntrePasosDelMismoProcedimiento() {
-        Procedimiento procedimiento =
-                new Procedimiento(UUID.randomUUID());
-        ProcedimientoPaso origen =
-                new ProcedimientoPaso(UUID.randomUUID());
-        ProcedimientoPaso referencia =
-                new ProcedimientoPaso(UUID.randomUUID());
-        origen.setIdProcedimiento(procedimiento);
-        referencia.setIdProcedimiento(procedimiento);
-
-        when(procedimientoPasoDAO.findAll())
-                .thenReturn(List.of(origen, referencia));
-        when(procedimientoPasoSecuenciaDAO.findByPaso(
-                origen.getIdProcedimientoPaso()))
-                .thenReturn(Collections.emptyList());
-
-        procedimientoPasoModel.init();
-        procedimientoPasoModel.seleccionar(origen);
-        procedimientoPasoModel.setPasoReferenciaSeleccionado(referencia);
-        procedimientoPasoModel.setTipoSecuencia("Siguiente");
-        procedimientoPasoModel.agregarSecuencia();
-
-        ArgumentCaptor<ProcedimientoPasoSecuencia> captor =
-                ArgumentCaptor.forClass(ProcedimientoPasoSecuencia.class);
-        verify(procedimientoPasoSecuenciaDAO).create(captor.capture());
-
-        ProcedimientoPasoSecuencia secuencia = captor.getValue();
-        assertNotNull(secuencia.getIdProcedimientoPasoSecuencia());
-        assertEquals(origen, secuencia.getIdProcedimientoPaso());
-        assertEquals(referencia.getIdProcedimientoPaso(),
-                secuencia.getIdProcedimientoPasoReferencia());
-        assertEquals("Siguiente", secuencia.getTipoSecuencia());
+    @Test void examenesEnMemoriaRechazanInactivosYDuplicados() {
+        Examen examen = new Examen(UUID.randomUUID()); examen.setActivo(false);
+        model.setExamenSeleccionado(examen); model.agregarExamen(); assertTrue(model.getExamenesAsignados().isEmpty());
+        examen.setActivo(true); model.setObservacionesExamen("Antes del paso"); model.agregarExamen();
+        model.setExamenSeleccionado(examen); model.agregarExamen();
+        assertEquals(1, model.getExamenesAsignados().size());
+        assertEquals("Antes del paso", model.getExamenesAsignados().getFirst().getObservaciones());
+        verifyNoInteractions(asignacionService, procedimientoPasoExamenDAO);
+        when(examenDAO.findById(examen.getIdExamen())).thenReturn(examen);
+        assertTrue(model.guardarPaso());
+        verify(asignacionService).guardarPaso(any(), eq(true), isNull(), argThat(l -> l.size() == 1));
     }
-
-    @Test
-    void testAgregarSecuenciaRechazaOtroProcedimiento() {
-        ProcedimientoPaso origen =
-                new ProcedimientoPaso(UUID.randomUUID());
-        origen.setIdProcedimiento(
-                new Procedimiento(UUID.randomUUID()));
-
-        ProcedimientoPaso referencia =
-                new ProcedimientoPaso(UUID.randomUUID());
-        referencia.setIdProcedimiento(
-                new Procedimiento(UUID.randomUUID()));
-
-        when(procedimientoPasoDAO.findAll())
-                .thenReturn(List.of(origen, referencia));
-
-        procedimientoPasoModel.init();
-        procedimientoPasoModel.seleccionar(origen);
-        procedimientoPasoModel.setPasoReferenciaSeleccionado(referencia);
-        procedimientoPasoModel.setTipoSecuencia("Siguiente");
-        procedimientoPasoModel.agregarSecuencia();
-
-        verify(procedimientoPasoSecuenciaDAO, never())
-                .create(any(ProcedimientoPasoSecuencia.class));
+    @Test void cancelarDescartaExamenesSinPersistir() {
+        Examen examen = new Examen(UUID.randomUUID()); examen.setActivo(true);
+        model.setExamenSeleccionado(examen); model.agregarExamen(); model.cancelar();
+        assertTrue(model.getExamenesAsignados().isEmpty());
+        assertEquals(procedimiento, model.getRegistroActual().getIdProcedimiento());
+        verifyNoInteractions(asignacionService, procedimientoPasoExamenDAO);
     }
-
-    @Test
-    void testQuitarSecuenciaAsignada() {
-        ProcedimientoPaso paso = new ProcedimientoPaso(UUID.randomUUID());
-        ProcedimientoPasoSecuencia secuencia =
-                new ProcedimientoPasoSecuencia(UUID.randomUUID());
-        when(procedimientoPasoSecuenciaDAO.findByPaso(
-                paso.getIdProcedimientoPaso()))
-                .thenReturn(List.of(secuencia), Collections.emptyList());
-
-        procedimientoPasoModel.seleccionar(paso);
-        procedimientoPasoModel.quitarSecuencia(secuencia);
-
-        verify(procedimientoPasoSecuenciaDAO).delete(secuencia);
-        assertTrue(procedimientoPasoModel.getSecuencias().isEmpty());
+    @Test void quitarExamenEnEdicionSoloSeGuardaAlConfirmar() {
+        ProcedimientoPaso paso = model.getRegistroActual();
+        ProcedimientoPasoExamen examen = new ProcedimientoPasoExamen(UUID.randomUUID());
+        when(procedimientoPasoExamenDAO.findByPaso(paso.getIdProcedimientoPaso())).thenReturn(List.of(examen));
+        model.seleccionar(paso);
+        model.setExamenAsignadoSeleccionado(examen); model.quitarExamenSeleccionado();
+        verify(procedimientoPasoExamenDAO, never()).delete(any());
+        assertTrue(model.guardarPaso());
+        verify(asignacionService).guardarPaso(any(), eq(false), isNull(), eq(List.of()));
     }
-
-    @Test
-    void testEliminar() {
-        ProcedimientoPaso paso = new ProcedimientoPaso(UUID.randomUUID());
-        when(procedimientoPasoDAO.findAll())
-                .thenReturn(Collections.emptyList());
-
-        procedimientoPasoModel.eliminar(paso);
-
-        verify(procedimientoPasoDAO).delete(paso);
+    @Test void edicionNoCambiaRolNiDependenciaYCancelarNoModificaOriginal() {
+        ProcedimientoPaso paso = model.getRegistroActual(); model.seleccionar(paso);
+        model.getRegistroActual().setNombre("Otro"); model.cancelar(); assertEquals("Recepción", paso.getNombre());
+        model.seleccionar(paso); model.setDependeDe(padre()); assertFalse(model.guardarPaso());
     }
-
-    @Test
-    void testGettersYMetodosProtegidos() {
-        assertEquals(procedimientoPasoDAO, procedimientoPasoModel.getDAO());
-        assertEquals(procedimientoPasoDAO,
-                procedimientoPasoModel.getProcedimientoPasoDAO());
-        assertNotNull(procedimientoPasoModel.crearNuevoRegistro());
+    @Test void noEliminarPasoConHijos() {
+        ProcedimientoPaso paso = model.getRegistroActual();
+        when(procedimientoPasoSecuenciaDAO.findByProcedimiento(procedimiento.getIdProcedimiento()))
+                .thenReturn(List.of(relacion(paso, padre())));
+        assertFalse(model.eliminarPaso(paso)); verifyNoInteractions(asignacionService);
+    }
+    @Test void errorDePersistenciaConservaBorrador() {
+        doThrow(new IllegalStateException("fallo")).when(asignacionService).guardarPaso(any(), anyBoolean(), any(), anyList());
+        ProcedimientoPaso borrador = model.getRegistroActual();
+        assertFalse(model.guardarPaso()); assertSame(borrador, model.getRegistroActual());
     }
 }
