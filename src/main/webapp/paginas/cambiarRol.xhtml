@@ -6,32 +6,32 @@
                 xmlns:ui="jakarta.faces.facelets"
                 xmlns:p="http://primefaces.org/ui">
 
-    <ui:define name="titulo">Cambiar Rol</ui:define>
+    <ui:define name="titulo">#{msg['page.change_role.title']}</ui:define>
 
     <ui:define name="contenido">
         <h:form id="frmCambiarRol">
-            <p:panel header="Selección de Contexto" style="max-width: 600px; margin: 2rem auto;">
+            <p:panel header="#{msg['page.change_role.header']}" style="max-width: 600px; margin: 2rem auto;">
                 <p:panelGrid columns="2" layout="flex" contentStyleClass="ui-fluid" style="width: 100%;">
 
-                    <p:outputLabel for="selClinica" value="Clínica Activa:"/>
+                    <p:outputLabel for="selClinica" value="#{msg['page.change_role.active_clinic']}"/>
                     <p:selectOneMenu id="selClinica" value="#{sesionBean.clinicaTemp}" converter="#{entityConverter}" filter="true">
-                        <f:selectItem itemLabel="Seleccione una clínica..." itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItem itemLabel="#{msg['page.change_role.select_clinic']}" itemValue="#{null}" noSelectionOption="true"/>
                         <f:selectItems value="#{sesionBean.clinicasActivas}" var="clinica"
                                        itemLabel="#{clinica.nombre}" itemValue="#{clinica}"/>
                         <p:ajax event="change" update="selPersona" listener="#{sesionBean.onChangeClinicaRol}"/>
                     </p:selectOneMenu>
 
-                    <p:outputLabel for="selRol" value="Rol:"/>
+                    <p:outputLabel for="selRol" value="#{msg['page.change_role.role']}"/>
                     <p:selectOneMenu id="selRol" value="#{sesionBean.rolTemp}" converter="#{entityConverter}" filter="true">
-                        <f:selectItem itemLabel="Seleccione un rol..." itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItem itemLabel="#{msg['page.change_role.select_role']}" itemValue="#{null}" noSelectionOption="true"/>
                         <f:selectItems value="#{sesionBean.rolesActivos}" var="rol"
                                        itemLabel="#{rol.nombre}" itemValue="#{rol}"/>
                         <p:ajax event="change" update="selPersona" listener="#{sesionBean.onChangeClinicaRol}"/>
                     </p:selectOneMenu>
 
-                    <p:outputLabel for="selPersona" value="Persona:"/>
+                    <p:outputLabel for="selPersona" value="#{msg['page.change_role.person']}"/>
                     <p:selectOneMenu id="selPersona" value="#{sesionBean.personaTemp}" converter="#{entityConverter}" filter="true">
-                        <f:selectItem itemLabel="Seleccione una persona..." itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItem itemLabel="#{msg['page.change_role.select_person']}" itemValue="#{null}" noSelectionOption="true"/>
                         <f:selectItems value="#{sesionBean.personasDisponibles}" var="persona"
                                        itemLabel="#{persona.nombres} #{persona.apellidos}" itemValue="#{persona}"/>
                     </p:selectOneMenu>
@@ -39,10 +39,10 @@
                 </p:panelGrid>
 
                 <f:facet name="footer">
-                    <p:commandButton value="Usar esta clínica" icon="pi pi-building" action="#{sesionBean.aplicarClinica}"
+                    <p:commandButton value="#{msg['page.change_role.btn_use_clinic']}" icon="pi pi-building" action="#{sesionBean.aplicarClinica}"
                                      process="@this selClinica" update="@form"
                                      oncomplete="if (!args.validationFailed) window.location.reload()"/>
-                    <p:commandButton value="Aplicar rol" icon="pi pi-check" action="#{sesionBean.aplicarCambios}"
+                    <p:commandButton value="#{msg['page.change_role.btn_apply_role']}" icon="pi pi-check" action="#{sesionBean.aplicarCambios}"
                                      styleClass="ui-button-success" update="@form"
                                      oncomplete="if (!args.validationFailed) window.location.reload()"/>
                 </f:facet>

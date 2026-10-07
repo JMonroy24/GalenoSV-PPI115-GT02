@@ -11,14 +11,14 @@
     </cc:interface>
 
     <cc:implementation>
-        <p:commandButton value="Nuevo" icon="pi pi-plus"
+        <p:commandButton value="#{msg['btn.new']}" icon="pi pi-plus"
                          styleClass="ui-button-success mr-2"
                          action="#{cc.attrs.model.prepararNuevo()}"
                          process="@this"
                          update="#{cc.attrs.update}"
                          />
 
-        <p:commandButton value="Editar" icon="pi pi-pencil"
+        <p:commandButton value="#{msg['btn.edit']}" icon="pi pi-pencil"
                          styleClass="ui-button-warning mr-2"
                          action="#{cc.attrs.model.seleccionar(cc.attrs.model.seleccion)}"
                          process="@this"
@@ -26,14 +26,14 @@
 
                          disabled="#{cc.attrs.model.seleccion == null}"/>
 
-        <p:commandButton value="Eliminar" icon="pi pi-trash"
+        <p:commandButton value="#{msg['btn.delete']}" icon="pi pi-trash"
                          styleClass="ui-button-danger"
                          action="#{cc.attrs.model.eliminar(cc.attrs.model.seleccion)}"
                          process="@this"
                          update="@form"
                          disabled="#{cc.attrs.model.seleccion == null}">
-            <p:confirm header="Confirmar eliminación"
-                       message="¿Está seguro de eliminar este registro?"
+            <p:confirm header="#{msg['confirm.delete.header']}"
+                       message="#{msg['confirm.delete.message']}"
                        icon="pi pi-exclamation-triangle"/>
         </p:commandButton>
     </cc:implementation>
