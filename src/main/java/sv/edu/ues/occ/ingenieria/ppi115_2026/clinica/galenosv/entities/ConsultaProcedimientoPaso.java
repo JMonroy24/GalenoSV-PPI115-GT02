@@ -7,34 +7,37 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import jakarta.validation.constraints.NotBlank;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.validation.PeriodoFechas;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.validation.RangoFechasValido;
 
 @Entity
-@RangoFechasValido
 @Table(name = "consulta_procedimiento_paso")
-public class ConsultaProcedimientoPaso implements IdentificableEntity, PeriodoFechas {
+@NamedQueries({
+    @NamedQuery(name = "ConsultaProcedimientoPaso.findAll", query = "SELECT c FROM ConsultaProcedimientoPaso c"),
+    @NamedQuery(name = "ConsultaProcedimientoPaso.findByFechaInicio", query = "SELECT c FROM ConsultaProcedimientoPaso c WHERE c.fechaInicio = :fechaInicio"),
+    @NamedQuery(name = "ConsultaProcedimientoPaso.findByFechaFin", query = "SELECT c FROM ConsultaProcedimientoPaso c WHERE c.fechaFin = :fechaFin"),
+    @NamedQuery(name = "ConsultaProcedimientoPaso.findByEstado", query = "SELECT c FROM ConsultaProcedimientoPaso c WHERE c.estado = :estado")})
+public class ConsultaProcedimientoPaso implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
-    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
+    @NotNull
     @Column(name = "id_consulta_procedimiento_paso")
     private UUID idConsultaProcedimientoPaso;
 
-    @NotNull(message = "{consultaProcedimientoPaso.fechaInicio.obligatorio}")
-    @Column(name = "fecha_inicio", nullable = false)
+    @Column(name = "fecha_inicio")
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaInicio;
 
@@ -42,19 +45,16 @@ public class ConsultaProcedimientoPaso implements IdentificableEntity, PeriodoFe
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaFin;
 
-    @NotBlank(message = "{consultaProcedimientoPaso.estado.obligatorio}")
-    @Size(max = 20, message = "{consultaProcedimientoPaso.estado.longitud}")
-    @Column(name = "estado", nullable = false, length = 20)
+    @Size(max = 20)
+    @Column(name = "estado")
     private String estado;
 
-    @NotNull(message = "{consultaProcedimientoPaso.idConsultaProcedimiento.obligatorio}")
-    @JoinColumn(name = "id_consulta_procedimiento", referencedColumnName = "id_consulta_procedimiento", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_consulta_procedimiento", referencedColumnName = "id_consulta_procedimiento")
+    @ManyToOne(fetch = FetchType.LAZY)
     private ConsultaProcedimiento idConsultaProcedimiento;
 
-    @NotNull(message = "{consultaProcedimientoPaso.idPersonaRol.obligatorio}")
-    @JoinColumn(name = "id_persona_rol", referencedColumnName = "id_persona_rol", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_persona_rol", referencedColumnName = "id_persona_rol")
+    @ManyToOne(fetch = FetchType.LAZY)
     private PersonaRol idPersonaRol;
 
     @OneToMany(mappedBy = "idConsultaProcedimientoPaso", fetch = FetchType.LAZY)
@@ -124,11 +124,6 @@ public class ConsultaProcedimientoPaso implements IdentificableEntity, PeriodoFe
     }
 
     @Override
-    public String getIdKey() {
-        return idConsultaProcedimientoPaso != null ? idConsultaProcedimientoPaso.toString() : "";
-    }
-
-    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idConsultaProcedimientoPaso != null ? idConsultaProcedimientoPaso.hashCode() : 0);
@@ -151,4 +146,7 @@ public class ConsultaProcedimientoPaso implements IdentificableEntity, PeriodoFe
     public String toString() {
         return "entity.ConsultaProcedimientoPaso[ idConsultaProcedimientoPaso=" + idConsultaProcedimientoPaso + " ]";
     }
+
+    @Override
+    public String getIdKey() { return idConsultaProcedimientoPaso == null ? null : idConsultaProcedimientoPaso.toString(); }
 }

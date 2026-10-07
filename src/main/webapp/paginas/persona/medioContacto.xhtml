@@ -10,27 +10,27 @@
     <ui:define name="titulo">Medios de Contacto</ui:define>
 
     <ui:define name="contenido">
-        
+
         <h:form id="frmPrincipal">
 <crud:crudTransaccional model="#{medioContactoModel}"
                                 lazyModel="#{medioContactoModel.lazyModel}"
                                 titulo="Medios de Contacto">
-                                
+
             <p:column headerText="Persona">
                 <h:outputText value="#{registro.idPersona.nombres} #{registro.idPersona.apellidos}"/>
             </p:column>
-            
+
             <p:column headerText="Tipo" sortBy="#{registro.idTipoMedioContacto.nombre}">
                 <h:outputText value="#{registro.idTipoMedioContacto.nombre}"/>
             </p:column>
-            
+
             <p:column headerText="Valor" sortBy="#{registro.valor}">
                 <h:outputText value="#{registro.valor}"/>
             </p:column>
-            
+
             <f:facet name="formulario">
                 <h:panelGrid columns="2" cellpadding="7" columnClasses="ui-grid-col-4,ui-grid-col-8" style="width:100%">
-                
+
                 <p:outputLabel value="Persona:" for="idPersona"/>
                 <p:autoComplete id="idPersona" disabled="#{medioContactoModel.estadoModificar}" value="#{medioContactoModel.registroActual.idPersona}"
                                 completeMethod="#{medioContactoModel.completePersona}"
@@ -38,7 +38,7 @@
                                 converter="#{entityConverter}"
                                 forceSelection="true" required="true" scrollHeight="250"
                                 placeholder="Escriba un nombre para buscar..." label="Persona" requiredMessage="Complete el campo persona." minQueryLength="2"/>
-                
+
                 <p:outputLabel value="Tipo de Medio:" for="idTipoMedioContacto"/>
                 <p:selectOneMenu id="idTipoMedioContacto" disabled="#{medioContactoModel.estadoModificar}" value="#{medioContactoModel.registroActual.idTipoMedioContacto}"
                                  converter="#{entityConverter}" required="true" filter="true" label="Tipo de Medio" requiredMessage="Complete el campo tipo de medio.">
@@ -47,19 +47,19 @@
                                    itemLabel="#{tmc.nombre}" itemValue="#{tmc}"/>
                     <p:ajax process="@this" update="valor indicacionesTipo"/>
                 </p:selectOneMenu>
-                
+
                 <p:outputLabel value="Valor:" for="valor"/>
                 <h:panelGroup>
                     <p:inputText id="valor" value="#{medioContactoModel.registroActual.valor}" required="true" label="Valor" requiredMessage="Complete el campo valor." maxlength="255" placeholder="#{medioContactoModel.registroActual.idTipoMedioContacto.indicaciones}"/>
                     <h:outputText id="indicacionesTipo" value="#{medioContactoModel.registroActual.idTipoMedioContacto.indicaciones}" styleClass="ui-text-secondary"/>
                 </h:panelGroup>
-                
+
                 </h:panelGrid>
             </f:facet>
-            
+
         </crud:crudTransaccional>
 </h:form>
-        
+
     </ui:define>
 
 </ui:composition>

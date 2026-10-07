@@ -81,7 +81,7 @@ public class PersonaRolDAO extends DefaultDAO<PersonaRol, UUID> implements Seria
         return java.util.List.of("idPersona", "idRol", "idClinica");
     }
 
-    
+
     public List<PersonaRol> findByClinicaAndRol(UUID idClinica, UUID idRol) {
         if (idClinica == null || idRol == null) return List.of();
         return getEntityManager().createQuery(
@@ -105,8 +105,8 @@ public class PersonaRolDAO extends DefaultDAO<PersonaRol, UUID> implements Seria
         if (excluirId != null) query.setParameter("excluir", excluirId);
         return query.getSingleResult() > 0;
     }
-    
-    
+
+
     public List<PersonaRol> findByPersona(UUID idPersona) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<PersonaRol> cq = cb.createQuery(PersonaRol.class);

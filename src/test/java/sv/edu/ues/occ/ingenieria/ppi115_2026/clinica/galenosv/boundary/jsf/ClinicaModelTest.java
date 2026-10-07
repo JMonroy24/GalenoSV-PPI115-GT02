@@ -70,7 +70,7 @@ public class ClinicaModelTest {
 
     @Test
     public void testGuardarCrear() {
-        
+
         clinicaModel.prepararNuevo();
         clinicaModel.getRegistroActual().setNombre("Clinica Central");
 
@@ -85,7 +85,7 @@ public class ClinicaModelTest {
 
     @Test
     public void testGuardarModificar() {
-        
+
         Clinica c = new Clinica(UUID.randomUUID());
         clinicaModel.seleccionar(c);
 
@@ -99,7 +99,7 @@ public class ClinicaModelTest {
 
     @Test
     public void testEliminar() {
-        
+
         Clinica c = new Clinica(UUID.randomUUID());
         clinicaModel.eliminar(c);
 

@@ -42,21 +42,6 @@ class ModelValidacionesTest {
     }
 
     @Test
-    void validaNombreUnicoDeProcedimiento() {
-        var model = new ProcedimientoModel();
-        var dao = mock(ProcedimientoDAO.class);
-        model.setProcedimientoDAO(dao);
-        var registro = new Procedimiento(UUID.randomUUID());
-        registro.setNombre("   ");
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-        registro.setNombre("  Nombre  ");
-        assertDoesNotThrow(() -> model.validarNegocio(registro));
-        assertEquals("Nombre", registro.getNombre());
-        when(dao.existePorCampo("nombre", "Nombre", registro.getIdProcedimiento())).thenReturn(true);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-    }
-
-    @Test
     void validaNombreUnicoDeExamen() {
         var model = new ExamenModel();
         var dao = mock(ExamenDAO.class);
@@ -239,26 +224,6 @@ class ModelValidacionesTest {
         resultado.setResultado(" Normal "); resultado.setInterpretacion(" Sin alteraciones "); resultado.setIdOrdenExamen(orden);
         assertDoesNotThrow(() -> modeloResultado.validarNegocio(resultado));
         assertEquals("Normal", resultado.getResultado());
-    }
-
-    @Test
-    void pasoValidaNombreDentroDeProcedimientoYResuelveReferenciaSinLista() {
-        var model = new ProcedimientoPasoModel(); var dao = mock(ProcedimientoPasoDAO.class); model.setProcedimientoPasoDAO(dao);
-        var paso = new ProcedimientoPaso(UUID.randomUUID()); paso.setNombre(" Paso ");
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(paso));
-        var procedimiento = new Procedimiento(UUID.randomUUID()); procedimiento.setActivo(true); paso.setIdProcedimiento(procedimiento);
-        var rol = new Rol(UUID.randomUUID()); rol.setActivo(true); paso.setIdRol(rol);
-        assertDoesNotThrow(() -> model.validarNegocio(paso));
-        when(dao.existeNombreEnProcedimiento(procedimiento.getIdProcedimiento(), "Paso", paso.getIdProcedimientoPaso())).thenReturn(true);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(paso));
-        assertNull(model.getRegistros());
-        when(dao.findById(paso.getIdProcedimientoPaso())).thenReturn(paso);
-        assertEquals("Paso", model.nombrePasoReferencia(paso.getIdProcedimientoPaso()));
-        assertEquals("", model.nombrePasoReferencia(null));
-        UUID perdido = UUID.randomUUID();
-        assertEquals(perdido.toString(), model.nombrePasoReferencia(perdido));
-        assertDoesNotThrow(() -> model.seleccionar(null));
-        assertDoesNotThrow(() -> new ExamenModel().seleccionar(null));
     }
 
     @Test

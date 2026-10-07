@@ -58,7 +58,7 @@ public class MedioContactoDAO extends DefaultDAO<MedioContacto, UUID> implements
         if (excluirId != null) query.setParameter("excluir", excluirId);
         return query.getSingleResult() > 0;
     }
-    
+
     public List<MedioContacto> findByPersona(UUID idPersona) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<MedioContacto> cq = cb.createQuery(MedioContacto.class);

@@ -41,6 +41,13 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
 
     private List<ExamenTipoExamen> tiposAsignados = Collections.emptyList();
     private TipoExamen tipoSeleccionado;
+    private ExamenTipoExamen asignacionTipoSeleccionada;
+    public ExamenTipoExamen getAsignacionTipoSeleccionada() { return asignacionTipoSeleccionada; }
+    public void setAsignacionTipoSeleccionada(ExamenTipoExamen seleccionada) { asignacionTipoSeleccionada = seleccionada; }
+    public void quitarTipoSeleccionado() {
+        quitarTipo(asignacionTipoSeleccionada);
+        asignacionTipoSeleccionada = null;
+    }
     private String observacionesTipo;
 
     @Inject
@@ -170,6 +177,7 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
     }
 
     private void limpiarSeleccionTipo() {
+        asignacionTipoSeleccionada = null;
         tipoSeleccionado = null;
         observacionesTipo = null;
     }

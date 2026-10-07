@@ -12,7 +12,7 @@
         <h:form id="frmCambiarRol">
             <p:panel header="Selección de Contexto" style="max-width: 600px; margin: 2rem auto;">
                 <p:panelGrid columns="2" layout="flex" contentStyleClass="ui-fluid" style="width: 100%;">
-                    
+
                     <p:outputLabel for="selClinica" value="Clínica Activa:"/>
                     <p:selectOneMenu id="selClinica" value="#{sesionBean.clinicaTemp}" converter="#{entityConverter}" filter="true">
                         <f:selectItem itemLabel="Seleccione una clínica..." itemValue="#{null}" noSelectionOption="true"/>
@@ -35,11 +35,14 @@
                         <f:selectItems value="#{sesionBean.personasDisponibles}" var="persona"
                                        itemLabel="#{persona.nombres} #{persona.apellidos}" itemValue="#{persona}"/>
                     </p:selectOneMenu>
-                    
+
                 </p:panelGrid>
-                
+
                 <f:facet name="footer">
-                    <p:commandButton value="Aplicar" icon="pi pi-check" action="#{sesionBean.aplicarCambios}" 
+                    <p:commandButton value="Usar esta clínica" icon="pi pi-building" action="#{sesionBean.aplicarClinica}"
+                                     process="@this selClinica" update="@form"
+                                     oncomplete="if (!args.validationFailed) window.location.reload()"/>
+                    <p:commandButton value="Aplicar rol" icon="pi pi-check" action="#{sesionBean.aplicarCambios}"
                                      styleClass="ui-button-success" update="@form"
                                      oncomplete="if (!args.validationFailed) window.location.reload()"/>
                 </f:facet>

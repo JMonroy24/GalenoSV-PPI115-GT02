@@ -68,8 +68,20 @@
                     <p:panel header="Resultados del examen">
                         <p:outputPanel id="pnlResultados">
 
-                            <p:dataTable value="#{ordenExamenModel.resultados}" var="res"
+                            <p:toolbar id="accionesResultado"><p:toolbarGroup><p:commandButton disabled="#{empty ordenExamenModel.resultadoSeleccionado}" value="Eliminar seleccionado" icon="pi pi-trash" title="Quitar resultado"
+                                                     styleClass="ui-button-danger"
+                                                     action="#{ordenExamenModel.quitarResultado(ordenExamenModel.resultadoSeleccionado)}"
+                                                     process="@this"
+                                                     update="pnlResultados">
+                                        <p:confirm header="Quitar resultado"
+                                                   message="¿Desea quitar este resultado?"
+                                                   icon="pi pi-exclamation-triangle"/>
+                                    </p:commandButton>
+                                </p:toolbarGroup></p:toolbar>
+                            <p:dataTable selectionMode="single" selection="#{ordenExamenModel.resultadoSeleccionado}" rowKey="#{res.idKey}" value="#{ordenExamenModel.resultados}" var="res"
                                          emptyMessage="Esta orden aún no tiene resultados." size="small">
+                                <p:ajax event="rowSelect" update="accionesResultado"/>
+                                <p:ajax event="rowUnselect" update="accionesResultado"/>
                                 <p:column headerText="Fecha" width="140">
                                     <h:outputText value="#{res.fechaCreacion}">
                                         <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
@@ -83,17 +95,6 @@
                                 </p:column>
                                 <p:column headerText="Atestado">
                                     <h:outputText value="#{res.rutaAtestado}"/>
-                                </p:column>
-                                <p:column headerText="Acción" width="70">
-                                    <p:commandButton icon="pi pi-trash" title="Quitar resultado"
-                                                     styleClass="ui-button-danger"
-                                                     action="#{ordenExamenModel.quitarResultado(res)}"
-                                                     process="@this"
-                                                     update="pnlResultados">
-                                        <p:confirm header="Quitar resultado"
-                                                   message="¿Desea quitar este resultado?"
-                                                   icon="pi pi-exclamation-triangle"/>
-                                    </p:commandButton>
                                 </p:column>
                             </p:dataTable>
 

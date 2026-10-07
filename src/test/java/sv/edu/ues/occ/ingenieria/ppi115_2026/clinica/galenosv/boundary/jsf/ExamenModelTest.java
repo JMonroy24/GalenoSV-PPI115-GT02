@@ -46,10 +46,10 @@ class ExamenModelTest {
     @Test
     void testInitYCargarDatos() {
         Examen examen = new Examen(UUID.randomUUID());
-        
+
         examenModel.init();
 
-        
+
         verifyNoInteractions(examenDAO);
     }
 
@@ -90,7 +90,7 @@ class ExamenModelTest {
 
     @Test
     void testGuardarCrear() {
-        
+
         examenModel.prepararNuevo();
         examenModel.getRegistroActual().setNombre("Hemograma");
         examenModel.getRegistroActual().setNombre("Registro válido");
@@ -106,7 +106,7 @@ class ExamenModelTest {
         Examen examen = new Examen(UUID.randomUUID());
         when(examenTipoExamenDAO.findByExamen(examen.getIdExamen()))
                 .thenReturn(Collections.emptyList());
-        
+
         examenModel.seleccionar(examen);
         examenModel.getRegistroActual().setNombre("Registro válido");
         examenModel.guardar();
@@ -201,7 +201,7 @@ class ExamenModelTest {
     @Test
     void testEliminar() {
         Examen examen = new Examen(UUID.randomUUID());
-        
+
         examenModel.eliminar(examen);
 
         verify(examenDAO).delete(examen);

@@ -39,12 +39,6 @@ public class ProcedimientoPasoSecuenciaDAO
         return em;
     }
 
-    @Override
-    protected java.util.List<String> getCamposBusqueda() {
-        return java.util.List.of("tipoSecuencia");
-    }
-
-
     /**
      * Consulta las relaciones de secuencia que parten del paso indicado.
      *
@@ -67,17 +61,16 @@ public class ProcedimientoPasoSecuenciaDAO
 
         return em.createQuery(cq).getResultList();
     }
-
-
-    @Override
-    protected java.util.List<String> getRelacionesCarga() {
-        return java.util.List.of("idProcedimientoPaso.idProcedimiento");
+    /** Una consulta para todas las relaciones PADRE → HIJO del procedimiento. */
+    public List<ProcedimientoPasoSecuencia> findByProcedimiento(UUID idProcedimiento) {
+        return em.createQuery("SELECT s FROM ProcedimientoPasoSecuencia s "
+                + "JOIN FETCH s.idProcedimientoPaso p "
+                + "WHERE p.idProcedimiento.idProcedimiento = :id", ProcedimientoPasoSecuencia.class)
+                .setParameter("id", idProcedimiento).getResultList();
     }
-
     public boolean existeSecuencia(UUID idPaso, UUID idReferencia, String tipo) {
         return existeSecuencia(idPaso, idReferencia, tipo, null);
     }
-
     public boolean existeSecuencia(UUID idPaso, UUID idReferencia, String tipo, UUID excluirId) {
         if (idPaso == null || idReferencia == null || tipo == null || tipo.isBlank()) return false;
         String jpql = "SELECT COUNT(s) FROM ProcedimientoPasoSecuencia s"
@@ -88,14 +81,5 @@ public class ProcedimientoPasoSecuenciaDAO
                 .setParameter("referencia", idReferencia).setParameter("tipo", tipo.trim().toLowerCase(java.util.Locale.ROOT));
         if (excluirId != null) query.setParameter("excluir", excluirId);
         return query.getSingleResult() > 0;
-    }
-
-    /** Grafo completo del procedimiento para validar ciclos dentro de una transacción. */
-    public List<ProcedimientoPasoSecuencia> findByProcedimiento(UUID idProcedimiento) {
-        if (idProcedimiento == null) return List.of();
-        return getEntityManager().createQuery("SELECT s FROM ProcedimientoPasoSecuencia s"
-                + " JOIN FETCH s.idProcedimientoPaso p WHERE p.idProcedimiento.idProcedimiento = :procedimiento"
-                + " ORDER BY s.idProcedimientoPasoSecuencia", ProcedimientoPasoSecuencia.class)
-                .setParameter("procedimiento", idProcedimiento).getResultList();
     }
 }

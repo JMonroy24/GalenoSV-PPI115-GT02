@@ -10,27 +10,27 @@
     <ui:define name="titulo">Roles de Persona</ui:define>
 
     <ui:define name="contenido">
-        
+
         <h:form id="frmPrincipal">
 <crud:crudTransaccional model="#{personaRolModel}"
                                 lazyModel="#{personaRolModel.lazyModel}"
                                 titulo="Roles de Persona">
-                                
+
             <p:column headerText="Persona">
                 <h:outputText value="#{registro.idPersona.nombres} #{registro.idPersona.apellidos}"/>
             </p:column>
-            
+
             <p:column headerText="Rol" sortBy="#{registro.idRol.nombre}">
                 <h:outputText value="#{registro.idRol.nombre}"/>
             </p:column>
-            
+
             <p:column headerText="Clínica" sortBy="#{registro.idClinica.nombre}">
                 <h:outputText value="#{registro.idClinica.nombre}"/>
             </p:column>
 
             <f:facet name="formulario">
                 <h:panelGrid columns="2" cellpadding="7" columnClasses="ui-grid-col-4,ui-grid-col-8" style="width:100%">
-                
+
                 <p:outputLabel value="Persona:" for="idPersona"/>
                 <p:autoComplete id="idPersona" disabled="#{personaRolModel.estadoModificar}" value="#{personaRolModel.registroActual.idPersona}"
                                 completeMethod="#{personaRolModel.completePersona}"
@@ -38,7 +38,7 @@
                                 converter="#{entityConverter}"
                                 forceSelection="true" required="true" scrollHeight="250"
                                 placeholder="Escriba un nombre para buscar..." label="Persona" requiredMessage="Complete el campo persona." minQueryLength="2"/>
-                
+
                 <p:outputLabel value="Rol:" for="idRol"/>
                 <p:selectOneMenu id="idRol" disabled="#{personaRolModel.estadoModificar}" value="#{personaRolModel.registroActual.idRol}"
                                  converter="#{entityConverter}" required="true" filter="true" label="Rol" requiredMessage="Complete el campo rol.">
@@ -46,7 +46,7 @@
                     <f:selectItems value="#{rolModel.rolesActivos}" var="r"
                                    itemLabel="#{r.nombre}" itemValue="#{r}"/>
                 </p:selectOneMenu>
-                
+
                 <p:outputLabel value="Clínica:" for="idClinica"/>
                 <p:selectOneMenu id="idClinica" disabled="#{personaRolModel.estadoModificar}" value="#{personaRolModel.registroActual.idClinica}"
                                  converter="#{entityConverter}" filter="true" label="Clínica" required="true" requiredMessage="Seleccione la clínica del rol.">
@@ -54,13 +54,13 @@
                     <f:selectItems value="#{clinicaModel.activos}" var="c"
                                    itemLabel="#{c.nombre}" itemValue="#{c}"/>
                 </p:selectOneMenu>
-                
+
                 </h:panelGrid>
             </f:facet>
-            
+
         </crud:crudTransaccional>
 </h:form>
-        
+
     </ui:define>
 
 </ui:composition>

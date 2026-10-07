@@ -75,7 +75,7 @@ public class ConsultaProcedimientoDAO extends DefaultDAO<ConsultaProcedimiento, 
     protected java.util.List<String> getRelacionesCarga() {
         return java.util.List.of("idConsulta.idPersonaRol.idPersona", "idConsulta.idPersonaRol.idRol", "idProcedimiento");
     }
-    
+
     public List<ConsultaProcedimiento> findByConsulta(UUID idConsulta) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<ConsultaProcedimiento> cq =

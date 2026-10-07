@@ -70,7 +70,7 @@ public class DocumentoDAO extends DefaultDAO<Documento, UUID> implements Seriali
         if (excluirId != null) query.setParameter("excluir", excluirId);
         return query.getSingleResult() > 0;
     }
-    
+
     public List<Documento> findByPersona(UUID idPersona) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Documento> cq = cb.createQuery(Documento.class);

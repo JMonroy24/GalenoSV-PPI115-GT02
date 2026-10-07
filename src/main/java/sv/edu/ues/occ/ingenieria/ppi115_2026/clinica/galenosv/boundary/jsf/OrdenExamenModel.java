@@ -143,4 +143,8 @@ public class OrdenExamenModel extends ModelTransaccional<OrdenExamen, UUID> impl
         ValidadorComun.requerido(registro.getIdConsultaProcedimientoPaso(), "Seleccione un paso de la consulta.");
     }
 
+
+    private ExamenResultado resultadoSeleccionado;
+    public ExamenResultado getResultadoSeleccionado() { return resultadoSeleccionado; }
+    public void setResultadoSeleccionado(ExamenResultado valor) { resultadoSeleccionado = valor; }
 }

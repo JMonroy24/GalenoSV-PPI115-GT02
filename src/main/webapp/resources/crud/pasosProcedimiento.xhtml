@@ -1,116 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
-                xmlns:h="jakarta.faces.html"
-                xmlns:f="jakarta.faces.core"
-                xmlns:ui="jakarta.faces.facelets"
-                xmlns:p="http://primefaces.org/ui">
-
-    <p:panel header="Pasos de: #{procedimientoModel.registroActual.nombre}"
-             style="margin-top:1rem"
-             rendered="#{procedimientoModel.registroActual != null}">
-
-        <p:dataTable value="#{procedimientoModel.pasos}" var="paso"
-                     emptyMessage="Este procedimiento aún no tiene pasos." size="small">
+                xmlns:h="jakarta.faces.html" xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets" xmlns:p="http://primefaces.org/ui">
+    <h:form id="frmPasos" rendered="#{procedimientoModel.estadoModificar}">
+        <p:toolbar id="accionesPaso">
+            <p:toolbarGroup>
+                <p:commandButton value="Nuevo paso" icon="pi pi-plus" action="#{procedimientoModel.nuevoPaso()}"
+                                 process="@this" update="@form" resetValues="true"/>
+                <p:commandButton value="Editar" icon="pi pi-pencil" action="#{procedimientoModel.editarPasoSeleccionado()}"
+                                 disabled="#{empty procedimientoModel.nodoPasoSeleccionado}"
+                                 process="@this" update="editorPaso :mensajes" resetValues="true"/>
+                <p:commandButton value="Eliminar" icon="pi pi-trash" action="#{procedimientoModel.eliminarPasoSeleccionado()}"
+                                 disabled="#{empty procedimientoModel.nodoPasoSeleccionado}"
+                                 process="@this" update="@form :mensajes" resetValues="true" styleClass="ui-button-danger"/>
+            </p:toolbarGroup>
+        </p:toolbar>
+        <p:treeTable id="arbol" value="#{procedimientoModel.arbolPasos}" var="paso" selectionMode="single"
+                     selection="#{procedimientoModel.nodoPasoSeleccionado}"
+                     emptyMessage="Este procedimiento aún no tiene pasos.">
+            <p:ajax event="select" process="@this" update="accionesPaso"/>
+            <p:ajax event="unselect" process="@this" update="accionesPaso"/>
             <p:column headerText="Nombre">
                 <h:outputText value="#{paso.nombre}"/>
+                <p:tag value="Inicial" rendered="#{procedimientoModel.esInicial(paso)}"/>
+                <p:tag value="Fin" severity="success" rendered="#{paso.indicaFin}"/>
             </p:column>
-            <p:column headerText="Rol">
-                <h:outputText value="#{paso.idRol.nombre}"/>
-            </p:column>
-            <p:column headerText="Fin">
-                <h:outputText value="#{paso.indicaFin eq true ? 'Sí' : 'No'}"/>
-            </p:column>
-            <p:column headerText="Acción" width="100">
-                <p:commandButton icon="pi pi-pencil" title="Editar paso"
-                                 styleClass="ui-button-warning"
-                                 action="#{procedimientoModel.procedimientoPasoModel.seleccionar(paso)}"
-                                 process="@this"
-                                 update="@form"
-                                 style="margin-right:0.5rem"/>
-                <p:commandButton icon="pi pi-trash" title="Quitar paso"
-                                 styleClass="ui-button-danger"
-                                 action="#{procedimientoModel.procedimientoPasoModel.eliminar(paso)}"
-                                 process="@this"
-                                 update="@form">
-                    <p:confirm header="Quitar paso"
-                               message="¿Desea eliminar este paso?"
-                               icon="pi pi-exclamation-triangle"/>
-                </p:commandButton>
-            </p:column>
-        </p:dataTable>
+            <p:column headerText="ID"><h:outputText value="#{paso.idProcedimientoPaso}"/></p:column>
+            <p:column headerText="A cargo de"><h:outputText value="#{paso.idRol.nombre}"/></p:column>
+            <p:column headerText="Procede de"><h:outputText value="#{procedimientoModel.procedeDe(paso)}"/></p:column>
+            <p:column headerText="Indica fin"><h:outputText value="#{paso.indicaFin ? 'Sí' : 'No'}"/></p:column>
+            <p:column headerText="Exámenes"><h:outputText value="#{procedimientoModel.examenesDe(paso)}"/></p:column>
 
-        <p:panelGrid columns="2" style="width:100%; margin-top:1rem">
-            
-            <p:outputLabel for="ppNombre" value="Nombre del paso:"/>
-            <p:inputText id="ppNombre"
-                         value="#{procedimientoPasoModel.registroActual.nombre}"
-                         required="true"
-                         requiredMessage="Ingrese el nombre del paso."
-                         maxlength="155" label="Nombre del paso"/>
+        </p:treeTable>
+        <p:panel id="editorPaso" header="#{procedimientoPasoModel.estadoModificar ? 'Editar paso' : 'Nuevo paso'}">
+            <p:panelGrid columns="2">
+                <p:outputLabel for="idPaso" value="ID"/>
+                <p:inputText id="idPaso" value="#{procedimientoPasoModel.registroActual.idProcedimientoPaso}" readonly="true"/>
+                <p:outputLabel for="nombrePaso" value="Nombre *"/>
+                <p:inputText id="nombrePaso" value="#{procedimientoPasoModel.registroActual.nombre}" required="true"
+                             requiredMessage="Ingrese el nombre del paso." maxlength="155"/>
+                <p:outputLabel for="rolPaso" value="A cargo de *"/>
+                <p:selectOneMenu id="rolPaso" value="#{procedimientoPasoModel.registroActual.idRol}"
+                                 converter="#{entityConverter}" required="true" requiredMessage="Seleccione un rol activo."
+                                 disabled="#{procedimientoPasoModel.estadoModificar}">
+                    <f:selectItem itemLabel="Seleccione un rol" itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{procedimientoPasoModel.rolesActivos}" var="rol" itemLabel="#{rol.nombre}" itemValue="#{rol}"/>
+                </p:selectOneMenu>
+                <p:outputLabel for="dependeDe" value="Depende de *"/>
+                <p:selectOneMenu id="dependeDe" value="#{procedimientoPasoModel.dependeDe}" converter="#{entityConverter}"
+                                 disabled="#{procedimientoPasoModel.estadoModificar or empty procedimientoPasoModel.pasosDependenciaDisponibles}">
+                    <f:selectItem itemLabel="#{empty procedimientoPasoModel.pasosDependenciaDisponibles ? 'Ninguno (paso inicial)' : 'Seleccione un paso'}"
+                                  itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{procedimientoPasoModel.pasosDependenciaDisponibles}" var="padre"
+                                   itemLabel="#{padre.nombre}" itemValue="#{padre}"/>
+                </p:selectOneMenu>
+                <p:outputLabel for="finPaso" value="Indica finalización"/>
+                <p:selectBooleanCheckbox id="finPaso" value="#{procedimientoPasoModel.registroActual.indicaFin}"/>
+            </p:panelGrid>
+            <p:panel id="panelExamenes" header="Exámenes del paso">
+                <p:selectOneMenu id="examenPaso" value="#{procedimientoPasoModel.examenSeleccionado}" converter="#{entityConverter}">
+                    <f:selectItem itemLabel="Seleccione un examen activo" itemValue="#{null}" noSelectionOption="true"/>
+                    <f:selectItems value="#{procedimientoPasoModel.examenesActivos}" var="examen"
+                                   itemLabel="#{examen.nombre}" itemValue="#{examen}"/>
+                </p:selectOneMenu>
+                <p:outputLabel for="observacionesExamen" value="Observaciones"/>
+                <p:inputTextarea id="observacionesExamen" value="#{procedimientoPasoModel.observacionesExamen}" rows="2"/>
+                <p:commandButton value="Agregar examen" icon="pi pi-plus" action="#{procedimientoPasoModel.agregarExamen()}"
+                                 process="@this examenPaso observacionesExamen" update="panelExamenes :mensajes"/>
+                <p:toolbar id="accionesExamen"><p:toolbarGroup>
+                <p:commandButton value="Eliminar seleccionado" action="#{procedimientoPasoModel.quitarExamenSeleccionado()}"
+                                 process="@this" update="panelExamenes :mensajes" disabled="#{empty procedimientoPasoModel.examenAsignadoSeleccionado}" styleClass="ui-button-danger"/>
+                </p:toolbarGroup></p:toolbar>
+                <p:dataTable id="examenes" value="#{procedimientoPasoModel.examenesAsignados}" var="asignacion"
+                             rowKey="#{asignacion.idProcedimientoPasoExamen}" selectionMode="single"
+                             selection="#{procedimientoPasoModel.examenAsignadoSeleccionado}"
+                             emptyMessage="Este paso aún no tiene exámenes.">
+                    <p:ajax event="rowSelect" process="@this" update="accionesExamen"/>
+                    <p:ajax event="rowUnselect" process="@this" update="accionesExamen"/>
+                    <p:column headerText="Examen"><h:outputText value="#{asignacion.idExamen.nombre}"/></p:column>
+                    <p:column headerText="Observaciones"><h:outputText value="#{asignacion.observaciones}"/></p:column>
+                </p:dataTable>
 
-            <p:outputLabel for="ppProcedimiento" value="Procedimiento:"/>
-            <p:selectOneMenu id="ppProcedimiento"
-                             disabled="#{procedimientoPasoModel.estadoModificar}" 
-                             value="#{procedimientoPasoModel.registroActual.idProcedimiento}"
-                             converter="#{entityConverter}"
-                             required="true"
-                             requiredMessage="Seleccione un procedimiento."
-                             filter="true" label="Procedimiento">
-                <f:selectItem itemLabel="Seleccione un procedimiento..."
-                              itemValue="#{null}"
-                              noSelectionOption="true"/>
-                <f:selectItems value="#{procedimientoModel.procedimientosActivos}"
-                               var="proc"
-                               itemLabel="#{proc.nombre}"
-                               itemValue="#{proc}"/>
-            </p:selectOneMenu>
-
-            <p:outputLabel for="ppRol" value="Rol:"/>
-            <p:selectOneMenu id="ppRol"
-                             disabled="#{procedimientoPasoModel.estadoModificar}" 
-                             value="#{procedimientoPasoModel.registroActual.idRol}"
-                             converter="#{entityConverter}"
-                             filter="true" label="Rol" required="true" requiredMessage="Seleccione un rol.">
-                <f:selectItem itemLabel="Seleccione un rol..."
-                              itemValue="#{null}"
-                              noSelectionOption="true"/>
-                <f:selectItems value="#{rolModel.rolesActivos}"
-                               var="rol"
-                               itemLabel="#{rol.nombre}"
-                               itemValue="#{rol}"/>
-            </p:selectOneMenu>
-            
-            <p:outputLabel for="ppDependeDe" value="Depende de:"/>
-            <p:selectOneMenu id="ppDependeDe"
-                             value="#{procedimientoPasoModel.pasoDependeDe}"
-                             converter="#{entityConverter}"
-                             filter="true" label="Depende de">
-                <f:selectItem itemLabel="Ninguno (Paso inicial)" itemValue="#{null}" noSelectionOption="true"/>
-                <f:selectItems value="#{procedimientoPasoModel.pasosDependeDeDisponibles}"
-                               var="pd" itemLabel="#{pd.nombre}" itemValue="#{pd}"/>
-            </p:selectOneMenu>
-
-            <p:outputLabel for="ppIndicaFin" value="Finaliza procedimiento:"/>
-            <p:selectBooleanCheckbox id="ppIndicaFin"
-                                     value="#{procedimientoPasoModel.registroActual.indicaFin}"/>
-
-            <h:outputText value=""/>
-            <h:panelGroup>
-                <p:commandButton value="#{procedimientoPasoModel.estadoModificar ? 'Actualizar paso' : 'Agregar paso'}" 
-                                 icon="#{procedimientoPasoModel.estadoModificar ? 'pi pi-save' : 'pi pi-plus'}"
-                                 styleClass="ui-button-success"
-                                 action="#{procedimientoPasoModel.guardar()}"
-                                 process="@this ppNombre ppProcedimiento ppRol ppDependeDe ppIndicaFin"
-                                 update="@form"/>
-                <p:commandButton value="Cancelar" icon="pi pi-times"
-                                 styleClass="ui-button-secondary" style="margin-left:0.5rem"
-                                 action="#{procedimientoPasoModel.prepararNuevo()}"
-                                 rendered="#{procedimientoPasoModel.estadoModificar}"
-                                 process="@this" update="@form">
-                     <!-- Override default cancelar to keep context of procedimiento -->
-                     <f:setPropertyActionListener target="#{procedimientoPasoModel.registroActual.idProcedimiento}" value="#{procedimientoModel.registroActual}" />
-                </p:commandButton>
-            </h:panelGroup>
-        </p:panelGrid>
-    </p:panel>
-
+            </p:panel>
+            <p:commandButton value="Guardar paso" action="#{procedimientoModel.guardarPaso()}"
+                             process="editorPaso" update="@form :mensajes"/>
+            <p:commandButton value="Cancelar paso" action="#{procedimientoModel.nuevoPaso()}"
+                             process="@this" update="@form" resetValues="true" styleClass="ui-button-secondary"/>
+        </p:panel>
+    </h:form>
 </ui:composition>

@@ -5,48 +5,50 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.io.Serializable;
 import java.util.Date;
-
 import java.util.List;
 import java.util.UUID;
-import jakarta.persistence.PrePersist;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Past;
 
 @Entity
 @Table(name = "persona")
+@NamedQueries({
+    @NamedQuery(name = "Persona.findAll", query = "SELECT p FROM Persona p"),
+    @NamedQuery(name = "Persona.findByNombres", query = "SELECT p FROM Persona p WHERE p.nombres = :nombres"),
+    @NamedQuery(name = "Persona.findByApellidos", query = "SELECT p FROM Persona p WHERE p.apellidos = :apellidos"),
+    @NamedQuery(name = "Persona.findByFechaNacimiento", query = "SELECT p FROM Persona p WHERE p.fechaNacimiento = :fechaNacimiento"),
+    @NamedQuery(name = "Persona.findByFechaCreacion", query = "SELECT p FROM Persona p WHERE p.fechaCreacion = :fechaCreacion")})
 public class Persona implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
-    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
+    @NotNull
     @Column(name = "id_persona")
     private UUID idPersona;
 
-    @NotBlank(message = "{persona.nombres.obligatorio}")
-    @Size(max = 255, message = "{persona.nombres.longitud}")
-    @Column(name = "nombres", nullable = false, length = 255)
+    @Size(max = 255)
+    @Column(name = "nombres")
     private String nombres;
 
-    @NotBlank(message = "{persona.apellidos.obligatorio}")
-    @Size(max = 255, message = "{persona.apellidos.longitud}")
-    @Column(name = "apellidos", nullable = false, length = 255)
+    @Size(max = 255)
+    @Column(name = "apellidos")
     private String apellidos;
 
-    @Past(message = "{persona.fechaNacimiento.pasada}")
     @Column(name = "fecha_nacimiento")
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaNacimiento;
 
-    @Column(name = "fecha_creacion", nullable = false, updatable = false)
+    @Column(name = "fecha_creacion")
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaCreacion;
 
@@ -58,14 +60,6 @@ public class Persona implements IdentificableEntity {
 
     @OneToMany(mappedBy = "idPersona", fetch = FetchType.LAZY)
     private List<PersonaRol> personaRolList;
-
-    /** Conserva fechas importadas y asigna la creación en todos los flujos JPA. */
-    @PrePersist
-    protected void asignarFechaCreacion() {
-        if (fechaCreacion == null) {
-            fechaCreacion = new Date();
-        }
-    }
 
     public Persona() {
     }
@@ -139,11 +133,6 @@ public class Persona implements IdentificableEntity {
     }
 
     @Override
-    public String getIdKey() {
-        return idPersona != null ? idPersona.toString() : "";
-    }
-
-    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idPersona != null ? idPersona.hashCode() : 0);
@@ -166,4 +155,7 @@ public class Persona implements IdentificableEntity {
     public String toString() {
         return "entity.Persona[ idPersona=" + idPersona + " ]";
     }
+
+    @Override
+    public String getIdKey() { return idPersona == null ? null : idPersona.toString(); }
 }

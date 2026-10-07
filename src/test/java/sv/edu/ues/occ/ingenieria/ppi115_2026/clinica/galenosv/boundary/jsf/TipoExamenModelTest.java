@@ -70,7 +70,7 @@ public class TipoExamenModelTest {
 
     @Test
     public void testGuardarCrear() {
-        
+
         tipoExamenModel.prepararNuevo();
         tipoExamenModel.getRegistroActual().setNombre("Hemograma");
 
@@ -84,7 +84,7 @@ public class TipoExamenModelTest {
 
     @Test
     public void testGuardarModificar() {
-        
+
         TipoExamen te = new TipoExamen(UUID.randomUUID());
         tipoExamenModel.seleccionar(te);
 
@@ -97,7 +97,7 @@ public class TipoExamenModelTest {
 
     @Test
     public void testEliminar() {
-        
+
         TipoExamen te = new TipoExamen(UUID.randomUUID());
         tipoExamenModel.eliminar(te);
 

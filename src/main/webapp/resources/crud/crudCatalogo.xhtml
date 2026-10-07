@@ -10,6 +10,7 @@
         <cc:attribute name="model" required="true" />
         <cc:attribute name="titulo" required="true" type="java.lang.String" />
         <cc:facet     name="formulario" />
+        <cc:facet name="relaciones"/>
     </cc:interface>
 
     <cc:implementation>
@@ -67,6 +68,7 @@
                     <cc:renderFacet name="formulario"/>
                 </p:outputPanel>
 
+                <cc:renderFacet name="relaciones"/>
                 <p:divider/>
 
                 <!-- ─── Botones Guardar / Cancelar ─── -->

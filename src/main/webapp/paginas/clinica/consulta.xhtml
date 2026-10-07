@@ -35,7 +35,7 @@
             </p:column>
 
             <p:column headerText="Información">
-                <h:outputText value="#{consultaModel.getDocumentosPersona(registro.idPersonaRol.idPersona.idPersona)}"/>
+                <h:outputText value="#{consultaModel.getInformacionPaciente(registro.idPersonaRol)}"/>
             </p:column>
 
             <p:column headerText="Rol">
@@ -61,15 +61,8 @@
             <p:column headerText="Observaciones">
                 <h:outputText value="#{registro.observaciones}"/>
             </p:column>
-            
-             <f:facet name="accionesExtra">
-    <p:button outcome="/paginas/clinica/consultaProcedimiento"
-              icon="pi pi-arrow-right"
-              title="Ver procedimientos de esta consulta">
-        <f:param name="idConsulta" value="#{registro.idConsulta}"/>
-        <f:param name="autoOpen" value="true"/>
-    </p:button>
-</f:facet>
+
+
 
             <f:facet name="formulario">
                 <p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank ui-fluid" columnClasses="ui-grid-col-4,ui-grid-col-8">
@@ -82,7 +75,28 @@
                                     itemValue="#{pr}"
                                     converter="#{entityConverter}"
                                     forceSelection="true" required="true" requiredMessage="Seleccione una persona/rol." scrollHeight="250"
-                                    placeholder="Busque un paciente de la clínica actual..." label="Persona / Rol" minQueryLength="2"/>
+                                    placeholder="Busque un paciente de la clínica actual..." label="Persona / Rol" minQueryLength="2"
+                                    panelStyleClass="pacientes-sugerencias">
+                        <p:ajax event="itemSelect" process="@this" update="infoPaciente"/>
+                        <p:ajax event="clear" process="@this" update="infoPaciente"/>
+                        <p:column headerText="Persona">
+                            <h:outputText value="#{pr.idPersona.nombres} #{pr.idPersona.apellidos}"/>
+                        </p:column>
+                        <p:column headerText="Fecha de nacimiento">
+                            <h:outputText value="#{pr.idPersona.fechaNacimiento}" rendered="#{not empty pr.idPersona.fechaNacimiento}">
+                                <f:convertDateTime pattern="dd/MM/yyyy" timeZone="America/El_Salvador"/>
+                            </h:outputText>
+                            <h:outputText value="Sin registrar" rendered="#{empty pr.idPersona.fechaNacimiento}"/>
+                        </p:column>
+                        <p:column headerText="Documentos">
+                            <h:outputText value="#{empty consultaModel.getDocumentosPersona(pr.idPersona.idPersona) ? 'Sin documentos registrados' : consultaModel.getDocumentosPersona(pr.idPersona.idPersona)}"/>
+                        </p:column>
+                    </p:autoComplete>
+
+                    <h:outputText value="Información:"/>
+                    <p:outputPanel id="infoPaciente">
+                        <h:outputText value="#{consultaModel.getInformacionPaciente(consultaModel.registroActual.idPersonaRol)}"/>
+                    </p:outputPanel>
 
                     <p:outputLabel value="Fecha de inicio:" for="fechaInicio"/>
                     <p:datePicker id="fechaInicio" value="#{consultaModel.registroActual.fechaInicio}"
@@ -116,9 +130,25 @@
                     <p:outputPanel id="pnlRelConsulta">
 
                         <p:panel header="Procedimientos de la consulta">
+                            <p:toolbar id="accionesCp"><p:toolbarGroup><p:commandButton disabled="#{empty consultaModel.cpSeleccionado}" icon="pi pi-list" value="Ver pasos"
+                                                     styleClass="ui-button-info mr-1"
+                                                     action="#{consultaModel.seleccionarProcedimiento(consultaModel.cpSeleccionado)}"
+                                                     process="@this"
+                                                     update="pnlRelConsulta"/>
+                                    <p:commandButton disabled="#{empty consultaModel.cpSeleccionado}" icon="pi pi-trash" value="Eliminar seleccionado"
+                                                     styleClass="ui-button-danger"
+                                                     action="#{consultaModel.quitarProcedimiento(consultaModel.cpSeleccionado)}"
+                                                     process="@this"
+                                                     update="pnlRelConsulta">
+                                        <p:confirm header="Quitar procedimiento"
+                                                   message="¿Desea quitar este procedimiento de la consulta?"
+                                                   icon="pi pi-exclamation-triangle"/>
+                                    </p:commandButton></p:toolbarGroup></p:toolbar>
                             <p:dataTable value="#{consultaModel.procedimientos}" var="cp"
                                          emptyMessage="La consulta no tiene procedimientos." size="small"
-                                         rowStyleClass="#{cp.idConsultaProcedimiento eq consultaModel.procedimientoActivo.idConsultaProcedimiento ? 'ui-state-highlight' : null}">
+                                         rowStyleClass="#{cp.idConsultaProcedimiento eq consultaModel.procedimientoActivo.idConsultaProcedimiento ? 'ui-state-highlight' : null}" selectionMode="single" selection="#{consultaModel.cpSeleccionado}" rowKey="#{cp.idKey}">
+                                <p:ajax event="rowSelect" update="accionesCp"/>
+                                <p:ajax event="rowUnselect" update="accionesCp"/>
                                 <p:column headerText="Procedimiento">
                                     <h:outputText value="#{cp.idProcedimiento.nombre}"/>
                                 </p:column>
@@ -135,24 +165,11 @@
                                 <p:column headerText="Observaciones">
                                     <h:outputText value="#{cp.observaciones}"/>
                                 </p:column>
+                                <p:column headerText="Primer paso y responsable">
+                                    <h:outputText value="#{consultaModel.getDetallePrimerPaso(cp)}"/>
+                                </p:column>
                                 <p:column headerText="Paso actual" width="220">
                                     <h:outputText value="#{consultaModel.getEstadoPasoActual(cp)}"/>
-                                </p:column>
-                                <p:column headerText="Acción" width="110">
-                                    <p:commandButton icon="pi pi-list" title="Ver / editar pasos"
-                                                     styleClass="ui-button-info mr-1"
-                                                     action="#{consultaModel.seleccionarProcedimiento(cp)}"
-                                                     process="@this"
-                                                     update="pnlRelConsulta"/>
-                                    <p:commandButton icon="pi pi-trash" title="Quitar procedimiento"
-                                                     styleClass="ui-button-danger"
-                                                     action="#{consultaModel.quitarProcedimiento(cp)}"
-                                                     process="@this"
-                                                     update="pnlRelConsulta">
-                                        <p:confirm header="Quitar procedimiento"
-                                                   message="¿Desea quitar este procedimiento de la consulta?"
-                                                   icon="pi pi-exclamation-triangle"/>
-                                    </p:commandButton>
                                 </p:column>
                             </p:dataTable>
 
@@ -165,7 +182,20 @@
                                                   noSelectionOption="true"/>
                                     <f:selectItems value="#{procedimientoModel.procedimientosActivos}" var="proc"
                                                    itemLabel="#{proc.nombre}" itemValue="#{proc}"/>
+                                    <p:ajax process="@this" listener="#{consultaModel.actualizarInicioPrevisto}" update="detalleInicio"/>
                                 </p:selectOneMenu>
+
+                                <h:outputText value="Primer paso y responsable:"/>
+                                <p:outputPanel id="detalleInicio">
+                                    <h:outputText value="Seleccione un procedimiento." rendered="#{empty consultaModel.procedimientoNuevo.idProcedimiento}"/>
+                                    <h:outputText value="Este procedimiento no tiene un paso inicial definido." rendered="#{not empty consultaModel.procedimientoNuevo.idProcedimiento and empty consultaModel.pasoInicialPrevisto}"/>
+                                    <p:outputPanel rendered="#{not empty consultaModel.pasoInicialPrevisto}">
+                                        <h:outputText value="Paso: #{consultaModel.pasoInicialPrevisto.nombre}"/><br/>
+                                        <h:outputText value="A cargo de: #{consultaModel.pasoInicialPrevisto.idRol.nombre}"/><br/>
+                                        <h:outputText value="Persona: #{consultaModel.nombreResponsableInicial}"/>
+                                        <h:outputText value=" (No hay una persona con ese rol en la clínica actual.)" rendered="#{empty consultaModel.responsableInicialPrevisto}"/>
+                                    </p:outputPanel>
+                                </p:outputPanel>
 
                                 <p:outputLabel for="cpInicio" value="Fecha de inicio:"/>
                                 <p:datePicker id="cpInicio" value="#{consultaModel.procedimientoNuevo.fechaInicio}"
@@ -194,8 +224,19 @@
                                  style="margin-top:1rem"
                                  rendered="#{consultaModel.procedimientoActivo != null}">
 
+                            <p:toolbar id="accionesPaso"><p:toolbarGroup><p:commandButton disabled="#{empty consultaModel.pasoSeleccionado}" icon="pi pi-trash" value="Eliminar seleccionado"
+                                                     styleClass="ui-button-danger"
+                                                     action="#{consultaModel.quitarPaso(consultaModel.pasoSeleccionado)}"
+                                                     process="@this"
+                                                     update="pnlRelConsulta">
+                                        <p:confirm header="Quitar paso"
+                                                   message="¿Desea quitar este paso?"
+                                                   icon="pi pi-exclamation-triangle"/>
+                                    </p:commandButton></p:toolbarGroup></p:toolbar>
                             <p:dataTable value="#{consultaModel.pasos}" var="paso"
-                                         emptyMessage="Este procedimiento aún no tiene pasos." size="small">
+                                         emptyMessage="Este procedimiento aún no tiene pasos." size="small" selectionMode="single" selection="#{consultaModel.pasoSeleccionado}" rowKey="#{paso.idKey}">
+                                <p:ajax event="rowSelect" update="accionesPaso"/>
+                                <p:ajax event="rowUnselect" update="accionesPaso"/>
                                 <p:column headerText="Responsable">
                                     <h:outputText value="#{paso.idPersonaRol.idPersona.nombres} #{paso.idPersonaRol.idPersona.apellidos}"/>
                                 </p:column>
@@ -214,17 +255,6 @@
                                 </p:column>
                                 <p:column headerText="Estado" width="110">
                                     <h:outputText value="#{paso.estado}"/>
-                                </p:column>
-                                <p:column headerText="Acción" width="70">
-                                    <p:commandButton icon="pi pi-trash" title="Quitar paso"
-                                                     styleClass="ui-button-danger"
-                                                     action="#{consultaModel.quitarPaso(paso)}"
-                                                     process="@this"
-                                                     update="pnlRelConsulta">
-                                        <p:confirm header="Quitar paso"
-                                                   message="¿Desea quitar este paso?"
-                                                   icon="pi pi-exclamation-triangle"/>
-                                    </p:commandButton>
                                 </p:column>
                             </p:dataTable>
 

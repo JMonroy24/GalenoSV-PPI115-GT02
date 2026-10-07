@@ -7,34 +7,38 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
-import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "procedimiento_paso")
+@NamedQueries({
+    @NamedQuery(name = "ProcedimientoPaso.findAll", query = "SELECT p FROM ProcedimientoPaso p"),
+    @NamedQuery(name = "ProcedimientoPaso.findByNombre", query = "SELECT p FROM ProcedimientoPaso p WHERE p.nombre = :nombre"),
+    @NamedQuery(name = "ProcedimientoPaso.findByIndicaFin", query = "SELECT p FROM ProcedimientoPaso p WHERE p.indicaFin = :indicaFin")})
 public class ProcedimientoPaso implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
-    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
+    @NotNull
     @Column(name = "id_procedimiento_paso")
     private UUID idProcedimientoPaso;
 
-    @NotBlank(message = "{procedimientoPaso.nombre.obligatorio}")
-    @Size(max = 155, message = "{procedimientoPaso.nombre.longitud}")
-    @Column(name = "nombre", nullable = false, length = 155)
+    @Size(max = 155)
+    @Column(name = "nombre")
     private String nombre;
 
-    @NotNull(message = "{procedimientoPaso.indicaFin.obligatorio}")
-    @Column(name = "indica_fin", nullable = false)
-    private Boolean indicaFin = false;
+    @Column(name = "indica_fin")
+    private Boolean indicaFin;
 
     @OneToMany(mappedBy = "idProcedimientoPaso", fetch = FetchType.LAZY)
     private List<ProcedimientoPasoSecuencia> procedimientoPasoSecuenciaList;
@@ -42,9 +46,8 @@ public class ProcedimientoPaso implements IdentificableEntity {
     @OneToMany(mappedBy = "idProcedimientoPaso", fetch = FetchType.LAZY)
     private List<ProcedimientoPasoExamen> procedimientoPasoExamenList;
 
-    @NotNull(message = "{procedimientoPaso.idProcedimiento.obligatorio}")
-    @JoinColumn(name = "id_procedimiento", referencedColumnName = "id_procedimiento", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_procedimiento", referencedColumnName = "id_procedimiento")
+    @ManyToOne(fetch = FetchType.LAZY)
     private Procedimiento idProcedimiento;
 
     @JoinColumn(name = "id_rol", referencedColumnName = "id_rol")
@@ -115,11 +118,6 @@ public class ProcedimientoPaso implements IdentificableEntity {
     }
 
     @Override
-    public String getIdKey() {
-        return idProcedimientoPaso != null ? idProcedimientoPaso.toString() : "";
-    }
-
-    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idProcedimientoPaso != null ? idProcedimientoPaso.hashCode() : 0);
@@ -142,4 +140,7 @@ public class ProcedimientoPaso implements IdentificableEntity {
     public String toString() {
         return "entity.ProcedimientoPaso[ idProcedimientoPaso=" + idProcedimientoPaso + " ]";
     }
+
+    @Override
+    public String getIdKey() { return idProcedimientoPaso == null ? null : idProcedimientoPaso.toString(); }
 }

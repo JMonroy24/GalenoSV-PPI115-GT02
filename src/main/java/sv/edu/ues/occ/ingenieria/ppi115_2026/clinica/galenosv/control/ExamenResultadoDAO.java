@@ -46,7 +46,7 @@ public class ExamenResultadoDAO extends DefaultDAO<ExamenResultado, UUID> implem
     protected java.util.List<String> getRelacionesCarga() {
         return java.util.List.of("idOrdenExamen.idConsultaProcedimientoPaso.idConsultaProcedimiento.idProcedimiento");
     }
-    
+
    public List<ExamenResultado> findByOrdenExamen(UUID idOrdenExamen) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<ExamenResultado> cq = cb.createQuery(ExamenResultado.class);

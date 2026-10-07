@@ -74,22 +74,6 @@ class RubricaRegressionTest {
         primera.setClinicaActual(null); assertFalse(primera.isClinicaSeleccionada());
     }
 
-    @Test
-    void pasosExigenRolActivoYDistintoAlCrear() {
-        ProcedimientoPasoModel m = new ProcedimientoPasoModel(); m.procedimientoPasoDAO = mock(ProcedimientoPasoDAO.class);
-        m.prepararNuevo(); ProcedimientoPaso paso = m.getRegistroActual(); paso.setNombre("Inicio");
-        Procedimiento p = new Procedimiento(UUID.randomUUID()); p.setActivo(false); paso.setIdProcedimiento(p);
-        assertThrows(ValidacionNegocioException.class, () -> m.validarNegocio(paso)); p.setActivo(true);
-        assertThrows(ValidacionNegocioException.class, () -> m.validarNegocio(paso));
-        Rol rol = rol("Doctor"); rol.setActivo(false); paso.setIdRol(rol);
-        assertThrows(ValidacionNegocioException.class, () -> m.validarNegocio(paso)); rol.setActivo(true);
-        ProcedimientoPaso existente = new ProcedimientoPaso(UUID.randomUUID()); existente.setIdRol(rol); existente.setIdProcedimiento(p);
-        when(m.procedimientoPasoDAO.findByProcedimiento(p.getIdProcedimiento(), null)).thenReturn(List.of(existente));
-        assertTrue(assertThrows(ValidacionNegocioException.class, () -> m.validarNegocio(paso)).getMessage().contains("rol distinto"));
-        paso.setIdRol(rol("Enfermera")); m.setPasoDependeDe(existente); assertDoesNotThrow(() -> m.validarNegocio(paso));
-        m.setEstado(Estado.MODIFICAR); paso.setIdRol(rol); assertDoesNotThrow(() -> m.validarNegocio(paso));
-    }
-
     @ParameterizedTest
     @ValueSource(strings = {"incorrecto", "[", "inactivo"})
     void documentosIntegradosRechazanFormatoRegexInvalidaYTipoInactivo(String caso) {

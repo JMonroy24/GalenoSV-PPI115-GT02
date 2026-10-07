@@ -1,65 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui:composition template="/WEB-INF/templates/template.xhtml"
-                xmlns="http://www.w3.org/1999/xhtml"
-                xmlns:h="jakarta.faces.html"
-                xmlns:f="jakarta.faces.core"
-                xmlns:ui="jakarta.faces.facelets"
-                xmlns:p="http://primefaces.org/ui"
-                xmlns:crud="jakarta.faces.composite/crud">
-
+                xmlns="http://www.w3.org/1999/xhtml" xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core" xmlns:ui="jakarta.faces.facelets" xmlns:p="http://primefaces.org/ui">
     <ui:define name="titulo">Procedimientos</ui:define>
-
     <ui:define name="contenido">
-        <h:form id="frmPrincipal">
-<crud:crudTransaccional model="#{procedimientoModel}" lazyModel="#{procedimientoModel.lazyModel}"
-                           titulo="Procedimientos">
+        <p:growl id="mensajes" showDetail="true"><p:autoUpdate/></p:growl>
+        <h:form id="frmLista">
+            <p:panel header="Procedimientos">
+                <p:toolbar id="accionesProcedimiento">
+                    <p:toolbarGroup>
+                        <p:commandButton value="Nuevo procedimiento" icon="pi pi-plus" action="#{procedimientoModel.prepararNuevo()}"
+                                         process="@this" update="@form :detalle" resetValues="true"/>
+                        <p:commandButton value="Editar" icon="pi pi-pencil" action="#{procedimientoModel.editarSeleccionado()}"
+                                         disabled="#{empty procedimientoModel.procedimientoSeleccionado}"
+                                         process="@this" update=":detalle :mensajes" resetValues="true"/>
+                        <p:commandButton value="Eliminar" icon="pi pi-trash" action="#{procedimientoModel.eliminarSeleccionado()}"
+                                         disabled="#{empty procedimientoModel.procedimientoSeleccionado}"
+                                         process="@this" update="@form :detalle :mensajes" resetValues="true" styleClass="ui-button-danger"/>
+                    </p:toolbarGroup>
+                </p:toolbar>
+                <p:dataTable id="tablaProcedimientos" value="#{procedimientoModel.registros}" var="registro"
+                             selectionMode="single" selection="#{procedimientoModel.procedimientoSeleccionado}"
+                             rowKey="#{registro.idProcedimiento}" emptyMessage="No se encontraron registros.">
+                    <p:ajax event="rowSelect" process="@this" update="accionesProcedimiento"/>
+                    <p:ajax event="rowUnselect" process="@this" update="accionesProcedimiento"/>
+                    <p:column headerText="Nombre"><h:outputText value="#{registro.nombre}"/></p:column>
+                    <p:column headerText="Activo"><h:outputText value="#{registro.activo ? 'Sí' : 'No'}"/></p:column>
+                    <p:column headerText="Observaciones"><h:outputText value="#{registro.observaciones}"/></p:column>
 
-            <p:column headerText="Nombre" sortBy="#{registro.nombre}">
-                <h:outputText value="#{registro.nombre}"/>
-            </p:column>
-
-            <p:column headerText="Activo">
-                <h:outputText value="#{registro.activo eq true ? 'Sí' : 'No'}"/>
-            </p:column>
-
-            <p:column headerText="Observaciones" sortBy="#{registro.observaciones}">
-                <h:outputText value="#{registro.observaciones}"/>
-            </p:column>
-
-            <f:facet name="formulario">
-                <p:outputLabel for="nombre" value="Nombre:"/>
-                <p:inputText id="nombre"
-                             value="#{procedimientoModel.registroActual.nombre}"
-                             required="true"
-                             requiredMessage="Ingrese el nombre del procedimiento."
-                             maxlength="155" label="Nombre"/>
-
-                <p:outputLabel for="activo" value="Activo:"/>
-                <p:selectBooleanCheckbox id="activo"
-                                         value="#{procedimientoModel.registroActual.activo}"/>
-
-                <p:outputLabel for="observaciones"
-                               value="Observaciones:"/>
-                <p:inputTextarea id="observaciones"
-                                 value="#{procedimientoModel.registroActual.observaciones}"
-                                 rows="3"
-                                 autoResize="false" label="Observaciones" maxlength="2000"/>
-            </f:facet>
-
-            <f:facet name="relaciones">
-
-                <p:outputPanel rendered="#{procedimientoModel.estadoCrear}">
-                    <h:outputText value="Guarde el procedimiento para agregar pasos."/>
-                </p:outputPanel>
-
-                <p:outputPanel rendered="#{procedimientoModel.estadoModificar}">
+                </p:dataTable>
+            </p:panel>
+        </h:form>
+        <p:outputPanel id="detalle">
+            <p:tabView id="pestanas" activeIndex="#{procedimientoModel.pestanaActiva}" rendered="#{not procedimientoModel.estadoNinguno}">
+                <p:ajax event="tabChange"/>
+                <p:tab title="Detalle">
+                    <h:form id="frmProcedimiento">
+                        <p:panelGrid columns="2">
+                            <p:outputLabel for="nombre" value="Nombre *"/>
+                            <p:inputText id="nombre" value="#{procedimientoModel.registroActual.nombre}" required="true" maxlength="155"/>
+                            <p:outputLabel for="activo" value="Activo"/>
+                            <p:selectBooleanCheckbox id="activo" value="#{procedimientoModel.registroActual.activo}"/>
+                            <p:outputLabel for="observaciones" value="Observaciones"/>
+                            <p:inputTextarea id="observaciones" value="#{procedimientoModel.registroActual.observaciones}" rows="3"/>
+                        </p:panelGrid>
+                        <p:commandButton value="Guardar procedimiento" action="#{procedimientoModel.guardar()}"
+                                         process="@form" update=":frmLista :detalle :mensajes"/>
+                        <p:commandButton value="Cancelar" action="#{procedimientoModel.cancelar()}"
+                                         process="@this" update=":detalle" resetValues="true"/>
+                    </h:form>
+                </p:tab>
+                <p:tab title="Pasos" disabled="#{procedimientoModel.estadoCrear}">
                     <ui:include src="/resources/crud/pasosProcedimiento.xhtml"/>
-                </p:outputPanel>
-
-            </f:facet>
-
-        </crud:crudTransaccional>
-</h:form>
+                </p:tab>
+            </p:tabView>
+        </p:outputPanel>
     </ui:define>
-
 </ui:composition>

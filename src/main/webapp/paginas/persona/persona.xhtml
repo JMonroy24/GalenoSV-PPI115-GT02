@@ -31,6 +31,12 @@
                 </h:outputText>
             </p:column>
 
+            <p:column headerText="Fecha de creación" sortBy="#{registro.fechaCreacion}">
+                <h:outputText value="#{registro.fechaCreacion}">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
+                </h:outputText>
+            </p:column>
+
             <f:facet name="formulario">
                 <h:panelGrid columns="2" cellpadding="7" columnClasses="ui-grid-col-4,ui-grid-col-8" style="width:100%">
 
@@ -39,6 +45,11 @@
 
                     <p:outputLabel value="Apellidos:" for="apellidos"/>
                     <p:inputText id="apellidos" value="#{personaModel.registroActual.apellidos}" required="true"/>
+
+                    <h:outputText value="Fecha de creación:"/>
+                    <h:outputText value="#{personaModel.registroActual.fechaCreacion}">
+                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
+                    </h:outputText>
 
                     <p:outputLabel value="Fecha de Nacimiento:" for="fechaNacimiento"/>
                     <p:datePicker id="fechaNacimiento" value="#{personaModel.registroActual.fechaNacimiento}" pattern="dd/MM/yyyy" showIcon="true"/>
@@ -58,8 +69,19 @@
 
                         <p:tab title="Documentos">
                             <p:outputPanel id="pnlDocumentos">
-                                <p:dataTable value="#{personaModel.documentos}" var="doc"
-                                             emptyMessage="La persona no tiene documentos." size="small">
+                                <p:toolbar id="accionesDoc"><p:toolbarGroup><p:commandButton disabled="#{empty personaModel.docSeleccionado}" icon="pi pi-trash" value="Eliminar seleccionado"
+                                                         styleClass="ui-button-danger"
+                                                         action="#{personaModel.quitarDocumento(personaModel.docSeleccionado)}"
+                                                         process="@this"
+                                                         update="pnlDocumentos">
+                                            <p:confirm header="Quitar documento"
+                                                       message="¿Desea quitar este documento?"
+                                                       icon="pi pi-exclamation-triangle"/>
+                                        </p:commandButton></p:toolbarGroup></p:toolbar>
+                            <p:dataTable value="#{personaModel.documentos}" var="doc"
+                                             emptyMessage="La persona no tiene documentos." size="small" selectionMode="single" selection="#{personaModel.docSeleccionado}" rowKey="#{doc.idKey}">
+                                <p:ajax event="rowSelect" update="accionesDoc"/>
+                                <p:ajax event="rowUnselect" update="accionesDoc"/>
                                     <p:column headerText="Tipo">
                                         <h:outputText value="#{doc.idTipoDocumento.nombre}"/>
                                     </p:column>
@@ -68,17 +90,6 @@
                                     </p:column>
                                     <p:column headerText="Ruta física">
                                         <h:outputText value="#{doc.rutaFisica}"/>
-                                    </p:column>
-                                    <p:column headerText="Acción" width="70">
-                                        <p:commandButton icon="pi pi-trash" title="Quitar documento"
-                                                         styleClass="ui-button-danger"
-                                                         action="#{personaModel.quitarDocumento(doc)}"
-                                                         process="@this"
-                                                         update="pnlDocumentos">
-                                            <p:confirm header="Quitar documento"
-                                                       message="¿Desea quitar este documento?"
-                                                       icon="pi pi-exclamation-triangle"/>
-                                        </p:commandButton>
                                     </p:column>
                                 </p:dataTable>
 
@@ -111,24 +122,24 @@
 
                         <p:tab title="Medios de contacto">
                             <p:outputPanel id="pnlMedios">
-                                <p:dataTable value="#{personaModel.mediosContacto}" var="medio"
-                                             emptyMessage="La persona no tiene medios de contacto." size="small">
-                                    <p:column headerText="Tipo">
-                                        <h:outputText value="#{medio.idTipoMedioContacto.nombre}"/>
-                                    </p:column>
-                                    <p:column headerText="Valor">
-                                        <h:outputText value="#{medio.valor}"/>
-                                    </p:column>
-                                    <p:column headerText="Acción" width="70">
-                                        <p:commandButton icon="pi pi-trash" title="Quitar medio de contacto"
+                                <p:toolbar id="accionesMedio"><p:toolbarGroup><p:commandButton disabled="#{empty personaModel.medioSeleccionado}" icon="pi pi-trash" value="Eliminar seleccionado"
                                                          styleClass="ui-button-danger"
-                                                         action="#{personaModel.quitarMedioContacto(medio)}"
+                                                         action="#{personaModel.quitarMedioContacto(personaModel.medioSeleccionado)}"
                                                          process="@this"
                                                          update="pnlMedios">
                                             <p:confirm header="Quitar medio de contacto"
                                                        message="¿Desea quitar este medio de contacto?"
                                                        icon="pi pi-exclamation-triangle"/>
-                                        </p:commandButton>
+                                        </p:commandButton></p:toolbarGroup></p:toolbar>
+                            <p:dataTable value="#{personaModel.mediosContacto}" var="medio"
+                                             emptyMessage="La persona no tiene medios de contacto." size="small" selectionMode="single" selection="#{personaModel.medioSeleccionado}" rowKey="#{medio.idKey}">
+                                <p:ajax event="rowSelect" update="accionesMedio"/>
+                                <p:ajax event="rowUnselect" update="accionesMedio"/>
+                                    <p:column headerText="Tipo">
+                                        <h:outputText value="#{medio.idTipoMedioContacto.nombre}"/>
+                                    </p:column>
+                                    <p:column headerText="Valor">
+                                        <h:outputText value="#{medio.valor}"/>
                                     </p:column>
                                 </p:dataTable>
 
@@ -158,24 +169,24 @@
 
                         <p:tab title="Roles">
                             <p:outputPanel id="pnlRoles">
-                                <p:dataTable value="#{personaModel.roles}" var="rol"
-                                             emptyMessage="La persona no tiene roles asignados." size="small">
-                                    <p:column headerText="Rol">
-                                        <h:outputText value="#{rol.idRol.nombre}"/>
-                                    </p:column>
-                                    <p:column headerText="Clínica">
-                                        <h:outputText value="#{rol.idClinica.nombre}"/>
-                                    </p:column>
-                                    <p:column headerText="Acción" width="70">
-                                        <p:commandButton icon="pi pi-trash" title="Quitar rol"
+                                <p:toolbar id="accionesRol"><p:toolbarGroup><p:commandButton disabled="#{empty personaModel.rolSeleccionado}" icon="pi pi-trash" value="Eliminar seleccionado"
                                                          styleClass="ui-button-danger"
-                                                         action="#{personaModel.quitarRol(rol)}"
+                                                         action="#{personaModel.quitarRol(personaModel.rolSeleccionado)}"
                                                          process="@this"
                                                          update="pnlRoles">
                                             <p:confirm header="Quitar rol"
                                                        message="¿Desea quitar este rol?"
                                                        icon="pi pi-exclamation-triangle"/>
-                                        </p:commandButton>
+                                        </p:commandButton></p:toolbarGroup></p:toolbar>
+                            <p:dataTable value="#{personaModel.roles}" var="rol"
+                                             emptyMessage="La persona no tiene roles asignados." size="small" selectionMode="single" selection="#{personaModel.rolSeleccionado}" rowKey="#{rol.idKey}">
+                                <p:ajax event="rowSelect" update="accionesRol"/>
+                                <p:ajax event="rowUnselect" update="accionesRol"/>
+                                    <p:column headerText="Rol">
+                                        <h:outputText value="#{rol.idRol.nombre}"/>
+                                    </p:column>
+                                    <p:column headerText="Clínica">
+                                        <h:outputText value="#{rol.idClinica.nombre}"/>
                                     </p:column>
                                 </p:dataTable>
 

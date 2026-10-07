@@ -70,7 +70,7 @@ public class TipoMedioContactoModelTest {
 
     @Test
     public void testGuardarCrear() {
-        
+
         tipoMedioContactoModel.prepararNuevo();
         tipoMedioContactoModel.getRegistroActual().setNombre("Telefono");
 
@@ -84,7 +84,7 @@ public class TipoMedioContactoModelTest {
 
     @Test
     public void testGuardarModificar() {
-        
+
         TipoMedioContacto tmc = new TipoMedioContacto(UUID.randomUUID());
         tipoMedioContactoModel.seleccionar(tmc);
 
@@ -97,7 +97,7 @@ public class TipoMedioContactoModelTest {
 
     @Test
     public void testEliminar() {
-        
+
         TipoMedioContacto tmc = new TipoMedioContacto(UUID.randomUUID());
         tipoMedioContactoModel.eliminar(tmc);
 

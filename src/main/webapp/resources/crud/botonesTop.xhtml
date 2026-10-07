@@ -17,15 +17,15 @@
                          process="@this"
                          update="#{cc.attrs.update}"
                          />
-                         
+
         <p:commandButton value="Editar" icon="pi pi-pencil"
                          styleClass="ui-button-warning mr-2"
                          action="#{cc.attrs.model.seleccionar(cc.attrs.model.seleccion)}"
                          process="@this"
                          update="#{cc.attrs.update}"
-                         
+
                          disabled="#{cc.attrs.model.seleccion == null}"/>
-                         
+
         <p:commandButton value="Eliminar" icon="pi pi-trash"
                          styleClass="ui-button-danger"
                          action="#{cc.attrs.model.eliminar(cc.attrs.model.seleccion)}"

@@ -40,63 +40,35 @@ public class ProcedimientoPasoDAO
         return em;
     }
 
-    @Override
-    protected java.util.List<String> getCamposBusqueda() {
-        return java.util.List.of("nombre");
-    }
-
-
-
-
     /**
-     * Devuelve los pasos del procedimiento indicado, excluyendo el paso cuyo
-     * UUID se pase como {@code excluir} (para el caso de secuencias: no se puede
-     * crear una secuencia hacia sí mismo).
+     * Lista los pasos con los datos necesarios para mostrar los nombres
+     * de su procedimiento y rol en la tabla JSF.
      *
-     * @param idProcedimiento UUID del procedimiento padre
-     * @param excluir         UUID del paso que se excluye de la lista (puede ser null)
-     * @return lista de pasos del mismo procedimiento, sin el excluido
+     * @return pasos con sus relaciones cargadas
      */
-    public java.util.List<ProcedimientoPaso> findByProcedimiento(
-            UUID idProcedimiento, UUID excluir) {
-        if (idProcedimiento == null) {
-            return java.util.Collections.emptyList();
-        }
-        String jpql = "SELECT pp FROM ProcedimientoPaso pp"
-                + " LEFT JOIN FETCH pp.idProcedimiento LEFT JOIN FETCH pp.idRol"
-                + " WHERE pp.idProcedimiento.idProcedimiento = :idProc"
-                + (excluir != null ? " AND pp.idProcedimientoPaso <> :excluir" : "")
-                + " ORDER BY pp.nombre";
-        var query = getEntityManager().createQuery(jpql, ProcedimientoPaso.class)
-                .setParameter("idProc", idProcedimiento);
-        if (excluir != null) {
-            query.setParameter("excluir", excluir);
-        }
-        return query.getResultList();
-    }
-
     @Override
-    protected java.util.List<String> getRelacionesCarga() {
-        return java.util.List.of("idProcedimiento", "idRol");
-    }
+    public List<ProcedimientoPaso> findAll() {
+        CriteriaBuilder cb = em.getCriteriaBuilder();
+        CriteriaQuery<ProcedimientoPaso> cq =
+                cb.createQuery(ProcedimientoPaso.class);
+        Root<ProcedimientoPaso> paso =
+                cq.from(ProcedimientoPaso.class);
 
-    public boolean existeNombreEnProcedimiento(UUID idProcedimiento, String nombre, UUID excluirId) {
-        if (idProcedimiento == null || nombre == null || nombre.isBlank()) return false;
-        String jpql = "SELECT COUNT(p) FROM ProcedimientoPaso p"
-                + " WHERE p.idProcedimiento.idProcedimiento = :procedimiento AND LOWER(p.nombre) = :nombre"
-                + (excluirId == null ? "" : " AND p.idProcedimientoPaso <> :excluir");
-        var query = getEntityManager().createQuery(jpql, Long.class).setParameter("procedimiento", idProcedimiento)
-                .setParameter("nombre", nombre.trim().toLowerCase(java.util.Locale.ROOT));
-        if (excluirId != null) query.setParameter("excluir", excluirId);
-        return query.getSingleResult() > 0;
-    }
+        paso.fetch("idProcedimiento", JoinType.LEFT);
+        paso.fetch("idRol", JoinType.LEFT);
+        cq.select(paso);
 
-    /**
-     * SIGUIENTE representa origen -> referencia. El inicio no aparece como
-     * referencia de ninguna secuencia del procedimiento. Si hay varios pasos
-     * desconectados se elige por nombre e identificador, de forma determinista.
-     */
-    
+        return em.createQuery(cq).getResultList();
+    }
+    /** Carga los pasos, roles y exámenes del procedimiento sin consultas por fila. */
+    public List<ProcedimientoPaso> findByProcedimiento(UUID idProcedimiento) {
+        return em.createQuery("SELECT DISTINCT p FROM ProcedimientoPaso p "
+                + "LEFT JOIN FETCH p.idProcedimiento LEFT JOIN FETCH p.idRol "
+                + "LEFT JOIN FETCH p.procedimientoPasoExamenList a "
+                + "LEFT JOIN FETCH a.idExamen "
+                + "WHERE p.idProcedimiento.idProcedimiento = :id", ProcedimientoPaso.class)
+                .setParameter("id", idProcedimiento).getResultList();
+    }
     public boolean tieneFin(UUID idProcedimiento) {
         if (idProcedimiento == null) return false;
         String jpql = "SELECT COUNT(p) FROM ProcedimientoPaso p WHERE p.idProcedimiento.idProcedimiento = :idProc AND p.indicaFin = true";

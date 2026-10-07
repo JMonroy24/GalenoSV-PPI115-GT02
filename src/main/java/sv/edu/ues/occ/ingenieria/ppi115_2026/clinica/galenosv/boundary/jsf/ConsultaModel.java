@@ -24,6 +24,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimiento;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimientoPaso;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRol;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPaso;
 
 /**
  * Backing bean de Consulta. Administra embebidos sus procedimientos
@@ -89,6 +90,9 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
 
     @Override
     public void seleccionar(Consulta consulta) {
+        cpSeleccionado = null;
+        pasoSeleccionado = null;
+
         super.seleccionar(consulta);
         procedimientos = consultaProcedimientoDAO.findByConsulta(consulta.getIdConsulta());
         cerrarPasos();
@@ -97,6 +101,9 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
 
     @Override
     public void prepararNuevo() {
+        cpSeleccionado = null;
+        pasoSeleccionado = null;
+
         super.prepararNuevo();
         procedimientos = Collections.emptyList();
         cerrarPasos();
@@ -105,6 +112,9 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
 
     @Override
     public void cancelar() {
+        cpSeleccionado = null;
+        pasoSeleccionado = null;
+
         super.cancelar();
         procedimientos = Collections.emptyList();
         cerrarPasos();
@@ -120,6 +130,8 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
         ConsultaProcedimiento cp = new ConsultaProcedimiento(UUID.randomUUID());
         cp.setFechaInicio(new Date());
         procedimientoNuevo = cp;
+        pasoInicialPrevisto = null;
+        responsableInicialPrevisto = null;
         limpiarPasoNuevo();
     }
 
@@ -189,6 +201,8 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
             ConsultaProcedimiento cp = new ConsultaProcedimiento(UUID.randomUUID());
             cp.setFechaInicio(new Date());
             procedimientoNuevo = cp;
+            pasoInicialPrevisto = null;
+            responsableInicialPrevisto = null;
         }, "Procedimiento agregado correctamente.");
     }
 
@@ -370,4 +384,72 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
 
     public void limpiarFiltro() { fechaDesde = null; fechaHasta = null; filtrar(); }
 
+
+    private ConsultaProcedimiento cpSeleccionado;
+    public ConsultaProcedimiento getCpSeleccionado() { return cpSeleccionado; }
+    public void setCpSeleccionado(ConsultaProcedimiento valor) { cpSeleccionado = valor; }
+
+    private ConsultaProcedimientoPaso pasoSeleccionado;
+    public ConsultaProcedimientoPaso getPasoSeleccionado() { return pasoSeleccionado; }
+    public void setPasoSeleccionado(ConsultaProcedimientoPaso valor) { pasoSeleccionado = valor; }
+
+    private final java.util.Map<UUID, String> documentosCache = new java.util.HashMap<>();
+    public String getDocumentosPersona(UUID idPersona) {
+        if (idPersona == null) return "";
+        return documentosCache.computeIfAbsent(idPersona, id -> documentoDAO.findByPersona(id).stream()
+                .map(d -> (d.getIdTipoDocumento() == null ? "Documento" : d.getIdTipoDocumento().getNombre())
+                        + ": " + d.getValor()).collect(java.util.stream.Collectors.joining(", ")));
+    }
+    public String getEstadoPasoActual(ConsultaProcedimiento procedimiento) {
+        if (procedimiento == null) return "";
+        return consultaProcedimientoPasoDAO.findByConsultaProcedimiento(procedimiento.getIdConsultaProcedimiento())
+                .stream().filter(p -> p.getFechaFin() == null)
+                .map(p -> p.getEstado() == null ? "Sin estado" : p.getEstado()).findFirst().orElse("Finalizado");
+    }
+
+    public String getInformacionPaciente(PersonaRol asignacion) {
+        if (asignacion == null || asignacion.getIdPersona() == null) return "Seleccione un paciente.";
+        var persona = asignacion.getIdPersona();
+        var formato = new java.text.SimpleDateFormat("dd/MM/yyyy");
+        formato.setTimeZone(java.util.TimeZone.getTimeZone("America/El_Salvador"));
+        String nacimiento = persona.getFechaNacimiento() == null ? "Sin registrar" : formato.format(persona.getFechaNacimiento());
+        String documentos = getDocumentosPersona(persona.getIdPersona());
+        return "Persona: " + nombrePersona(asignacion) + " | Fecha de nacimiento: " + nacimiento
+                + " | Documentos: " + (documentos.isBlank() ? "Sin documentos registrados" : documentos);
+    }
+
+    private String nombrePersona(PersonaRol asignacion) {
+        if (asignacion == null || asignacion.getIdPersona() == null) return "Sin responsable asignado";
+        var p = asignacion.getIdPersona();
+        return ((p.getNombres() == null ? "" : p.getNombres()) + " "
+                + (p.getApellidos() == null ? "" : p.getApellidos())).trim();
+    }
+
+    private ProcedimientoPaso pasoInicialPrevisto;
+    private PersonaRol responsableInicialPrevisto;
+    public ProcedimientoPaso getPasoInicialPrevisto() { return pasoInicialPrevisto; }
+    public PersonaRol getResponsableInicialPrevisto() { return responsableInicialPrevisto; }
+    public String getNombreResponsableInicial() { return nombrePersona(responsableInicialPrevisto); }
+
+    public void actualizarInicioPrevisto() {
+        pasoInicialPrevisto = null;
+        responsableInicialPrevisto = null;
+        if (procedimientoNuevo == null || procedimientoNuevo.getIdProcedimiento() == null) return;
+        pasoInicialPrevisto = procedimientoPasoDAO.findPasoInicial(procedimientoNuevo.getIdProcedimiento().getIdProcedimiento());
+        if (pasoInicialPrevisto != null && pasoInicialPrevisto.getIdRol() != null && idClinicaActual() != null) {
+            responsableInicialPrevisto = personaRolDAO.findResponsable(idClinicaActual(), pasoInicialPrevisto.getIdRol().getIdRol());
+        }
+    }
+
+    public String getDetallePrimerPaso(ConsultaProcedimiento procedimiento) {
+        if (procedimiento == null || procedimiento.getIdProcedimiento() == null) return "Sin paso inicial";
+        var definicion = procedimientoPasoDAO.findPasoInicial(procedimiento.getIdProcedimiento().getIdProcedimiento());
+        var inicial = consultaProcedimientoPasoDAO.findByConsultaProcedimiento(procedimiento.getIdConsultaProcedimiento())
+                .stream().min(java.util.Comparator.comparing(ConsultaProcedimientoPaso::getFechaInicio,
+                        java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()))).orElse(null);
+        return (definicion == null ? "Sin paso inicial definido" : definicion.getNombre())
+                + " | A cargo de: " + (inicial == null || inicial.getIdPersonaRol() == null
+                || inicial.getIdPersonaRol().getIdRol() == null ? "Sin rol" : inicial.getIdPersonaRol().getIdRol().getNombre())
+                + " | Persona: " + nombrePersona(inicial == null ? null : inicial.getIdPersonaRol());
+    }
 }

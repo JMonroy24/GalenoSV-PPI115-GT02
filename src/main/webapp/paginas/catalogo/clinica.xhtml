@@ -43,7 +43,7 @@
                              placeholder="Nombre de la clínica" label="Nombre"/>
 
                 <p:outputLabel value="Tipo:" for="tipo"/>
-                <p:selectOneMenu id="tipo" required="true" requiredMessage="El tipo de clínica es obligatorio."
+                <p:selectOneMenu disabled="#{clinicaModel.estadoModificar}" id="tipo" required="true" requiredMessage="El tipo de clínica es obligatorio."
                                  value="#{clinicaModel.registroActual.tipo}" label="Tipo">
                     <f:selectItem itemLabel="Seleccione un tipo..." itemValue="#{null}" noSelectionOption="true"/>
                     <f:selectItem itemLabel="Hospital Nivel 1" itemValue="HOSPITAL_NIVEL_1"/>

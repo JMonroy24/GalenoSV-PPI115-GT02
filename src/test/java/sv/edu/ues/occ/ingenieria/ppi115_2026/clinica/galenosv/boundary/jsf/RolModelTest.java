@@ -70,7 +70,7 @@ public class RolModelTest {
 
     @Test
     public void testGuardarCrear() {
-        
+
         rolModel.prepararNuevo();
         rolModel.getRegistroActual().setNombre("Medico");
 
@@ -84,7 +84,7 @@ public class RolModelTest {
 
     @Test
     public void testGuardarModificar() {
-        
+
         Rol r = new Rol(UUID.randomUUID());
         rolModel.seleccionar(r);
 
@@ -97,7 +97,7 @@ public class RolModelTest {
 
     @Test
     public void testEliminar() {
-        
+
         Rol r = new Rol(UUID.randomUUID());
         rolModel.eliminar(r);
 

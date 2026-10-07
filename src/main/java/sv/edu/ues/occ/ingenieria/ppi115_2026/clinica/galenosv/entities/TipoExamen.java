@@ -5,37 +5,42 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
-import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "tipo_examen")
+@NamedQueries({
+    @NamedQuery(name = "TipoExamen.findAll", query = "SELECT t FROM TipoExamen t"),
+    @NamedQuery(name = "TipoExamen.findByNombre", query = "SELECT t FROM TipoExamen t WHERE t.nombre = :nombre"),
+    @NamedQuery(name = "TipoExamen.findByActivo", query = "SELECT t FROM TipoExamen t WHERE t.activo = :activo"),
+    @NamedQuery(name = "TipoExamen.findByObservaciones", query = "SELECT t FROM TipoExamen t WHERE t.observaciones = :observaciones")})
 public class TipoExamen implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
-    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
+    @NotNull
     @Column(name = "id_tipo_examen")
     private UUID idTipoExamen;
 
-    @NotBlank(message = "{tipoExamen.nombre.obligatorio}")
-    @Size(max = 255, message = "{tipoExamen.nombre.longitud}")
-    @Column(name = "nombre", nullable = false, length = 255)
+    @Size(max = 2147483647)
+    @Column(name = "nombre")
     private String nombre;
 
-    @NotNull(message = "{tipoExamen.activo.obligatorio}")
-    @Column(name = "activo", nullable = false)
+    @Column(name = "activo")
     private Boolean activo;
 
-    @Size(max = 2000, message = "{tipoExamen.observaciones.longitud}")
-    @Column(name = "observaciones", length = 2000)
+    @Size(max = 2147483647)
+    @Column(name = "observaciones")
     private String observaciones;
 
     @OneToMany(mappedBy = "idTipoExamen", fetch = FetchType.LAZY)
@@ -89,11 +94,6 @@ public class TipoExamen implements IdentificableEntity {
     }
 
     @Override
-    public String getIdKey() {
-        return idTipoExamen != null ? idTipoExamen.toString() : "";
-    }
-
-    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idTipoExamen != null ? idTipoExamen.hashCode() : 0);
@@ -116,4 +116,7 @@ public class TipoExamen implements IdentificableEntity {
     public String toString() {
         return "entity.TipoExamen[ idTipoExamen=" + idTipoExamen + " ]";
     }
+
+    @Override
+    public String getIdKey() { return idTipoExamen == null ? null : idTipoExamen.toString(); }
 }

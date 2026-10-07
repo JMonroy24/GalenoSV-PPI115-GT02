@@ -39,10 +39,10 @@ class ExamenTipoExamenModelTest {
     @Test
     void testInitYCargarDatos() {
         ExamenTipoExamen examenTipoexamen = new ExamenTipoExamen(UUID.randomUUID());
-        
+
         examenTipoexamenModel.init();
 
-        
+
         assertEquals(1, examenTipoexamenModel.getLazyModel() != null ? 1 : 0);
         verifyNoInteractions(examenTipoexamenDAO);
     }
@@ -80,7 +80,7 @@ class ExamenTipoExamenModelTest {
 
     @Test
     void testGuardarCrear() {
-        
+
         examenTipoexamenModel.prepararNuevo();
         examenTipoexamenModel.getRegistroActual().setObservaciones("Asociación entre examen y tipo de examen");
 

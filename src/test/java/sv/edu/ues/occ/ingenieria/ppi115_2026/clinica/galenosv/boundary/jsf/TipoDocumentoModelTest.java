@@ -70,7 +70,7 @@ public class TipoDocumentoModelTest {
 
     @Test
     public void testGuardarCrear() {
-        
+
         tipoDocumentoModel.prepararNuevo();
         tipoDocumentoModel.getRegistroActual().setNombre("DUI");
 
@@ -84,7 +84,7 @@ public class TipoDocumentoModelTest {
 
     @Test
     public void testGuardarModificar() {
-        
+
         TipoDocumento td = new TipoDocumento(UUID.randomUUID());
         tipoDocumentoModel.seleccionar(td);
 
@@ -97,7 +97,7 @@ public class TipoDocumentoModelTest {
 
     @Test
     public void testEliminar() {
-        
+
         TipoDocumento td = new TipoDocumento(UUID.randomUUID());
         tipoDocumentoModel.eliminar(td);
 

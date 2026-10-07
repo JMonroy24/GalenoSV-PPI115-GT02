@@ -1,486 +1,207 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoExamenDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoSecuenciaDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Examen;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPaso;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPasoExamen;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPasoSecuencia;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.*;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.*;
 
-/**
- * Administra los pasos de procedimientos, sus exámenes asociados y las
- * relaciones de secuencia entre pasos del mismo procedimiento.
- */
+/** Editor de pasos integrado en el procedimiento; las asociaciones se preparan en memoria. */
 @Named("procedimientoPasoModel")
 @ViewScoped
-public class ProcedimientoPasoModel extends ModelTransaccional<ProcedimientoPaso, UUID>
-        implements Serializable {
-
+public class ProcedimientoPasoModel extends Model<ProcedimientoPaso, UUID> implements Serializable {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER
-            = Logger.getLogger(ProcedimientoPasoModel.class.getName());
-
-    @Inject
-    protected ProcedimientoPasoDAO procedimientoPasoDAO;
-
-    @Inject
-    protected ProcedimientoPasoExamenDAO procedimientoPasoExamenDAO;
-
-    @Inject
-    protected ProcedimientoPasoSecuenciaDAO procedimientoPasoSecuenciaDAO;
-
-    private List<ProcedimientoPasoExamen> examenesAsignados
-            = Collections.emptyList();
-    private List<ProcedimientoPasoSecuencia> secuencias
-            = Collections.emptyList();
-
+    private static final Logger LOGGER = Logger.getLogger(ProcedimientoPasoModel.class.getName());
+    @Inject protected ProcedimientoPasoDAO procedimientoPasoDAO;
+    @Inject protected ProcedimientoPasoExamenDAO procedimientoPasoExamenDAO;
+    @Inject protected ProcedimientoPasoSecuenciaDAO procedimientoPasoSecuenciaDAO;
+    @Inject protected AsignacionService asignacionService;
+    @Inject protected RolDAO rolDAO;
+    @Inject protected ExamenDAO examenDAO;
+    private Procedimiento procedimiento;
+    private ProcedimientoPaso dependeDe;
+    private List<ProcedimientoPasoExamen> examenesAsignados = new ArrayList<>();
+    private ProcedimientoPasoExamen examenAsignadoSeleccionado;
     private Examen examenSeleccionado;
     private String observacionesExamen;
-    private boolean examenActivo = true;
+    private UUID rolOriginal;
+    private UUID padreOriginal;
 
-    private ProcedimientoPaso pasoDependeDe;
-    private ProcedimientoPaso pasoReferenciaSeleccionado;
-    private String tipoSecuencia;
-
-    @Inject
-    protected AsignacionService asignacionService;
-
-    @PostConstruct
-    public void init() {
-        inicializarLazyModel();
-    }
-
-    @Override
-    protected DAOInterface<ProcedimientoPaso, UUID> getDAO() {
-        return procedimientoPasoDAO;
-    }
-
-    /**
-     * Prepara un paso nuevo con su identificador UUID.
-     *
-     * @return paso nuevo listo para completar
-     */
-    @Override
-    protected ProcedimientoPaso crearNuevoRegistro() {
+    @PostConstruct public void init() { cargarDatos(); }
+    @Override protected DAOInterface<ProcedimientoPaso, UUID> getDAO() { return procedimientoPasoDAO; }
+    @Override protected ProcedimientoPaso crearNuevoRegistro() {
         ProcedimientoPaso paso = new ProcedimientoPaso(UUID.randomUUID());
+        paso.setIdProcedimiento(procedimiento);
         paso.setIndicaFin(false);
         return paso;
     }
-
-    /**
-     * Carga las dos clases de asociaciones del paso elegido.
-     *
-     * @param paso paso seleccionado en el catálogo
-     */
-    @Override
-    public void seleccionar(ProcedimientoPaso paso) {
-        if (paso == null) return;
-        super.seleccionar(paso);
-        UUID idPaso = paso.getIdProcedimientoPaso();
-        examenesAsignados = procedimientoPasoExamenDAO.findByPaso(idPaso);
-        secuencias = procedimientoPasoSecuenciaDAO.findByPaso(idPaso);
-        limpiarCamposRelaciones();
+    public void abrirProcedimiento(Procedimiento actual) {
+        procedimiento = actual;
+        prepararNuevo();
     }
-
-    @Override
-    public void prepararNuevo() {
+    @Override public void prepararNuevo() {
         super.prepararNuevo();
-        pasoDependeDe = null;
-        examenesAsignados = Collections.emptyList();
-        secuencias = Collections.emptyList();
-        limpiarCamposRelaciones();
+        dependeDe = null;
+        rolOriginal = null;
+        padreOriginal = null;
+        examenesAsignados = new ArrayList<>();
+        limpiarExamen();
     }
-
-    @Override
-    public void cancelar() {
-        super.cancelar();
-        pasoDependeDe = null;
-        examenesAsignados = Collections.emptyList();
-        secuencias = Collections.emptyList();
-        limpiarCamposRelaciones();
+    @Override public void cancelar() { prepararNuevo(); }
+    @Override public void seleccionar(ProcedimientoPaso paso) {
+        // Copia editable para que cancelar no altere los datos visibles del árbol.
+        ProcedimientoPaso copia = new ProcedimientoPaso(paso.getIdProcedimientoPaso());
+        copia.setIdProcedimiento(procedimiento);
+        copia.setNombre(paso.getNombre());
+        copia.setIdRol(paso.getIdRol());
+        copia.setIndicaFin(paso.getIndicaFin());
+        super.seleccionar(copia);
+        dependeDe = null;
+        for (ProcedimientoPasoSecuencia s : procedimientoPasoSecuenciaDAO.findByProcedimiento(
+                procedimiento.getIdProcedimiento())) {
+            if ("SIGUIENTE".equals(s.getTipoSecuencia())
+                    && paso.getIdProcedimientoPaso().equals(s.getIdProcedimientoPasoReferencia()))
+                dependeDe = s.getIdProcedimientoPaso();
+        }
+        rolOriginal = paso.getIdRol() == null ? null : paso.getIdRol().getIdRol();
+        padreOriginal = dependeDe == null ? null : dependeDe.getIdProcedimientoPaso();
+        examenesAsignados = new ArrayList<>(procedimientoPasoExamenDAO.findByPaso(paso.getIdProcedimientoPaso()));
+        limpiarExamen();
     }
-
-    /**
-     * Asigna un examen al paso guardado, conservando estado y observaciones.
-     */
+    private void limpiarExamen() {
+        examenSeleccionado = null;
+        observacionesExamen = null;
+        examenAsignadoSeleccionado = null;
+    }
     public void agregarExamen() {
-        if (!isEstadoModificar() || getRegistroActual() == null
-                || examenSeleccionado == null || examenSeleccionado.getIdExamen() == null) {
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Examen del paso",
-                    "Seleccione un examen para un paso guardado.");
-            return;
+        if (getRegistroActual() == null || examenSeleccionado == null
+                || !Boolean.TRUE.equals(examenSeleccionado.getActivo())) {
+            error("Seleccione un examen activo."); return;
         }
-
-        if (!Boolean.TRUE.equals(examenSeleccionado.getActivo())) {
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Examen del paso", "No se puede asignar un examen inactivo.");
-            return;
+        if (examenesAsignados.stream().anyMatch(a -> examenSeleccionado.equals(a.getIdExamen()))) {
+            error("Este examen ya está asignado al paso."); return;
         }
-        UUID idExamen = examenSeleccionado.getIdExamen();
-        boolean yaAsignado = examenesAsignados.stream()
-                .anyMatch(asignacion -> asignacion.getIdExamen() != null
-                && idExamen.equals(asignacion.getIdExamen().getIdExamen()));
-
-        if (yaAsignado) {
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Examen del paso",
-                    "Este examen ya está asignado al paso.");
-            return;
-        }
-
-        ProcedimientoPasoExamen asignacion
-                = new ProcedimientoPasoExamen(UUID.randomUUID());
+        ProcedimientoPasoExamen asignacion = new ProcedimientoPasoExamen(UUID.randomUUID());
         asignacion.setIdProcedimientoPaso(getRegistroActual());
         asignacion.setIdExamen(examenSeleccionado);
         asignacion.setFechaCreacion(new Date());
-        asignacion.setActivo(examenActivo);
+        asignacion.setActivo(true);
         asignacion.setObservaciones(observacionesExamen);
-
+        examenesAsignados.add(asignacion);
+        limpiarExamen();
+    }
+    public void quitarExamenSeleccionado() {
+        if (examenAsignadoSeleccionado == null || !examenesAsignados.remove(examenAsignadoSeleccionado))
+            error("Seleccione un examen asignado a este paso.");
+        examenAsignadoSeleccionado = null;
+    }
+    public List<ProcedimientoPaso> getPasosDependenciaDisponibles() {
+        if (procedimiento == null) return List.of();
+        return procedimientoPasoDAO.findByProcedimiento(procedimiento.getIdProcedimiento()).stream()
+                .filter(p -> !p.equals(getRegistroActual()))
+                .sorted(Comparator.comparing(ProcedimientoPaso::getNombre, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                .toList();
+    }
+    public List<Rol> getRolesActivos() {
+        return rolDAO.findAll().stream().filter(r -> Boolean.TRUE.equals(r.getActivo())).toList();
+    }
+    public List<Examen> getExamenesActivos() {
+        return examenDAO.findAll().stream().filter(e -> Boolean.TRUE.equals(e.getActivo())).toList();
+    }
+    protected boolean validarNegocio() {
+        ProcedimientoPaso paso = getRegistroActual();
+        if (paso == null || procedimiento == null || !procedimiento.equals(paso.getIdProcedimiento()))
+            return error("Seleccione el procedimiento actual.");
+        if (paso.getNombre() == null || paso.getNombre().isBlank()) return error("Ingrese el nombre del paso.");
+        Rol rol = paso.getIdRol() == null ? null : rolDAO.findById(paso.getIdRol().getIdRol());
+        if (rol == null || !Boolean.TRUE.equals(rol.getActivo())) return error("Seleccione un rol activo.");
+        List<ProcedimientoPaso> otros = procedimientoPasoDAO.findByProcedimiento(procedimiento.getIdProcedimiento())
+                .stream().filter(p -> !p.equals(paso)).toList();
+        if (isEstadoModificar() && (!Objects.equals(rolOriginal, rol.getIdRol())
+                || !Objects.equals(padreOriginal, dependeDe == null ? null : dependeDe.getIdProcedimientoPaso())))
+            return error("El rol y la dependencia solo se pueden elegir al crear el paso.");
+        if (otros.isEmpty() && dependeDe != null) return error("El primer paso no debe tener dependencia.");
+        if (isEstadoCrear() && !otros.isEmpty() && dependeDe == null)
+            return error("Seleccione el paso del que depende.");
+        if (dependeDe != null) {
+            ProcedimientoPaso padre = otros.stream().filter(p -> p.equals(dependeDe)).findFirst().orElse(null);
+            if (padre == null) return error("La dependencia debe ser otro paso del mismo procedimiento.");
+            if (Boolean.TRUE.equals(padre.getIndicaFin())) return error("Un paso de fin no puede tener hijos.");
+        }
+        List<ProcedimientoPasoSecuencia> secuencias = procedimientoPasoSecuenciaDAO.findByProcedimiento(procedimiento.getIdProcedimiento());
+        if (Boolean.TRUE.equals(paso.getIndicaFin()) && secuencias.stream().anyMatch(s ->
+                "SIGUIENTE".equals(s.getTipoSecuencia()) && paso.equals(s.getIdProcedimientoPaso())))
+            return error("Un paso con hijos no puede indicar finalización.");
+        // Comprueba si el padre ya es descendiente del paso, incluso ante datos heredados corruptos.
+        Set<UUID> visitados = new HashSet<>();
+        Deque<UUID> pendientes = new ArrayDeque<>();
+        pendientes.add(paso.getIdProcedimientoPaso());
+        while (!pendientes.isEmpty()) {
+            UUID id = pendientes.remove();
+            if (!visitados.add(id)) continue;
+            if (dependeDe != null && id.equals(dependeDe.getIdProcedimientoPaso()))
+                return error("La dependencia produciría un ciclo.");
+            secuencias.stream().filter(s -> "SIGUIENTE".equals(s.getTipoSecuencia())
+                    && s.getIdProcedimientoPaso() != null
+                    && id.equals(s.getIdProcedimientoPaso().getIdProcedimientoPaso()))
+                    .map(ProcedimientoPasoSecuencia::getIdProcedimientoPasoReferencia)
+                    .filter(Objects::nonNull).forEach(pendientes::add);
+        }
+        Set<UUID> examenes = new HashSet<>();
+        for (ProcedimientoPasoExamen a : examenesAsignados) {
+            Examen examen = a.getIdExamen() == null ? null : examenDAO.findById(a.getIdExamen().getIdExamen());
+            if (examen == null || !Boolean.TRUE.equals(examen.getActivo())) return error("Todos los exámenes deben estar activos.");
+            if (!examenes.add(examen.getIdExamen())) return error("No se permiten exámenes duplicados.");
+        }
+        return true;
+    }
+    private boolean error(String detalle) {
+        agregarMensaje(FacesMessage.SEVERITY_ERROR, "Paso de procedimiento", detalle);
+        return false;
+    }
+    /** Devuelve éxito para que el procedimiento refresque el árbol solo tras guardar. */
+    public boolean guardarPaso() {
         try {
-            asignacionService.guardarExamen(asignacion, true);
-            examenesAsignados = procedimientoPasoExamenDAO.findByPaso(
-                    getRegistroActual().getIdProcedimientoPaso());
-            limpiarCamposExamen();
-            agregarMensaje(FacesMessage.SEVERITY_INFO, "Examen del paso",
-                    "Examen asignado correctamente.");
-        } catch (ValidacionNegocioException e) {
-            agregarMensaje(FacesMessage.SEVERITY_WARN, "Validación", e.getMessage());
-            marcarValidacionFallida();
+            if (!validarNegocio()) return false;
+            asignacionService.guardarPaso(getRegistroActual(), isEstadoCrear(), dependeDe, examenesAsignados);
+            prepararNuevo();
+            agregarMensaje(FacesMessage.SEVERITY_INFO, "Paso", "Paso y exámenes guardados correctamente.");
+            return true;
         } catch (Exception e) {
-            marcarValidacionFallida();
-            LOGGER.log(Level.SEVERE, "Error al asignar examen al paso", e);
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Examen del paso",
-                    clasificarError(e));
+            LOGGER.log(Level.SEVERE, "Error al guardar paso", e);
+            error(clasificarError(e)); return false;
         }
     }
-
-    /**
-     * Quita una asociación de examen perteneciente al paso seleccionado.
-     *
-     * @param asignacion asociación que se quitará
-     */
-    public void quitarExamen(ProcedimientoPasoExamen asignacion) {
-        if (!isEstadoModificar() || getRegistroActual() == null
-                || asignacion == null
-                || examenesAsignados.stream().noneMatch(actual
-                        -> Objects.equals(
-                        actual.getIdProcedimientoPasoExamen(),
-                        asignacion.getIdProcedimientoPasoExamen()))) {
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Examen del paso",
-                    "Seleccione un examen asignado a este paso.");
-            return;
-        }
-
+    @Override public void guardar() { guardarPaso(); }
+    public boolean eliminarPaso(ProcedimientoPaso paso) {
         try {
-            procedimientoPasoExamenDAO.delete(asignacion);
-            examenesAsignados = procedimientoPasoExamenDAO.findByPaso(
-                    getRegistroActual().getIdProcedimientoPaso());
-            agregarMensaje(FacesMessage.SEVERITY_INFO, "Examen del paso",
-                    "Examen quitado correctamente.");
-        } catch (ValidacionNegocioException e) {
-            agregarMensaje(FacesMessage.SEVERITY_WARN, "Validación", e.getMessage());
-            marcarValidacionFallida();
-        } catch (Exception e) {
-            marcarValidacionFallida();
-            LOGGER.log(Level.SEVERE, "Error al quitar examen del paso", e);
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Examen del paso",
-                    clasificarError(e));
-        }
+            if (procedimiento == null || !procedimiento.equals(paso.getIdProcedimiento()))
+                return error("El paso debe pertenecer al procedimiento actual.");
+            if (procedimientoPasoSecuenciaDAO.findByProcedimiento(procedimiento.getIdProcedimiento()).stream()
+                    .anyMatch(s -> "SIGUIENTE".equals(s.getTipoSecuencia()) && paso.equals(s.getIdProcedimientoPaso())))
+                return error("No se puede eliminar un paso con hijos. Elimine primero sus hijos.");
+            asignacionService.eliminarPaso(paso);
+            prepararNuevo();
+            agregarMensaje(FacesMessage.SEVERITY_INFO, "Paso", "Paso eliminado correctamente.");
+            return true;
+        } catch (Exception e) { error(clasificarError(e)); return false; }
     }
-
-    /**
-     * Devuelve los demás pasos del mismo procedimiento para elegir una
-     * referencia válida de secuencia. Consulta el DAO directamente porque en
-     * modelos transaccionales getRegistros() siempre es null.
-     *
-     * @return pasos del mismo procedimiento, sin el paso actual
-     */
-    public List<ProcedimientoPaso> getPasosReferenciaDisponibles() {
-        if (getRegistroActual() == null
-                || getRegistroActual().getIdProcedimiento() == null) {
-            return Collections.emptyList();
-        }
-
-        UUID idProcedimiento = getRegistroActual()
-                .getIdProcedimiento().getIdProcedimiento();
-        UUID idPasoActual = getRegistroActual().getIdProcedimientoPaso();
-
-        return procedimientoPasoDAO.findByProcedimiento(idProcedimiento, idPasoActual);
-    }
-
-    /**
-     * Obtiene el nombre de un paso referenciado por su UUID.
-     *
-     * @param idReferencia UUID guardado en la relación de secuencia
-     * @return nombre del paso, o su UUID si ya no está en el catálogo
-     */
-    public String nombrePasoReferencia(UUID idReferencia) {
-        if (idReferencia == null) {
-            return "";
-        }
-        ProcedimientoPaso paso = procedimientoPasoDAO.findById(idReferencia);
-        return paso == null || paso.getNombre() == null ? idReferencia.toString() : paso.getNombre();
-    }
-
-    /**
-     * Relaciona el paso actual con otro paso del mismo procedimiento.
-     */
-    public void agregarSecuencia() {
-        if (!isEstadoModificar() || getRegistroActual() == null
-                || pasoReferenciaSeleccionado == null
-                || tipoSecuencia == null || tipoSecuencia.isBlank()) {
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Secuencia",
-                    "Seleccione un paso de referencia e indique el tipo de secuencia.");
-            return;
-        }
-
-        String tipo = tipoSecuencia.trim();
-        if (tipo.length() > 20) {
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Secuencia",
-                    "El tipo de secuencia no puede superar 20 caracteres.");
-            return;
-        }
-
-        UUID idReferencia
-                = pasoReferenciaSeleccionado.getIdProcedimientoPaso();
-        boolean referenciaValida = getPasosReferenciaDisponibles().stream()
-                .anyMatch(paso -> Objects.equals(
-                paso.getIdProcedimientoPaso(), idReferencia));
-
-        if (!referenciaValida) {
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Secuencia",
-                    "El paso de referencia debe pertenecer al mismo procedimiento.");
-            return;
-        }
-
-        boolean yaExiste = secuencias.stream()
-                .anyMatch(secuencia -> Objects.equals(
-                secuencia.getIdProcedimientoPasoReferencia(),
-                idReferencia)
-                && tipo.equalsIgnoreCase(secuencia.getTipoSecuencia()));
-
-        if (yaExiste) {
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Secuencia",
-                    "Esta relación de secuencia ya existe.");
-            return;
-        }
-
-        ProcedimientoPasoSecuencia secuencia
-                = new ProcedimientoPasoSecuencia(UUID.randomUUID());
-        secuencia.setIdProcedimientoPaso(getRegistroActual());
-        secuencia.setIdProcedimientoPasoReferencia(idReferencia);
-        secuencia.setTipoSecuencia(tipo);
-
-        try {
-            asignacionService.guardarSecuencia(secuencia, true);
-            secuencias = procedimientoPasoSecuenciaDAO.findByPaso(
-                    getRegistroActual().getIdProcedimientoPaso());
-            limpiarCamposSecuencia();
-            agregarMensaje(FacesMessage.SEVERITY_INFO, "Secuencia",
-                    "Secuencia agregada correctamente.");
-        } catch (ValidacionNegocioException e) {
-            agregarMensaje(FacesMessage.SEVERITY_WARN, "Validación", e.getMessage());
-            marcarValidacionFallida();
-        } catch (Exception e) {
-            marcarValidacionFallida();
-            LOGGER.log(Level.SEVERE, "Error al agregar secuencia", e);
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Secuencia",
-                    clasificarError(e));
-        }
-    }
-
-    /**
-     * Quita una relación de secuencia del paso seleccionado.
-     *
-     * @param secuencia relación que se quitará
-     */
-    public void quitarSecuencia(ProcedimientoPasoSecuencia secuencia) {
-        if (!isEstadoModificar() || getRegistroActual() == null
-                || secuencia == null
-                || secuencias.stream().noneMatch(actual
-                        -> Objects.equals(
-                        actual.getIdProcedimientoPasoSecuencia(),
-                        secuencia.getIdProcedimientoPasoSecuencia()))) {
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Secuencia",
-                    "Seleccione una secuencia perteneciente al paso.");
-            return;
-        }
-
-        try {
-            procedimientoPasoSecuenciaDAO.delete(secuencia);
-            secuencias = procedimientoPasoSecuenciaDAO.findByPaso(
-                    getRegistroActual().getIdProcedimientoPaso());
-            agregarMensaje(FacesMessage.SEVERITY_INFO, "Secuencia",
-                    "Secuencia quitada correctamente.");
-        } catch (ValidacionNegocioException e) {
-            agregarMensaje(FacesMessage.SEVERITY_WARN, "Validación", e.getMessage());
-            marcarValidacionFallida();
-        } catch (Exception e) {
-            marcarValidacionFallida();
-            LOGGER.log(Level.SEVERE, "Error al quitar secuencia", e);
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Secuencia",
-                    clasificarError(e));
-        }
-    }
-
-    private void limpiarCamposExamen() {
-        examenSeleccionado = null;
-        observacionesExamen = null;
-        examenActivo = true;
-    }
-
-    private void limpiarCamposSecuencia() {
-    pasoReferenciaSeleccionado = null;
-    tipoSecuencia = "SIGUIENTE";
-        }
-
-    private void limpiarCamposRelaciones() {
-        limpiarCamposExamen();
-        limpiarCamposSecuencia();
-    }
-
-    public List<ProcedimientoPasoExamen> getExamenesAsignados() {
-        return examenesAsignados;
-    }
-
-    public List<ProcedimientoPasoSecuencia> getSecuencias() {
-        return secuencias;
-    }
-
-    public Examen getExamenSeleccionado() {
-        return examenSeleccionado;
-    }
-
-    public void setExamenSeleccionado(Examen examenSeleccionado) {
-        this.examenSeleccionado = examenSeleccionado;
-    }
-
-    public String getObservacionesExamen() {
-        return observacionesExamen;
-    }
-
-    public void setObservacionesExamen(String observacionesExamen) {
-        this.observacionesExamen = observacionesExamen;
-    }
-
-    public boolean isExamenActivo() {
-        return examenActivo;
-    }
-
-    public void setExamenActivo(boolean examenActivo) {
-        this.examenActivo = examenActivo;
-    }
-
-    
-    public ProcedimientoPaso getPasoDependeDe() {
-        return pasoDependeDe;
-    }
-
-    public void setPasoDependeDe(ProcedimientoPaso pasoDependeDe) {
-        this.pasoDependeDe = pasoDependeDe;
-    }
-
-    public List<ProcedimientoPaso> getPasosDependeDeDisponibles() {
-        if (getRegistroActual() == null || getRegistroActual().getIdProcedimiento() == null) {
-            return Collections.emptyList();
-        }
-        return procedimientoPasoDAO.findByProcedimiento(getRegistroActual().getIdProcedimiento().getIdProcedimiento(), null);
-    }
-    
-    public ProcedimientoPaso getPasoReferenciaSeleccionado() {
-        return pasoReferenciaSeleccionado;
-    }
-
-    public void setPasoReferenciaSeleccionado(
-            ProcedimientoPaso pasoReferenciaSeleccionado) {
-        this.pasoReferenciaSeleccionado = pasoReferenciaSeleccionado;
-    }
-
-    public String getTipoSecuencia() {
-        return tipoSecuencia;
-    }
-
-    public void setTipoSecuencia(String tipoSecuencia) {
-        this.tipoSecuencia = tipoSecuencia;
-    }
-
-    public ProcedimientoPasoDAO getProcedimientoPasoDAO() {
-        return procedimientoPasoDAO;
-    }
-
-    public void setProcedimientoPasoDAO(
-            ProcedimientoPasoDAO procedimientoPasoDAO) {
-        this.procedimientoPasoDAO = procedimientoPasoDAO;
-    }
-    
-    
-
-    @Override
-    protected void persistirNuevo(ProcedimientoPaso registro) {
-        super.persistirNuevo(registro);
-        if (pasoDependeDe != null) {
-            ProcedimientoPasoSecuencia secuencia = new ProcedimientoPasoSecuencia(UUID.randomUUID());
-            secuencia.setIdProcedimientoPaso(pasoDependeDe);
-            secuencia.setIdProcedimientoPasoReferencia(registro.getIdProcedimientoPaso());
-            secuencia.setTipoSecuencia("SIGUIENTE");
-            try {
-                asignacionService.guardarSecuencia(secuencia, true);
-            } catch (Exception e) {
-                LOGGER.log(Level.SEVERE, "Error al guardar la dependencia del nuevo paso", e);
-                throw new ValidacionNegocioException("Se creó el paso pero no se pudo guardar su dependencia.");
-            }
-        }
-    }
-
-    @Override
-    protected void validarNegocio(ProcedimientoPaso registro) {
-        registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre del paso"));
-        var procedimiento = ValidadorComun.requerido(registro.getIdProcedimiento(), "Seleccione un procedimiento.");
-        ValidadorComun.requerido(procedimiento.getIdProcedimiento(), "Seleccione un procedimiento válido.");
-        ValidadorComun.activo(procedimiento.getActivo(), "El procedimiento");
-        var rol = ValidadorComun.requerido(registro.getIdRol(), "Cada paso debe tener un rol responsable.");
-        ValidadorComun.requerido(rol.getIdRol(), "Seleccione un rol válido.");
-        ValidadorComun.activo(rol.getActivo(), "El rol");
-        if (isEstadoCrear() && procedimientoPasoDAO.findByProcedimiento(procedimiento.getIdProcedimiento(), null)
-                .stream().anyMatch(paso -> paso.getIdRol() != null
-                        && rol.getIdRol().equals(paso.getIdRol().getIdRol()))) {
-            throw new ValidacionNegocioException("Cada paso del procedimiento debe tener un rol distinto.");
-        }
-        if (procedimientoPasoDAO.existeNombreEnProcedimiento(procedimiento.getIdProcedimiento(),
-                registro.getNombre(), registro.getIdProcedimientoPaso())) {
-            throw new ValidacionNegocioException("Ya existe un paso con este nombre en el procedimiento.");
-        }
-
-        if (isEstadoCrear()) {
-            List<ProcedimientoPaso> pasosExistentes = procedimientoPasoDAO.findByProcedimiento(procedimiento.getIdProcedimiento(), null);
-            if (!pasosExistentes.isEmpty()) {
-                ValidadorComun.requerido(pasoDependeDe, "Depende de es obligatorio, ya que el procedimiento ya tiene pasos.");
-                if (pasoDependeDe.getIdProcedimiento() == null || !procedimiento.getIdProcedimiento().equals(pasoDependeDe.getIdProcedimiento().getIdProcedimiento())) {
-                    throw new ValidacionNegocioException("La lista 'Depende de' solo ofrece pasos del mismo procedimiento.");
-                }
-            } else {
-                if (pasoDependeDe != null) {
-                    throw new ValidacionNegocioException("El primer paso no lleva dependencia, ya que es el inicial.");
-                }
-            }
-        }
-    }
-
-
+    @Override public void eliminar(ProcedimientoPaso paso) { eliminarPaso(paso); }
+    public ProcedimientoPaso getDependeDe() { return dependeDe; }
+    public void setDependeDe(ProcedimientoPaso paso) { dependeDe = paso; }
+    public List<ProcedimientoPasoExamen> getExamenesAsignados() { return examenesAsignados; }
+    public ProcedimientoPasoExamen getExamenAsignadoSeleccionado() { return examenAsignadoSeleccionado; }
+    public void setExamenAsignadoSeleccionado(ProcedimientoPasoExamen examen) { examenAsignadoSeleccionado = examen; }
+    public Examen getExamenSeleccionado() { return examenSeleccionado; }
+    public void setExamenSeleccionado(Examen examen) { examenSeleccionado = examen; }
+    public String getObservacionesExamen() { return observacionesExamen; }
+    public void setObservacionesExamen(String observaciones) { observacionesExamen = observaciones; }
+    public ProcedimientoPasoDAO getProcedimientoPasoDAO() { return procedimientoPasoDAO; }
+    public void setProcedimientoPasoDAO(ProcedimientoPasoDAO dao) { procedimientoPasoDAO = dao; }
 }

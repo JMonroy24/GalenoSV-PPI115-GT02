@@ -7,29 +7,34 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import jakarta.persistence.PrePersist;
 
 @Entity
 @Table(name = "persona_rol")
+@NamedQueries({
+    @NamedQuery(name = "PersonaRol.findAll", query = "SELECT p FROM PersonaRol p"),
+    @NamedQuery(name = "PersonaRol.findByFechaCreacion", query = "SELECT p FROM PersonaRol p WHERE p.fechaCreacion = :fechaCreacion")})
 public class PersonaRol implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
-    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
+    @NotNull
     @Column(name = "id_persona_rol")
     private UUID idPersonaRol;
 
-    @Column(name = "fecha_creacion", nullable = false, updatable = false)
+    @Column(name = "fecha_creacion")
     @Temporal(TemporalType.TIMESTAMP)
     private Date fechaCreacion;
 
@@ -40,26 +45,16 @@ public class PersonaRol implements IdentificableEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private Clinica idClinica;
 
-    @NotNull(message = "{personaRol.idPersona.obligatorio}")
-    @JoinColumn(name = "id_persona", referencedColumnName = "id_persona", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_persona", referencedColumnName = "id_persona")
+    @ManyToOne(fetch = FetchType.LAZY)
     private Persona idPersona;
 
-    @NotNull(message = "{personaRol.idRol.obligatorio}")
-    @JoinColumn(name = "id_rol", referencedColumnName = "id_rol", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_rol", referencedColumnName = "id_rol")
+    @ManyToOne(fetch = FetchType.LAZY)
     private Rol idRol;
 
     @OneToMany(mappedBy = "idPersonaRol", fetch = FetchType.LAZY)
     private List<Consulta> consultaList;
-
-    /** Conserva fechas importadas y asigna la creación en todos los flujos JPA. */
-    @PrePersist
-    protected void asignarFechaCreacion() {
-        if (fechaCreacion == null) {
-            fechaCreacion = new Date();
-        }
-    }
 
     public PersonaRol() {
     }
@@ -125,11 +120,6 @@ public class PersonaRol implements IdentificableEntity {
     }
 
     @Override
-    public String getIdKey() {
-        return idPersonaRol != null ? idPersonaRol.toString() : "";
-    }
-
-    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idPersonaRol != null ? idPersonaRol.hashCode() : 0);
@@ -152,4 +142,7 @@ public class PersonaRol implements IdentificableEntity {
     public String toString() {
         return "entity.PersonaRol[ idPersonaRol=" + idPersonaRol + " ]";
     }
+
+    @Override
+    public String getIdKey() { return idPersonaRol == null ? null : idPersonaRol.toString(); }
 }

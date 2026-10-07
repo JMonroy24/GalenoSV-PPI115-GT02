@@ -27,6 +27,7 @@
             <p:panel header="#{cc.attrs.titulo}">
                 <p:toolbar id="toolbarTop">
                     <p:toolbarGroup>
+                        <cc:renderFacet name="accionesExtra"/>
                         <crud:botonesTop model="#{cc.attrs.model}" update="crudContainer" dialog="dlgFormularioTx" />
                     </p:toolbarGroup>
                     <p:toolbarGroup align="right">
@@ -68,12 +69,6 @@
                     <p:ajax event="rowUnselect" update="toolbarTop"/>
 
                     <cc:insertChildren/>
-
-                    <p:column headerText="Acciones" width="100"
-                              exportable="false" styleClass="col-acciones"
-                              rendered="#{not empty cc.facets.accionesExtra}">
-                        <cc:renderFacet name="accionesExtra"/>
-                    </p:column>
                 </p:dataTable>
             </p:panel>
 

@@ -122,7 +122,7 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
                 agregarMensaje(FacesMessage.SEVERITY_INFO, "Éxito", "Registro actualizado correctamente.");
             }
             cargarDatos();
-            cancelar(); 
+            cancelar();
         } catch (ValidacionNegocioException e) {
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Validación", e.getMessage());
             marcarValidacionFallida();
@@ -238,9 +238,9 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
             agregarMensaje(FacesMessage.SEVERITY_ERROR, titulo, clasificarError(e));
         }
     }
-    
-    
-    
+
+
+
     /** @return true si se está creando un registro */
     public boolean isEstadoCrear() { return estado == Estado.CREAR; }
 

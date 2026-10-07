@@ -21,22 +21,22 @@ import java.util.Collections;
 @SessionScoped
 public class SesionBean implements Serializable {
     private static final long serialVersionUID = 1L;
-    
+
     @Inject protected ClinicaDAO clinicaDAO;
     @Inject protected RolDAO rolDAO;
     @Inject protected PersonaRolDAO personaRolDAO;
-    
+
     private Clinica clinicaActual;
     private Rol rolActual;
     private Persona personaActual;
-    
+
     // Temporal variables for the form
     private Clinica clinicaTemp;
     private Rol rolTemp;
     private Persona personaTemp;
 
     public Clinica getClinicaActual() { return clinicaActual; }
-    
+
     public void setClinicaActual(Clinica seleccionada) {
         if (seleccionada != null && !Boolean.TRUE.equals(seleccionada.getActivo())) {
             FacesContext contexto = FacesContext.getCurrentInstance();
@@ -68,7 +68,7 @@ public class SesionBean implements Serializable {
 
     public List<Clinica> getClinicasActivas() { return clinicaDAO.findAllActivos(); }
     public List<Rol> getRolesActivos() { return rolDAO.findAllActivos(); }
-    
+
     public List<Persona> getPersonasDisponibles() {
         if (clinicaTemp == null || rolTemp == null) return Collections.emptyList();
         return personaRolDAO.findByClinicaAndRol(clinicaTemp.getIdClinica(), rolTemp.getIdRol())
@@ -79,25 +79,72 @@ public class SesionBean implements Serializable {
         personaTemp = null;
     }
 
-    public void aplicarCambios() {
-        FacesContext ctx = FacesContext.getCurrentInstance();
-        if (clinicaTemp == null || rolTemp == null || personaTemp == null) {
-            ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Debe seleccionar clínica, rol y persona."));
+    public void aplicarClinica() {
+        Clinica clinica = clinicaTemp == null ? null : clinicaDAO.findById(clinicaTemp.getIdClinica());
+        if (clinica == null || !Boolean.TRUE.equals(clinica.getActivo())) {
+            mensaje(FacesMessage.SEVERITY_ERROR, "Seleccione una clínica activa.");
             return;
         }
-        clinicaActual = clinicaTemp;
-        rolActual = rolTemp;
-        personaActual = personaTemp;
-        ctx.addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Rol aplicado correctamente."));
+        if (!clinica.equals(clinicaActual)) {
+            rolActual = null;
+            personaActual = null;
+            rolTemp = null;
+            personaTemp = null;
+        }
+        clinicaActual = clinica;
+        mensaje(FacesMessage.SEVERITY_INFO, "Clínica de trabajo aplicada correctamente.");
+    }
+
+    public void aplicarCambios() {
+        if (clinicaTemp == null || rolTemp == null || personaTemp == null) {
+            mensaje(FacesMessage.SEVERITY_ERROR, "Debe seleccionar clínica, rol y persona.");
+            return;
+        }
+        Clinica clinica = clinicaDAO.findById(clinicaTemp.getIdClinica());
+        Rol rol = rolDAO.findById(rolTemp.getIdRol());
+        if (clinica == null || !Boolean.TRUE.equals(clinica.getActivo())
+                || rol == null || !Boolean.TRUE.equals(rol.getActivo())) {
+            mensaje(FacesMessage.SEVERITY_ERROR, "Seleccione una clínica y un rol activos.");
+            return;
+        }
+        Persona persona = personaRolDAO.findByClinicaAndRol(clinica.getIdClinica(), rol.getIdRol())
+                .stream().map(PersonaRol::getIdPersona)
+                .filter(p -> p != null && p.equals(personaTemp)).findFirst().orElse(null);
+        if (persona == null) {
+            mensaje(FacesMessage.SEVERITY_ERROR, "La persona debe tener el rol elegido en esta clínica.");
+            return;
+        }
+        clinicaActual = clinica;
+        rolActual = rol;
+        personaActual = persona;
+        mensaje(FacesMessage.SEVERITY_INFO, "Clínica y rol aplicados correctamente.");
+    }
+
+    private void mensaje(FacesMessage.Severity severidad, String texto) {
+        FacesContext ctx = FacesContext.getCurrentInstance();
+        if (ctx != null) {
+            ctx.addMessage(null, new FacesMessage(severidad, "Sesión", texto));
+            if (FacesMessage.SEVERITY_ERROR.equals(severidad)) ctx.validationFailed();
+        }
+    }
+
+    public String cerrarSesion() {
+        clinicaActual = null;
+        rolActual = null;
+        personaActual = null;
+        clinicaTemp = null;
+        rolTemp = null;
+        personaTemp = null;
+        return "/index?faces-redirect=true";
     }
 
     public boolean isClinicaSeleccionada() { return clinicaActual != null; }
     public String getNombreClinica() {
         return clinicaActual == null ? "Sin clínica seleccionada" : clinicaActual.getNombre();
     }
-    
+
     public String getDisplayUsuario() {
-        if (personaActual == null || rolActual == null) return "No autenticado";
+        if (personaActual == null || rolActual == null) return "Sin rol seleccionado";
         return personaActual.getNombres() + " " + personaActual.getApellidos() + " (" + rolActual.getNombre() + ")";
     }
 }

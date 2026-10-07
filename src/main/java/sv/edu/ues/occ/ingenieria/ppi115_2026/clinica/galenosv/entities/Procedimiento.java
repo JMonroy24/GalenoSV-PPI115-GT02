@@ -5,37 +5,42 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
-import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "procedimiento")
+@NamedQueries({
+    @NamedQuery(name = "Procedimiento.findAll", query = "SELECT p FROM Procedimiento p"),
+    @NamedQuery(name = "Procedimiento.findByNombre", query = "SELECT p FROM Procedimiento p WHERE p.nombre = :nombre"),
+    @NamedQuery(name = "Procedimiento.findByActivo", query = "SELECT p FROM Procedimiento p WHERE p.activo = :activo"),
+    @NamedQuery(name = "Procedimiento.findByObservaciones", query = "SELECT p FROM Procedimiento p WHERE p.observaciones = :observaciones")})
 public class Procedimiento implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
-    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
+    @NotNull
     @Column(name = "id_procedimiento")
     private UUID idProcedimiento;
 
-    @NotBlank(message = "{procedimiento.nombre.obligatorio}")
-    @Size(max = 155, message = "{procedimiento.nombre.longitud}")
-    @Column(name = "nombre", nullable = false, length = 155)
+    @Size(max = 155)
+    @Column(name = "nombre")
     private String nombre;
 
-    @NotNull(message = "{procedimiento.activo.obligatorio}")
-    @Column(name = "activo", nullable = false)
+    @Column(name = "activo")
     private Boolean activo;
 
-    @Size(max = 2000, message = "{procedimiento.observaciones.longitud}")
-    @Column(name = "observaciones", length = 2000)
+    @Size(max = 2147483647)
+    @Column(name = "observaciones")
     private String observaciones;
 
     @OneToMany(mappedBy = "idProcedimiento", fetch = FetchType.LAZY)
@@ -89,11 +94,6 @@ public class Procedimiento implements IdentificableEntity {
     }
 
     @Override
-    public String getIdKey() {
-        return idProcedimiento != null ? idProcedimiento.toString() : "";
-    }
-
-    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idProcedimiento != null ? idProcedimiento.hashCode() : 0);
@@ -116,4 +116,7 @@ public class Procedimiento implements IdentificableEntity {
     public String toString() {
         return "entity.Procedimiento[ idProcedimiento=" + idProcedimiento + " ]";
     }
+
+    @Override
+    public String getIdKey() { return idProcedimiento == null ? null : idProcedimiento.toString(); }
 }

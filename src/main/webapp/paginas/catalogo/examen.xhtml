@@ -61,11 +61,24 @@
                     <p:panel header="Tipos asignados"
                              style="margin-top:1rem">
 
-                        <p:dataTable value="#{examenModel.tiposAsignados}"
+                        <p:toolbar id="accionesTipo"><p:toolbarGroup>
+                            <p:commandButton value="Eliminar seleccionado" icon="pi pi-trash"
+                                             action="#{examenModel.quitarTipoSeleccionado()}"
+                                             disabled="#{empty examenModel.asignacionTipoSeleccionada}"
+                                             process="@this" update="@form" styleClass="ui-button-danger">
+                                <p:confirm header="Quitar tipo" message="¿Desea quitar el tipo seleccionado del examen?"/>
+                            </p:commandButton>
+                        </p:toolbarGroup></p:toolbar>
+                        <p:dataTable id="tablaTipos" selectionMode="single"
+                                     selection="#{examenModel.asignacionTipoSeleccionada}"
+                                     rowKey="#{asignacion.idExamenTipoExamen}"
+                                     value="#{examenModel.tiposAsignados}"
                                      var="asignacion"
                                      emptyMessage="Este examen aún no tiene tipos asignados."
                                      size="small">
 
+                            <p:ajax event="rowSelect" process="@this" update="accionesTipo"/>
+                            <p:ajax event="rowUnselect" process="@this" update="accionesTipo"/>
                             <p:column headerText="Tipo">
                                 <h:outputText value="#{asignacion.idTipoExamen.nombre}"/>
                             </p:column>
@@ -74,18 +87,7 @@
                                 <h:outputText value="#{asignacion.observaciones}"/>
                             </p:column>
 
-                            <p:column headerText="Acción">
-                                <p:commandButton icon="pi pi-trash"
-                                                 title="Quitar tipo"
-                                                 styleClass="ui-button-danger"
-                                                 action="#{examenModel.quitarTipo(asignacion)}"
-                                                 process="@this"
-                                                 update="@form">
-                                    <p:confirm header="Quitar tipo"
-                                               message="¿Desea quitar este tipo del examen?"
-                                               icon="pi pi-exclamation-triangle"/>
-                                </p:commandButton>
-                            </p:column>
+
                         </p:dataTable>
 
                         <p:panelGrid columns="2"

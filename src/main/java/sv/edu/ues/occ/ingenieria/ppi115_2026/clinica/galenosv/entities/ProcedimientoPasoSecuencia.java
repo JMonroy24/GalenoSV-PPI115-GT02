@@ -7,36 +7,38 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import java.io.Serializable;
 import java.util.UUID;
-import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "procedimiento_paso_secuencia")
+@NamedQueries({
+    @NamedQuery(name = "ProcedimientoPasoSecuencia.findAll", query = "SELECT p FROM ProcedimientoPasoSecuencia p"),
+    @NamedQuery(name = "ProcedimientoPasoSecuencia.findByTipoSecuencia", query = "SELECT p FROM ProcedimientoPasoSecuencia p WHERE p.tipoSecuencia = :tipoSecuencia")})
 public class ProcedimientoPasoSecuencia implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
-    @NotNull(message = "{identificador.obligatorio}")
     @Id
     @Basic(optional = false)
+    @NotNull
     @Column(name = "id_procedimiento_paso_secuencia")
     private UUID idProcedimientoPasoSecuencia;
 
-    @NotNull(message = "{procedimientoPasoSecuencia.idProcedimientoPasoReferencia.obligatorio}")
-    @Column(name = "id_procedimiento_paso_referencia", nullable = false)
+    @Column(name = "id_procedimiento_paso_referencia")
     private UUID idProcedimientoPasoReferencia;
 
-    @NotBlank(message = "{procedimientoPasoSecuencia.tipoSecuencia.obligatorio}")
-    @Size(max = 20, message = "{procedimientoPasoSecuencia.tipoSecuencia.longitud}")
-    @Column(name = "tipo_secuencia", nullable = false, length = 20)
+    @Size(max = 20)
+    @Column(name = "tipo_secuencia")
     private String tipoSecuencia;
 
-    @NotNull(message = "{procedimientoPasoSecuencia.idProcedimientoPaso.obligatorio}")
-    @JoinColumn(name = "id_procedimiento_paso", referencedColumnName = "id_procedimiento_paso", nullable = false)
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_procedimiento_paso", referencedColumnName = "id_procedimiento_paso")
+    @ManyToOne(fetch = FetchType.LAZY)
     private ProcedimientoPaso idProcedimientoPaso;
 
     public ProcedimientoPasoSecuencia() {
@@ -79,11 +81,6 @@ public class ProcedimientoPasoSecuencia implements IdentificableEntity {
     }
 
     @Override
-    public String getIdKey() {
-        return idProcedimientoPasoSecuencia != null ? idProcedimientoPasoSecuencia.toString() : "";
-    }
-
-    @Override
     public int hashCode() {
         int hash = 0;
         hash += (idProcedimientoPasoSecuencia != null ? idProcedimientoPasoSecuencia.hashCode() : 0);
@@ -106,4 +103,7 @@ public class ProcedimientoPasoSecuencia implements IdentificableEntity {
     public String toString() {
         return "entity.ProcedimientoPasoSecuencia[ idProcedimientoPasoSecuencia=" + idProcedimientoPasoSecuencia + " ]";
     }
+
+    @Override
+    public String getIdKey() { return idProcedimientoPasoSecuencia == null ? null : idProcedimientoPasoSecuencia.toString(); }
 }

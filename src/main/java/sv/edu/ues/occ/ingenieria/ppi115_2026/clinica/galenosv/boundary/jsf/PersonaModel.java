@@ -87,11 +87,17 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
 
     @Override
     protected Persona crearNuevoRegistro() {
-        return new Persona(UUID.randomUUID());
+        Persona nueva = new Persona(UUID.randomUUID());
+        nueva.setFechaCreacion(new Date());
+        return nueva;
     }
 
     @Override
     public void seleccionar(Persona persona) {
+        docSeleccionado = null;
+        medioSeleccionado = null;
+        rolSeleccionado = null;
+
         super.seleccionar(persona);
         recargarRelaciones();
         limpiarBorradores();
@@ -99,6 +105,10 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
 
     @Override
     public void prepararNuevo() {
+        docSeleccionado = null;
+        medioSeleccionado = null;
+        rolSeleccionado = null;
+
         super.prepararNuevo();
         vaciarRelaciones();
         limpiarBorradores();
@@ -106,6 +116,10 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
 
     @Override
     public void cancelar() {
+        docSeleccionado = null;
+        medioSeleccionado = null;
+        rolSeleccionado = null;
+
         super.cancelar();
         vaciarRelaciones();
         limpiarBorradores();
@@ -325,8 +339,6 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
 
     @Override
     protected void validarNegocio(Persona registro) {
-        java.util.logging.Logger.getLogger("persona").info(
-            "guardar id=" + registro.getIdPersona() + " nombres=[" + registro.getNombres() + "] crear=" + isEstadoCrear());
         registro.setNombres(ValidadorComun.textoObligatorio(registro.getNombres(), "El campo Nombres"));
         registro.setApellidos(ValidadorComun.textoObligatorio(registro.getApellidos(), "El campo Apellidos"));
         if (registro.getFechaNacimiento() != null && !registro.getFechaNacimiento().before(getHoy())) {
@@ -339,4 +351,16 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
         return Date.from(java.time.LocalDate.now(zona).atStartOfDay(zona).toInstant());
     }
 
+
+    private Documento docSeleccionado;
+    public Documento getDocSeleccionado() { return docSeleccionado; }
+    public void setDocSeleccionado(Documento valor) { docSeleccionado = valor; }
+
+    private MedioContacto medioSeleccionado;
+    public MedioContacto getMedioSeleccionado() { return medioSeleccionado; }
+    public void setMedioSeleccionado(MedioContacto valor) { medioSeleccionado = valor; }
+
+    private PersonaRol rolSeleccionado;
+    public PersonaRol getRolSeleccionado() { return rolSeleccionado; }
+    public void setRolSeleccionado(PersonaRol valor) { rolSeleccionado = valor; }
 }
