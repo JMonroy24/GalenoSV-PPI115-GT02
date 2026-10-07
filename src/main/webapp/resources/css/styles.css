@@ -101,7 +101,7 @@
     .layout-topbar .app-user { margin-left: 0; padding-left: 0; flex-wrap: wrap; }
 }
 
-.layout-topbar .app-logo { width: 36px; height: 36px; object-fit: contain; margin-right: 0.5rem; }
+.layout-topbar .app-logo { width: 24px; height: 24px; object-fit: contain; margin-right: 0.5rem; }
 .layout-topbar #frmSesion { margin: 0; }
 
 .pacientes-sugerencias .ui-autocomplete-table {
