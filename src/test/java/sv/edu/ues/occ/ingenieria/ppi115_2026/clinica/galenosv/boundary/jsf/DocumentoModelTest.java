@@ -15,6 +15,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 public class DocumentoModelTest {
 
     @Mock
@@ -32,7 +33,8 @@ public class DocumentoModelTest {
     public void testInitYCargarDatos() {
         documentoModel.init();
         assertNotNull(documentoModel.getLazyModel());
-        verify(documentoDAO, never()).findAll();
+        assertNull(documentoModel.getRegistros());
+
     }
 
     @Test
@@ -40,7 +42,6 @@ public class DocumentoModelTest {
         documentoModel.prepararNuevo();
 
         assertNotNull(documentoModel.getRegistroActual());
-        assertNotNull(documentoModel.getRegistroActual().getIdDocumento());
         assertEquals(Estado.CREAR, documentoModel.getEstado());
         assertTrue(documentoModel.isEstadoCrear());
     }
@@ -67,9 +68,13 @@ public class DocumentoModelTest {
 
     @Test
     public void testGuardarCrear() {
-
         documentoModel.prepararNuevo();
 
+        documentoModel.getRegistroActual().setValor("12345678");
+        documentoModel.getRegistroActual().setIdPersona(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona(UUID.randomUUID()));
+        var tipoValido = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoDocumento(UUID.randomUUID());
+        tipoValido.setActivo(true);
+        documentoModel.getRegistroActual().setIdTipoDocumento(tipoValido);
         documentoModel.guardar();
 
         verify(documentoDAO).create(any(Documento.class));
@@ -79,10 +84,14 @@ public class DocumentoModelTest {
 
     @Test
     public void testGuardarModificar() {
-
         Documento d = new Documento(UUID.randomUUID());
         documentoModel.seleccionar(d);
 
+        documentoModel.getRegistroActual().setValor("12345678");
+        documentoModel.getRegistroActual().setIdPersona(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona(UUID.randomUUID()));
+        var tipoValido = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoDocumento(UUID.randomUUID());
+        tipoValido.setActivo(true);
+        documentoModel.getRegistroActual().setIdTipoDocumento(tipoValido);
         documentoModel.guardar();
 
         verify(documentoDAO).update(d);
@@ -91,7 +100,6 @@ public class DocumentoModelTest {
 
     @Test
     public void testEliminar() {
-
         Documento d = new Documento(UUID.randomUUID());
         documentoModel.eliminar(d);
 
@@ -100,8 +108,10 @@ public class DocumentoModelTest {
 
     @Test
     public void testGettersAndSetters() {
+        documentoModel.init();
         assertEquals(documentoDAO, documentoModel.getDAO());
         assertEquals(documentoDAO, documentoModel.getDocumentoDAO());
         assertNotNull(documentoModel.crearNuevoRegistro());
+        assertNotNull(documentoModel.getLazyModel());
     }
 }

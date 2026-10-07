@@ -26,7 +26,7 @@ import java.util.UUID;
     @NamedQuery(name = "ExamenResultado.findByResultado", query = "SELECT e FROM ExamenResultado e WHERE e.resultado = :resultado"),
     @NamedQuery(name = "ExamenResultado.findByInterpretacion", query = "SELECT e FROM ExamenResultado e WHERE e.interpretacion = :interpretacion"),
     @NamedQuery(name = "ExamenResultado.findByRutaAtestado", query = "SELECT e FROM ExamenResultado e WHERE e.rutaAtestado = :rutaAtestado")})
-public class ExamenResultado implements Serializable {
+public class ExamenResultado implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -134,4 +134,7 @@ public class ExamenResultado implements Serializable {
     public String toString() {
         return "entity.ExamenResultado[ idExamenResultado=" + idExamenResultado + " ]";
     }
+
+    @Override
+    public String getIdKey() { return idExamenResultado == null ? null : idExamenResultado.toString(); }
 }

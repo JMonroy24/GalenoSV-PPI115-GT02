@@ -8,7 +8,7 @@ import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoMedioContacto;
 
 /**
- * Acceso a datos para la entidad .
+ * Acceso a datos para la entidad TipoMedioContacto.
  */
 @ApplicationScoped
 public class TipoMedioContactoDAO extends DefaultDAO<TipoMedioContacto, UUID> implements Serializable {
@@ -30,5 +30,19 @@ public class TipoMedioContactoDAO extends DefaultDAO<TipoMedioContacto, UUID> im
     @Override
     public EntityManager getEntityManager() {
         return em;
+    }
+
+    @Override
+    protected java.util.List<String> getCamposBusqueda() {
+        return java.util.List.of("nombre");
+    }
+
+
+
+    /** Catálogo activo, ordenado para los selectores de los formularios. */
+    public java.util.List<TipoMedioContacto> findAllActivos() {
+        return getEntityManager().createQuery(
+                "SELECT e FROM TipoMedioContacto e WHERE e.activo = true ORDER BY e.nombre, e.idTipoMedioContacto",
+                TipoMedioContacto.class).getResultList();
     }
 }

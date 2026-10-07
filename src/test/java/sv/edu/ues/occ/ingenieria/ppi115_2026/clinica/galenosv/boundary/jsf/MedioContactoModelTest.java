@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +15,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 public class MedioContactoModelTest {
 
     @Mock
@@ -32,14 +31,10 @@ public class MedioContactoModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        MedioContacto mc = new MedioContacto(UUID.randomUUID());
-        when(medioContactoDAO.findAll()).thenReturn(List.of(mc));
-
         medioContactoModel.init();
+        assertNotNull(medioContactoModel.getLazyModel());
+        assertNull(medioContactoModel.getRegistros());
 
-        assertNotNull(medioContactoModel.getRegistros());
-        assertEquals(1, medioContactoModel.getRegistros().size());
-        verify(medioContactoDAO).findAll();
     }
 
     @Test
@@ -73,11 +68,14 @@ public class MedioContactoModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(medioContactoDAO.findAll()).thenReturn(Collections.emptyList());
-
         medioContactoModel.prepararNuevo();
         medioContactoModel.getRegistroActual().setValor("test@email.com");
 
+        medioContactoModel.getRegistroActual().setValor("12345678");
+        medioContactoModel.getRegistroActual().setIdPersona(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona(UUID.randomUUID()));
+        var tipoValido = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoMedioContacto(UUID.randomUUID());
+        tipoValido.setActivo(true);
+        medioContactoModel.getRegistroActual().setIdTipoMedioContacto(tipoValido);
         medioContactoModel.guardar();
 
         verify(medioContactoDAO).create(any(MedioContacto.class));
@@ -87,11 +85,14 @@ public class MedioContactoModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(medioContactoDAO.findAll()).thenReturn(Collections.emptyList());
-
         MedioContacto mc = new MedioContacto(UUID.randomUUID());
         medioContactoModel.seleccionar(mc);
 
+        medioContactoModel.getRegistroActual().setValor("12345678");
+        medioContactoModel.getRegistroActual().setIdPersona(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona(UUID.randomUUID()));
+        var tipoValido = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoMedioContacto(UUID.randomUUID());
+        tipoValido.setActivo(true);
+        medioContactoModel.getRegistroActual().setIdTipoMedioContacto(tipoValido);
         medioContactoModel.guardar();
 
         verify(medioContactoDAO).update(mc);
@@ -100,8 +101,6 @@ public class MedioContactoModelTest {
 
     @Test
     public void testEliminar() {
-        when(medioContactoDAO.findAll()).thenReturn(Collections.emptyList());
-
         MedioContacto mc = new MedioContacto(UUID.randomUUID());
         medioContactoModel.eliminar(mc);
 
@@ -110,8 +109,10 @@ public class MedioContactoModelTest {
 
     @Test
     public void testGettersAndSetters() {
+        medioContactoModel.init();
         assertEquals(medioContactoDAO, medioContactoModel.getDAO());
         assertEquals(medioContactoDAO, medioContactoModel.getMedioContactoDAO());
         assertNotNull(medioContactoModel.crearNuevoRegistro());
+        assertNotNull(medioContactoModel.getLazyModel());
     }
 }

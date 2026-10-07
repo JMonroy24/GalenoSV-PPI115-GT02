@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui:composition template="/WEB-INF/templates/template.xhtml"
+                xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:crud="jakarta.faces.composite/crud">
+
+    <ui:define name="titulo">Personas</ui:define>
+
+    <ui:define name="contenido">
+
+        <h:form id="frmPrincipal">
+<crud:crudTransaccional model="#{personaModel}"
+                                lazyModel="#{personaModel.lazyModel}"
+                                titulo="Personas"
+                                anchoDialogo="850">
+
+            <p:column headerText="Nombres" sortBy="#{registro.nombres}">
+                <h:outputText value="#{registro.nombres}"/>
+            </p:column>
+
+            <p:column headerText="Apellidos" sortBy="#{registro.apellidos}">
+                <h:outputText value="#{registro.apellidos}"/>
+            </p:column>
+
+            <p:column headerText="Fecha de Nacimiento" sortBy="#{registro.fechaNacimiento}">
+                <h:outputText value="#{registro.fechaNacimiento}">
+                    <f:convertDateTime pattern="dd/MM/yyyy" timeZone="America/El_Salvador"/>
+                </h:outputText>
+            </p:column>
+
+            <p:column headerText="Fecha de creación" sortBy="#{registro.fechaCreacion}">
+                <h:outputText value="#{registro.fechaCreacion}">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
+                </h:outputText>
+            </p:column>
+
+            <f:facet name="formulario">
+                <h:panelGrid columns="2" cellpadding="7" columnClasses="ui-grid-col-4,ui-grid-col-8" style="width:100%">
+
+                    <p:outputLabel value="Nombres:" for="nombres"/>
+                    <p:inputText id="nombres" value="#{personaModel.registroActual.nombres}" required="true"/>
+
+                    <p:outputLabel value="Apellidos:" for="apellidos"/>
+                    <p:inputText id="apellidos" value="#{personaModel.registroActual.apellidos}" required="true"/>
+
+                    <h:outputText value="Fecha de creación:"/>
+                    <h:outputText value="#{personaModel.registroActual.fechaCreacion}">
+                        <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador"/>
+                    </h:outputText>
+
+                    <p:outputLabel value="Fecha de Nacimiento:" for="fechaNacimiento"/>
+                    <p:datePicker id="fechaNacimiento" value="#{personaModel.registroActual.fechaNacimiento}" pattern="dd/MM/yyyy" showIcon="true"/>
+
+                </h:panelGrid>
+            </f:facet>
+
+
+            <f:facet name="relaciones">
+
+                <p:outputPanel rendered="#{personaModel.estadoCrear}">
+                    <h:outputText value="Guarde la persona para poder agregar documentos, medios de contacto y roles."/>
+                </p:outputPanel>
+
+                <p:outputPanel rendered="#{personaModel.estadoModificar}">
+                    <p:tabView>
+
+                        <p:tab title="Documentos">
+                            <p:outputPanel id="pnlDocumentos">
+                                <p:toolbar id="accionesDoc"><p:toolbarGroup><p:commandButton disabled="#{empty personaModel.docSeleccionado}" icon="pi pi-trash" value="Eliminar seleccionado"
+                                                         styleClass="ui-button-danger"
+                                                         action="#{personaModel.quitarDocumento(personaModel.docSeleccionado)}"
+                                                         process="@this"
+                                                         update="pnlDocumentos">
+                                            <p:confirm header="Quitar documento"
+                                                       message="¿Desea quitar este documento?"
+                                                       icon="pi pi-exclamation-triangle"/>
+                                        </p:commandButton></p:toolbarGroup></p:toolbar>
+                            <p:dataTable value="#{personaModel.documentos}" var="doc"
+                                             emptyMessage="La persona no tiene documentos." size="small" selectionMode="single" selection="#{personaModel.docSeleccionado}" rowKey="#{doc.idKey}">
+                                <p:ajax event="rowSelect" update="accionesDoc"/>
+                                <p:ajax event="rowUnselect" update="accionesDoc"/>
+                                    <p:column headerText="Tipo">
+                                        <h:outputText value="#{doc.idTipoDocumento.nombre}"/>
+                                    </p:column>
+                                    <p:column headerText="Valor">
+                                        <h:outputText value="#{doc.valor}"/>
+                                    </p:column>
+                                    <p:column headerText="Ruta física">
+                                        <h:outputText value="#{doc.rutaFisica}"/>
+                                    </p:column>
+                                </p:dataTable>
+
+                                <p:panelGrid columns="2" style="width:100%; margin-top:1rem">
+                                    <p:outputLabel for="docTipo" value="Tipo:"/>
+                                    <p:selectOneMenu id="docTipo"
+                                                     value="#{personaModel.documentoNuevo.idTipoDocumento}"
+                                                     converter="#{entityConverter}" filter="true">
+                                        <f:selectItem itemLabel="Seleccione un tipo..." itemValue="#{null}"
+                                                      noSelectionOption="true"/>
+                                        <f:selectItems value="#{personaModel.tiposDocumento}" var="td"
+                                                       itemLabel="#{td.nombre}" itemValue="#{td}"/>
+                                    </p:selectOneMenu>
+
+                                    <p:outputLabel for="docValor" value="Valor:"/>
+                                    <p:inputText id="docValor" value="#{personaModel.documentoNuevo.valor}"/>
+
+                                    <p:outputLabel for="docRuta" value="Ruta física:"/>
+                                    <p:inputText id="docRuta" value="#{personaModel.documentoNuevo.rutaFisica}"/>
+
+                                    <h:outputText value=""/>
+                                    <p:commandButton value="Agregar documento" icon="pi pi-plus"
+                                                     styleClass="ui-button-success"
+                                                     action="#{personaModel.agregarDocumento()}"
+                                                     process="@this docTipo docValor docRuta"
+                                                     update="pnlDocumentos"/>
+                                </p:panelGrid>
+                            </p:outputPanel>
+                        </p:tab>
+
+                        <p:tab title="Medios de contacto">
+                            <p:outputPanel id="pnlMedios">
+                                <p:toolbar id="accionesMedio"><p:toolbarGroup><p:commandButton disabled="#{empty personaModel.medioSeleccionado}" icon="pi pi-trash" value="Eliminar seleccionado"
+                                                         styleClass="ui-button-danger"
+                                                         action="#{personaModel.quitarMedioContacto(personaModel.medioSeleccionado)}"
+                                                         process="@this"
+                                                         update="pnlMedios">
+                                            <p:confirm header="Quitar medio de contacto"
+                                                       message="¿Desea quitar este medio de contacto?"
+                                                       icon="pi pi-exclamation-triangle"/>
+                                        </p:commandButton></p:toolbarGroup></p:toolbar>
+                            <p:dataTable value="#{personaModel.mediosContacto}" var="medio"
+                                             emptyMessage="La persona no tiene medios de contacto." size="small" selectionMode="single" selection="#{personaModel.medioSeleccionado}" rowKey="#{medio.idKey}">
+                                <p:ajax event="rowSelect" update="accionesMedio"/>
+                                <p:ajax event="rowUnselect" update="accionesMedio"/>
+                                    <p:column headerText="Tipo">
+                                        <h:outputText value="#{medio.idTipoMedioContacto.nombre}"/>
+                                    </p:column>
+                                    <p:column headerText="Valor">
+                                        <h:outputText value="#{medio.valor}"/>
+                                    </p:column>
+                                </p:dataTable>
+
+                                <p:panelGrid columns="2" style="width:100%; margin-top:1rem">
+                                    <p:outputLabel for="medTipo" value="Tipo:"/>
+                                    <p:selectOneMenu id="medTipo"
+                                                     value="#{personaModel.medioNuevo.idTipoMedioContacto}"
+                                                     converter="#{entityConverter}" filter="true">
+                                        <f:selectItem itemLabel="Seleccione un tipo..." itemValue="#{null}"
+                                                      noSelectionOption="true"/>
+                                        <f:selectItems value="#{personaModel.tiposMedioContacto}" var="tmc"
+                                                       itemLabel="#{tmc.nombre}" itemValue="#{tmc}"/>
+                                    </p:selectOneMenu>
+
+                                    <p:outputLabel for="medValor" value="Valor:"/>
+                                    <p:inputText id="medValor" value="#{personaModel.medioNuevo.valor}"/>
+
+                                    <h:outputText value=""/>
+                                    <p:commandButton value="Agregar medio" icon="pi pi-plus"
+                                                     styleClass="ui-button-success"
+                                                     action="#{personaModel.agregarMedioContacto()}"
+                                                     process="@this medTipo medValor"
+                                                     update="pnlMedios"/>
+                                </p:panelGrid>
+                            </p:outputPanel>
+                        </p:tab>
+
+                        <p:tab title="Roles">
+                            <p:outputPanel id="pnlRoles">
+                                <p:toolbar id="accionesRol"><p:toolbarGroup><p:commandButton disabled="#{empty personaModel.rolSeleccionado}" icon="pi pi-trash" value="Eliminar seleccionado"
+                                                         styleClass="ui-button-danger"
+                                                         action="#{personaModel.quitarRol(personaModel.rolSeleccionado)}"
+                                                         process="@this"
+                                                         update="pnlRoles">
+                                            <p:confirm header="Quitar rol"
+                                                       message="¿Desea quitar este rol?"
+                                                       icon="pi pi-exclamation-triangle"/>
+                                        </p:commandButton></p:toolbarGroup></p:toolbar>
+                            <p:dataTable value="#{personaModel.roles}" var="rol"
+                                             emptyMessage="La persona no tiene roles asignados." size="small" selectionMode="single" selection="#{personaModel.rolSeleccionado}" rowKey="#{rol.idKey}">
+                                <p:ajax event="rowSelect" update="accionesRol"/>
+                                <p:ajax event="rowUnselect" update="accionesRol"/>
+                                    <p:column headerText="Rol">
+                                        <h:outputText value="#{rol.idRol.nombre}"/>
+                                    </p:column>
+                                    <p:column headerText="Clínica">
+                                        <h:outputText value="#{rol.idClinica.nombre}"/>
+                                    </p:column>
+                                </p:dataTable>
+
+                                <p:panelGrid columns="2" style="width:100%; margin-top:1rem">
+                                    <p:outputLabel for="rolSel" value="Rol:"/>
+                                    <p:selectOneMenu id="rolSel" value="#{personaModel.rolNuevo.idRol}"
+                                                     converter="#{entityConverter}" filter="true">
+                                        <f:selectItem itemLabel="Seleccione un rol..." itemValue="#{null}"
+                                                      noSelectionOption="true"/>
+                                        <f:selectItems value="#{personaModel.rolesActivos}" var="r"
+                                                       itemLabel="#{r.nombre}" itemValue="#{r}"/>
+                                    </p:selectOneMenu>
+
+                                    <p:outputLabel for="rolClinica" value="Clínica:"/>
+                                    <p:selectOneMenu id="rolClinica" value="#{personaModel.rolNuevo.idClinica}"
+                                                     converter="#{entityConverter}" filter="true">
+                                        <f:selectItem itemLabel="Seleccione una clínica..." itemValue="#{null}"
+                                                      noSelectionOption="true"/>
+                                        <f:selectItems value="#{personaModel.clinicas}" var="c"
+                                                       itemLabel="#{c.nombre}" itemValue="#{c}"/>
+                                    </p:selectOneMenu>
+
+                                    <h:outputText value=""/>
+                                    <p:commandButton value="Asignar rol" icon="pi pi-plus"
+                                                     styleClass="ui-button-success"
+                                                     action="#{personaModel.agregarRol()}"
+                                                     process="@this rolSel rolClinica"
+                                                     update="pnlRoles"/>
+                                </p:panelGrid>
+                            </p:outputPanel>
+                        </p:tab>
+
+                    </p:tabView>
+                </p:outputPanel>
+
+            </f:facet>
+        </crud:crudTransaccional>
+</h:form>
+
+    </ui:define>
+
+</ui:composition>

@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -21,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 class ExamenModelTest {
 
     @Mock
@@ -28,6 +31,9 @@ class ExamenModelTest {
 
     @Mock
     private ExamenTipoExamenDAO examenTipoExamenDAO;
+
+    @Mock
+    private AsignacionService asignacionService;
 
     @InjectMocks
     private ExamenModel examenModel;
@@ -40,12 +46,11 @@ class ExamenModelTest {
     @Test
     void testInitYCargarDatos() {
         Examen examen = new Examen(UUID.randomUUID());
-        when(examenDAO.findAll()).thenReturn(List.of(examen));
 
         examenModel.init();
 
-        assertEquals(1, examenModel.getRegistros().size());
-        verify(examenDAO).findAll();
+
+        verifyNoInteractions(examenDAO);
     }
 
     @Test
@@ -85,10 +90,10 @@ class ExamenModelTest {
 
     @Test
     void testGuardarCrear() {
-        when(examenDAO.findAll()).thenReturn(Collections.emptyList());
 
         examenModel.prepararNuevo();
         examenModel.getRegistroActual().setNombre("Hemograma");
+        examenModel.getRegistroActual().setNombre("Registro válido");
         examenModel.guardar();
 
         verify(examenDAO).create(any(Examen.class));
@@ -101,9 +106,9 @@ class ExamenModelTest {
         Examen examen = new Examen(UUID.randomUUID());
         when(examenTipoExamenDAO.findByExamen(examen.getIdExamen()))
                 .thenReturn(Collections.emptyList());
-        when(examenDAO.findAll()).thenReturn(Collections.emptyList());
 
         examenModel.seleccionar(examen);
+        examenModel.getRegistroActual().setNombre("Registro válido");
         examenModel.guardar();
 
         verify(examenDAO).update(examen);
@@ -114,6 +119,7 @@ class ExamenModelTest {
     void testAgregarTipoGuardaAsociacion() {
         Examen examen = new Examen(UUID.randomUUID());
         TipoExamen tipo = new TipoExamen(UUID.randomUUID());
+        tipo.setActivo(true);
         when(examenTipoExamenDAO.findByExamen(examen.getIdExamen()))
                 .thenReturn(Collections.emptyList());
 
@@ -124,7 +130,7 @@ class ExamenModelTest {
 
         ArgumentCaptor<ExamenTipoExamen> captor =
                 ArgumentCaptor.forClass(ExamenTipoExamen.class);
-        verify(examenTipoExamenDAO).create(captor.capture());
+        verify(asignacionService).guardarTipo(captor.capture(), eq(true));
 
         ExamenTipoExamen asignacion = captor.getValue();
         assertNotNull(asignacion.getIdExamenTipoExamen());
@@ -140,6 +146,7 @@ class ExamenModelTest {
     void testAgregarTipoImpideDuplicado() {
         Examen examen = new Examen(UUID.randomUUID());
         TipoExamen tipo = new TipoExamen(UUID.randomUUID());
+        tipo.setActivo(true);
         ExamenTipoExamen asignacion =
                 new ExamenTipoExamen(UUID.randomUUID());
         asignacion.setIdTipoExamen(tipo);
@@ -149,8 +156,12 @@ class ExamenModelTest {
 
         examenModel.seleccionar(examen);
         examenModel.setTipoSeleccionado(tipo);
+        doThrow(new ValidacionNegocioException("Duplicado"))
+                .when(asignacionService).guardarTipo(any(), eq(true));
         examenModel.agregarTipo();
 
+        assertEquals(tipo, examenModel.getTipoSeleccionado());
+        assertEquals(Estado.MODIFICAR, examenModel.getEstado());
         verify(examenTipoExamenDAO, never())
                 .create(any(ExamenTipoExamen.class));
     }
@@ -190,7 +201,6 @@ class ExamenModelTest {
     @Test
     void testEliminar() {
         Examen examen = new Examen(UUID.randomUUID());
-        when(examenDAO.findAll()).thenReturn(Collections.emptyList());
 
         examenModel.eliminar(examen);
 

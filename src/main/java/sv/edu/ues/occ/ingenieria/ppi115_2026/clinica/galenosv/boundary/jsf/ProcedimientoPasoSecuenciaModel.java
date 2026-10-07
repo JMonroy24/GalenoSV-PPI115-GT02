@@ -1,5 +1,6 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -22,7 +23,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Procedimi
 @Named("procedimientoPasoSecuenciaModel")
 @ViewScoped
 public class ProcedimientoPasoSecuenciaModel
-        extends Model<ProcedimientoPasoSecuencia, UUID>
+        extends ModelTransaccional<ProcedimientoPasoSecuencia, UUID>
         implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -38,7 +39,7 @@ public class ProcedimientoPasoSecuenciaModel
      */
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     /**
@@ -58,7 +59,7 @@ public class ProcedimientoPasoSecuenciaModel
      */
     @Override
     protected ProcedimientoPasoSecuencia crearNuevoRegistro() {
-        return new ProcedimientoPasoSecuencia();
+        return new ProcedimientoPasoSecuencia(UUID.randomUUID());
     }
 
     /**
@@ -84,4 +85,18 @@ public class ProcedimientoPasoSecuenciaModel
         this.procedimientoPasoSecuenciaDAO =
                 procedimientoPasoSecuenciaDAO;
     }
+
+    @Inject
+    protected AsignacionService asignacionService;
+
+    @Override
+    protected void persistirNuevo(ProcedimientoPasoSecuencia registro) {
+        asignacionService.guardarSecuencia(registro, true);
+    }
+
+    @Override
+    protected void persistirCambios(ProcedimientoPasoSecuencia registro) {
+        asignacionService.guardarSecuencia(registro, false);
+    }
+
 }

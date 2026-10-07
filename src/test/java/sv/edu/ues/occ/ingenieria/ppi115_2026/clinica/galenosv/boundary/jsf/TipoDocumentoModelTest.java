@@ -17,6 +17,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 public class TipoDocumentoModelTest {
 
     @Mock
@@ -32,14 +33,10 @@ public class TipoDocumentoModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        TipoDocumento td = new TipoDocumento(UUID.randomUUID());
-        when(tipoDocumentoDAO.findAll()).thenReturn(List.of(td));
-
         tipoDocumentoModel.init();
+        assertNotNull(tipoDocumentoModel.getLazyModel());
+        assertNull(tipoDocumentoModel.getRegistros());
 
-        assertNotNull(tipoDocumentoModel.getRegistros());
-        assertEquals(1, tipoDocumentoModel.getRegistros().size());
-        verify(tipoDocumentoDAO).findAll();
     }
 
     @Test
@@ -73,11 +70,11 @@ public class TipoDocumentoModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(tipoDocumentoDAO.findAll()).thenReturn(Collections.emptyList());
 
         tipoDocumentoModel.prepararNuevo();
         tipoDocumentoModel.getRegistroActual().setNombre("DUI");
 
+        tipoDocumentoModel.getRegistroActual().setNombre("Registro válido");
         tipoDocumentoModel.guardar();
 
         verify(tipoDocumentoDAO).create(any(TipoDocumento.class));
@@ -87,11 +84,11 @@ public class TipoDocumentoModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(tipoDocumentoDAO.findAll()).thenReturn(Collections.emptyList());
 
         TipoDocumento td = new TipoDocumento(UUID.randomUUID());
         tipoDocumentoModel.seleccionar(td);
 
+        tipoDocumentoModel.getRegistroActual().setNombre("Registro válido");
         tipoDocumentoModel.guardar();
 
         verify(tipoDocumentoDAO).update(td);
@@ -100,7 +97,6 @@ public class TipoDocumentoModelTest {
 
     @Test
     public void testEliminar() {
-        when(tipoDocumentoDAO.findAll()).thenReturn(Collections.emptyList());
 
         TipoDocumento td = new TipoDocumento(UUID.randomUUID());
         tipoDocumentoModel.eliminar(td);

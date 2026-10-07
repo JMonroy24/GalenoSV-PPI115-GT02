@@ -33,7 +33,7 @@ class ConsultaProcedimientoPasoDAOTest {
     @Mock
     private CriteriaQuery<Long> cqLong;
 
-    @Mock
+    @Mock(answer = org.mockito.Answers.RETURNS_DEEP_STUBS)
     private Root<ConsultaProcedimientoPaso> root;
 
     @Mock

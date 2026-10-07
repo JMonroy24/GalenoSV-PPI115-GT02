@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -15,14 +17,16 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica;
  */
 @Named("clinicaModel")
 @ViewScoped
-public class ClinicaModel extends Model<Clinica, UUID> implements Serializable {
+public class ClinicaModel extends ModelTransaccional<Clinica, UUID> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Inject
     protected ClinicaDAO clinicaDAO;
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override
@@ -32,7 +36,9 @@ public class ClinicaModel extends Model<Clinica, UUID> implements Serializable {
 
     @Override
     protected Clinica crearNuevoRegistro() {
-        return new Clinica();
+        Clinica registro = new Clinica(UUID.randomUUID());
+        registro.setActivo(true);
+        return registro;
     }
 
     public ClinicaDAO getClinicaDAO() {
@@ -42,4 +48,18 @@ public class ClinicaModel extends Model<Clinica, UUID> implements Serializable {
     public void setClinicaDAO(ClinicaDAO clinicaDAO) {
         this.clinicaDAO = clinicaDAO;
     }
+
+    @Override
+    protected void validarNegocio(Clinica registro) {
+        registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre"));
+        registro.setTipo(ValidadorComun.textoObligatorio(registro.getTipo(), "El tipo de clínica"));
+        if (clinicaDAO.existePorCampo("nombre", registro.getNombre(), registro.getIdClinica())) {
+            throw new ValidacionNegocioException("Ya existe un registro con este nombre.");
+        }
+    }
+
+    public java.util.List<Clinica> getActivos() {
+        return clinicaDAO.findAllActivos();
+    }
+
 }

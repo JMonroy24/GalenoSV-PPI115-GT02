@@ -39,9 +39,37 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
     private List<ProcedimientoPaso> pasos = List.of();
     private final Map<UUID, ProcedimientoPaso> padres = new HashMap<>();
     private int pestanaActiva;
+    private Procedimiento procedimientoSeleccionado;
+    private TreeNode<ProcedimientoPaso> nodoPasoSeleccionado;
+
+    public Procedimiento getProcedimientoSeleccionado() { return procedimientoSeleccionado; }
+    public void setProcedimientoSeleccionado(Procedimiento seleccionado) { procedimientoSeleccionado = seleccionado; }
+    public TreeNode<ProcedimientoPaso> getNodoPasoSeleccionado() { return nodoPasoSeleccionado; }
+    public void setNodoPasoSeleccionado(TreeNode<ProcedimientoPaso> seleccionado) { nodoPasoSeleccionado = seleccionado; }
+    public void editarSeleccionado() {
+        if (procedimientoSeleccionado != null) seleccionar(procedimientoSeleccionado);
+    }
+    public void eliminarSeleccionado() {
+        if (procedimientoSeleccionado != null) {
+            eliminar(procedimientoSeleccionado);
+            procedimientoSeleccionado = null;
+        }
+    }
+    public void nuevoPaso() {
+        nodoPasoSeleccionado = null;
+        pasoModel.prepararNuevo();
+    }
+    public void editarPasoSeleccionado() {
+        if (nodoPasoSeleccionado != null) pasoModel.seleccionar(nodoPasoSeleccionado.getData());
+    }
+    public void eliminarPasoSeleccionado() {
+        if (nodoPasoSeleccionado != null) eliminarPaso(nodoPasoSeleccionado.getData());
+    }
 
     @Override public void prepararNuevo() {
         super.prepararNuevo();
+        procedimientoSeleccionado = null;
+        nodoPasoSeleccionado = null;
         pestanaActiva = 0;
         arbolPasos = null;
     }
@@ -98,7 +126,7 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
             agregarMensaje(FacesMessage.SEVERITY_WARN, "Procedimiento sin finalización",
                     "Este procedimiento aún no tiene un paso de fin.");
     }
-    public void refrescarPasos() { arbolPasos = null; getArbolPasos(); }
+    public void refrescarPasos() { nodoPasoSeleccionado = null; arbolPasos = null; getArbolPasos(); }
     /** Construye un bosque expandido: cada paso se muestra una vez, incluso con ciclos u huérfanos. */
     public TreeNode<ProcedimientoPaso> getArbolPasos() {
         if (arbolPasos != null) return arbolPasos;
@@ -168,7 +196,9 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
      */
     @Override
     protected Procedimiento crearNuevoRegistro() {
-        return new Procedimiento(UUID.randomUUID());
+        Procedimiento nuevo = new Procedimiento(UUID.randomUUID());
+        nuevo.setActivo(true);
+        return nuevo;
     }
 
     public ProcedimientoDAO getProcedimientoDAO() {
@@ -177,5 +207,9 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
 
     public void setProcedimientoDAO(ProcedimientoDAO procedimientoDAO) {
         this.procedimientoDAO = procedimientoDAO;
+    }
+
+    public List<Procedimiento> getProcedimientosActivos() {
+        return procedimientoDAO.findAllActivos();
     }
 }

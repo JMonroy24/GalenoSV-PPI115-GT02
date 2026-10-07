@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -15,14 +17,16 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol;
  */
 @Named("rolModel")
 @ViewScoped
-public class RolModel extends Model<Rol, UUID> implements Serializable {
+public class RolModel extends ModelTransaccional<Rol, UUID> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Inject
     protected RolDAO rolDAO;
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override
@@ -32,7 +36,19 @@ public class RolModel extends Model<Rol, UUID> implements Serializable {
 
     @Override
     protected Rol crearNuevoRegistro() {
-        return new Rol();
+        Rol registro = new Rol(UUID.randomUUID());
+        registro.setActivo(true);
+        return registro;
+    }
+
+    /**
+     * Fuente de opciones para selectores de FK en otras vistas.
+     * Retorna solo los roles activos, sin cargar el modelo completo.
+     *
+     * @return lista de Rol ordenada por nombre
+     */
+    public java.util.List<Rol> getRolesActivos() {
+        return rolDAO.findAllActivos();
     }
 
     public RolDAO getRolDAO() {
@@ -42,4 +58,13 @@ public class RolModel extends Model<Rol, UUID> implements Serializable {
     public void setRolDAO(RolDAO rolDAO) {
         this.rolDAO = rolDAO;
     }
+
+    @Override
+    protected void validarNegocio(Rol registro) {
+        registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre"));
+        if (rolDAO.existePorCampo("nombre", registro.getNombre(), registro.getIdRol())) {
+            throw new ValidacionNegocioException("Ya existe un registro con este nombre.");
+        }
+    }
+
 }

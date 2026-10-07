@@ -23,7 +23,7 @@ import java.util.UUID;
     @NamedQuery(name = "TipoMedioContacto.findByIndicaciones", query = "SELECT t FROM TipoMedioContacto t WHERE t.indicaciones = :indicaciones"),
     @NamedQuery(name = "TipoMedioContacto.findByExpresionRegular", query = "SELECT t FROM TipoMedioContacto t WHERE t.expresionRegular = :expresionRegular"),
     @NamedQuery(name = "TipoMedioContacto.findByActivo", query = "SELECT t FROM TipoMedioContacto t WHERE t.activo = :activo")})
-public class TipoMedioContacto implements Serializable {
+public class TipoMedioContacto implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -129,4 +129,7 @@ public class TipoMedioContacto implements Serializable {
     public String toString() {
         return "entity.TipoMedioContacto[ idTipoMedioContacto=" + idTipoMedioContacto + " ]";
     }
+
+    @Override
+    public String getIdKey() { return idTipoMedioContacto == null ? null : idTipoMedioContacto.toString(); }
 }

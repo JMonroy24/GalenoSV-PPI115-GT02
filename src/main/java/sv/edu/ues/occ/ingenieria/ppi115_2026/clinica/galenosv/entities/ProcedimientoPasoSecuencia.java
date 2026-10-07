@@ -20,7 +20,7 @@ import java.util.UUID;
 @NamedQueries({
     @NamedQuery(name = "ProcedimientoPasoSecuencia.findAll", query = "SELECT p FROM ProcedimientoPasoSecuencia p"),
     @NamedQuery(name = "ProcedimientoPasoSecuencia.findByTipoSecuencia", query = "SELECT p FROM ProcedimientoPasoSecuencia p WHERE p.tipoSecuencia = :tipoSecuencia")})
-public class ProcedimientoPasoSecuencia implements Serializable {
+public class ProcedimientoPasoSecuencia implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -103,4 +103,7 @@ public class ProcedimientoPasoSecuencia implements Serializable {
     public String toString() {
         return "entity.ProcedimientoPasoSecuencia[ idProcedimientoPasoSecuencia=" + idProcedimientoPasoSecuencia + " ]";
     }
+
+    @Override
+    public String getIdKey() { return idProcedimientoPasoSecuencia == null ? null : idProcedimientoPasoSecuencia.toString(); }
 }

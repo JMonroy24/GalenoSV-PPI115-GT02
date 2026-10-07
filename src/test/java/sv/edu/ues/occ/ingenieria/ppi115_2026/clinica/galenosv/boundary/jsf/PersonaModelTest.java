@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,7 +7,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DocumentoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.MedioContactoDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,10 +18,20 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 public class PersonaModelTest {
 
     @Mock
     private PersonaDAO personaDAO;
+
+    @Mock
+    private DocumentoDAO documentoDAO;
+
+    @Mock
+    private MedioContactoDAO medioContactoDAO;
+
+    @Mock
+    private PersonaRolDAO personaRolDAO;
 
     @InjectMocks
     private PersonaModel personaModel;
@@ -32,14 +43,10 @@ public class PersonaModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        Persona p = new Persona(UUID.randomUUID());
-        when(personaDAO.findAll()).thenReturn(List.of(p));
-
         personaModel.init();
+        assertNotNull(personaModel.getLazyModel());
+        assertNull(personaModel.getRegistros());
 
-        assertNotNull(personaModel.getRegistros());
-        assertEquals(1, personaModel.getRegistros().size());
-        verify(personaDAO).findAll();
     }
 
     @Test
@@ -73,11 +80,11 @@ public class PersonaModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(personaDAO.findAll()).thenReturn(Collections.emptyList());
-
         personaModel.prepararNuevo();
         personaModel.getRegistroActual().setNombres("Juan");
 
+        personaModel.getRegistroActual().setNombres("Ana");
+        personaModel.getRegistroActual().setApellidos("Pérez");
         personaModel.guardar();
 
         verify(personaDAO).create(any(Persona.class));
@@ -87,11 +94,11 @@ public class PersonaModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(personaDAO.findAll()).thenReturn(Collections.emptyList());
-
         Persona p = new Persona(UUID.randomUUID());
         personaModel.seleccionar(p);
 
+        personaModel.getRegistroActual().setNombres("Ana");
+        personaModel.getRegistroActual().setApellidos("Pérez");
         personaModel.guardar();
 
         verify(personaDAO).update(p);
@@ -100,8 +107,6 @@ public class PersonaModelTest {
 
     @Test
     public void testEliminar() {
-        when(personaDAO.findAll()).thenReturn(Collections.emptyList());
-
         Persona p = new Persona(UUID.randomUUID());
         personaModel.eliminar(p);
 
@@ -110,8 +115,10 @@ public class PersonaModelTest {
 
     @Test
     public void testGettersAndSetters() {
+        personaModel.init();
         assertEquals(personaDAO, personaModel.getDAO());
         assertEquals(personaDAO, personaModel.getPersonaDAO());
         assertNotNull(personaModel.crearNuevoRegistro());
+        assertNotNull(personaModel.getLazyModel());
     }
 }

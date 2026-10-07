@@ -1,114 +1,99 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  CRUD para catálogos de bajo volumen. La sección opcional "relaciones"
-  permite administrar asociaciones dentro del formulario del catálogo.
--->
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="jakarta.faces.html"
       xmlns:f="jakarta.faces.core"
       xmlns:p="http://primefaces.org/ui"
       xmlns:crud="jakarta.faces.composite/crud"
-      xmlns:cc="jakarta.faces.composite"
-      xmlns:pt="jakarta.faces.passthrough">
+      xmlns:cc="jakarta.faces.composite">
 
     <cc:interface>
-        <cc:attribute name="model" required="true"
-                      shortDescription="Modelo JSF del catálogo."/>
-        <cc:attribute name="titulo" required="true"
-                      type="java.lang.String"
-                      shortDescription="Título visible del catálogo."/>
-        <cc:attribute name="anchoDialogo" default="550"
-                      type="java.lang.String"
-                      shortDescription="Ancho del formulario en píxeles."/>
-
-        <cc:facet name="formulario"
-                  shortDescription="Campos principales en dos columnas."/>
-        <cc:facet name="relaciones"
-                  shortDescription="Asociaciones mostradas a ancho completo."/>
+        <cc:attribute name="model" required="true" />
+        <cc:attribute name="titulo" required="true" type="java.lang.String" />
+        <cc:facet     name="formulario" />
+        <cc:facet name="relaciones"/>
     </cc:interface>
 
     <cc:implementation>
-        <h:form id="frmCrud">
-            <p:growl id="mensajes" showDetail="true" life="3000"/>
+        <p:outputPanel id="crudContainer">
+
+        <!-- ═══ VISTA LISTA (tabla) ═══ -->
+        <p:outputPanel id="frmCrud" rendered="#{cc.attrs.model.registroActual == null}">
+            <p:growl id="mensajes" showDetail="true" life="3000"><p:autoUpdate/></p:growl>
 
             <p:panel header="#{cc.attrs.titulo}">
                 <p:toolbar id="toolbarTop">
                     <p:toolbarGroup>
-                        <crud:botonesTop model="#{cc.attrs.model}"
-                                        update="frmCrud:pnlFormulario"
-                                        dialog="dlgFormularioCat"/>
+                        <crud:botonesTop model="#{cc.attrs.model}" update="crudContainer" dialog="dlgFormularioCat" />
                     </p:toolbarGroup>
                 </p:toolbar>
 
-                <p:dataTable id="tabla" lazy="false"
-                             var="registro"
+                <p:dataTable id="tabla" var="registro"
                              value="#{cc.attrs.model.registros}"
                              emptyMessage="No se encontraron registros."
-                             rows="20"
+                             rows="15"
                              paginator="true"
                              paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
-                             rowsPerPageTemplate="10,20,50"
+                             rowsPerPageTemplate="10,15,25,50"
+                             paginatorPosition="both"
                              stripedRows="true"
                              size="small"
                              selectionMode="single"
-                             selection="#{cc.attrs.model.registroActual}"
-                             rowKey="#{registro.hashCode()}">
+                             selection="#{cc.attrs.model.seleccion}"
+                             rowKey="#{registro.idKey}">
 
-                    <p:ajax event="rowSelect"
-                            update="frmCrud:toolbarTop"/>
-                    <p:ajax event="rowUnselect"
-                            update="frmCrud:toolbarTop"/>
+                    <p:ajax event="rowSelect" update="toolbarTop"/>
+                    <p:ajax event="rowUnselect" update="toolbarTop"/>
 
                     <cc:insertChildren/>
                 </p:dataTable>
             </p:panel>
 
-            <p:dialog header="#{cc.attrs.model.estadoCrear ? 'Nuevo' : 'Editar'} — #{cc.attrs.titulo}"
-                      widgetVar="dlgFormularioCat"
-                      modal="true"
-                      responsive="true"
-                      width="#{cc.attrs.anchoDialogo}"
-                      closable="true">
-
-                <p:outputPanel id="pnlFormulario">
-                    <h:panelGrid columns="2"
-                                 cellpadding="7"
-                                 columnClasses="ui-grid-col-4,ui-grid-col-8"
-                                 rendered="#{cc.attrs.model.registroActual != null}"
-                                 style="width:100%">
-
-                        <cc:renderFacet name="formulario"/>
-
-                    </h:panelGrid>
-
-                    <cc:renderFacet name="relaciones"/>
-
-                    <p:divider/>
-
-                    <p:toolbar>
-                        <p:toolbarGroup align="right">
-                            <crud:botonesFormulario
-                                    model="#{cc.attrs.model}"
-                                    update="@form"
-                                    dialog="dlgFormularioCat"/>
-                        </p:toolbarGroup>
-                    </p:toolbar>
-                </p:outputPanel>
-            </p:dialog>
-
-            <p:confirmDialog global="true"
-                             showEffect="fade"
-                             hideEffect="fade">
-                <p:commandButton value="Sí"
-                                 type="button"
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+                <p:commandButton value="Sí" type="button"
                                  styleClass="ui-confirmdialog-yes ui-button-danger"
                                  icon="pi pi-check"/>
-                <p:commandButton value="No"
-                                 type="button"
+                <p:commandButton value="No" type="button"
                                  styleClass="ui-confirmdialog-no ui-button-secondary"
                                  icon="pi pi-times"/>
             </p:confirmDialog>
-        </h:form>
+        </p:outputPanel>
+
+        <!-- ═══ VISTA FORMULARIO (crear / editar) ═══ -->
+        <p:outputPanel id="frmDialogo" rendered="#{cc.attrs.model.registroActual != null}">
+            <p:panel header="#{cc.attrs.model.estadoCrear ? 'Nuevo' : 'Editar'} — #{cc.attrs.titulo}">
+                <p:messages id="msgForm" showDetail="true" closable="true"/>
+
+                <!-- ─── Campos del formulario ─── -->
+                <p:outputPanel id="pnlFormulario" style="display:block">
+                    <cc:renderFacet name="formulario"/>
+                </p:outputPanel>
+
+                <cc:renderFacet name="relaciones"/>
+                <p:divider/>
+
+                <!-- ─── Botones Guardar / Cancelar ─── -->
+                <p:toolbar>
+                    <p:toolbarGroup align="right">
+                        <p:commandButton id="btnGuardar"
+                                         value="Guardar" icon="pi pi-check"
+                                         styleClass="ui-button-success"
+                                         action="#{cc.attrs.model.guardar()}"
+                                         process="@form"
+                                         update="crudContainer"/>
+                        <p:commandButton id="btnCancelar"
+                                         value="Cancelar" icon="pi pi-times"
+                                         styleClass="ui-button-secondary"
+                                         action="#{cc.attrs.model.cancelar()}"
+                                         process="@this"
+                                         update="crudContainer"
+                                         immediate="true"/>
+                    </p:toolbarGroup>
+                </p:toolbar>
+
+            </p:panel>
+        </p:outputPanel>
+
+        </p:outputPanel>
     </cc:implementation>
 
 </html>

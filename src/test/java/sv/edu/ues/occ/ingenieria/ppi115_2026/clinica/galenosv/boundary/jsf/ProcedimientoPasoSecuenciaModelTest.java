@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -25,10 +27,14 @@ import static org.mockito.Mockito.*;
  * acceder a una base de datos real.
  */
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 public class ProcedimientoPasoSecuenciaModelTest {
 
     @Mock
     private ProcedimientoPasoSecuenciaDAO procedimientoPasoSecuenciaDAO;
+
+    @Mock
+    private AsignacionService asignacionService;
 
     @InjectMocks
     private ProcedimientoPasoSecuenciaModel procedimientoPasoSecuenciaModel;
@@ -50,22 +56,10 @@ public class ProcedimientoPasoSecuenciaModelTest {
      */
     @Test
     public void testInitYCargarDatos() {
-        ProcedimientoPasoSecuencia secuencia =
-                new ProcedimientoPasoSecuencia(UUID.randomUUID());
-
-        when(procedimientoPasoSecuenciaDAO.findAll())
-                .thenReturn(List.of(secuencia));
-
         procedimientoPasoSecuenciaModel.init();
+        assertNotNull(procedimientoPasoSecuenciaModel.getLazyModel());
+        assertNull(procedimientoPasoSecuenciaModel.getRegistros());
 
-        assertNotNull(
-                procedimientoPasoSecuenciaModel.getRegistros()
-        );
-        assertEquals(
-                1,
-                procedimientoPasoSecuenciaModel.getRegistros().size()
-        );
-        verify(procedimientoPasoSecuenciaDAO).findAll();
     }
 
     /**
@@ -150,8 +144,7 @@ public class ProcedimientoPasoSecuenciaModelTest {
 
         procedimientoPasoSecuenciaModel.guardar();
 
-        verify(procedimientoPasoSecuenciaDAO)
-                .create(any(ProcedimientoPasoSecuencia.class));
+        verify(asignacionService).guardarSecuencia(any(ProcedimientoPasoSecuencia.class), eq(true));
         assertEquals(
                 Estado.NINGUNO,
                 procedimientoPasoSecuenciaModel.getEstado()
@@ -176,7 +169,7 @@ public class ProcedimientoPasoSecuenciaModelTest {
         procedimientoPasoSecuenciaModel.seleccionar(secuencia);
         procedimientoPasoSecuenciaModel.guardar();
 
-        verify(procedimientoPasoSecuenciaDAO).update(secuencia);
+        verify(asignacionService).guardarSecuencia(secuencia, false);
         assertEquals(
                 Estado.NINGUNO,
                 procedimientoPasoSecuenciaModel.getEstado()

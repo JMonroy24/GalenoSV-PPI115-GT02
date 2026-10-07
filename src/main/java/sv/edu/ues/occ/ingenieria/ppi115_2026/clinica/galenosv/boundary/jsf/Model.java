@@ -4,15 +4,24 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.context.FacesContext;
 import java.io.Serializable;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
+
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import java.util.stream.Collectors;
 
 /**
  * Backing bean abstracto y genérico para vistas JSF con operaciones CRUD.
  * Usa el patrón Template Method: las subclases solo implementan
- *  y .
+ * {@link #getDAO()} y {@link #crearNuevoRegistro()}.
  *
  * @param <T>  tipo de la entidad JPA
  * @param <ID> tipo de la llave primaria; debe ser Serializable
@@ -20,6 +29,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterfa
  */
 public abstract class Model<T, ID extends Serializable> implements Serializable {
 
+    private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(Model.class.getName());
 
     /**
@@ -40,6 +50,10 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
     /** Registro seleccionado o en creación/edición; null si no hay operación activa. */
     private T registroActual;
 
+    /** Fila seleccionada en la tabla. Separada de registroActual para que el
+     *  procesamiento ajax de la tabla nunca destruya el objeto del formulario. */
+    private T seleccion;
+
     /** Estado actual de la operación CRUD. */
     private Estado estado = Estado.NINGUNO;
 
@@ -51,12 +65,12 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
         try {
             registros = getDAO().findAll();
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error al cargar datos", e);
+            registrarError("cargar datos", e);
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Error", "No se pudieron cargar los datos.");
         }
     }
 
-    /** Prepara un registro nuevo y cambia el estado a . */
+    /** Prepara un registro nuevo y cambia el estado a CREAR. */
     public void prepararNuevo() {
         registroActual = crearNuevoRegistro();
         estado = Estado.CREAR;
@@ -67,34 +81,55 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
      * @param registro el registro seleccionado por el usuario
      */
     public void seleccionar(T registro) {
+        if (registro == null) {
+            agregarMensaje(FacesMessage.SEVERITY_WARN, "Aviso", "Seleccione un registro para editar.");
+            return;
+        }
         registroActual = registro;
         estado = Estado.MODIFICAR;
     }
 
-    /** Cancela la operación en curso y restablece el estado a . */
+    /** Cancela la operación en curso y restablece el estado a NINGUNO. */
     public void cancelar() {
         registroActual = null;
+        seleccion = null;
         estado = Estado.NINGUNO;
     }
 
     /**
-     * Persiste o actualiza el registro actual según el .
+     * Persiste o actualiza el registro actual según el estado actual.
      * Recarga datos y cancela la operación al finalizar exitosamente.
      */
+    protected void validarNegocio(T registro) { }
+
+    protected void persistirNuevo(T registro) { getDAO().create(registro); }
+    protected void persistirCambios(T registro) { getDAO().update(registro); }
+
     public void guardar() {
         try {
+            if (registroActual == null || (estado != Estado.CREAR && estado != Estado.MODIFICAR)) {
+                agregarMensaje(FacesMessage.SEVERITY_WARN, "Aviso",
+                        "No hay una operación de guardado activa. Abra el formulario con Nuevo o Editar.");
+                marcarValidacionFallida();
+                return;
+            }
+            validarNegocio(registroActual);
             if (estado == Estado.CREAR) {
-                getDAO().create(registroActual);
+                persistirNuevo(registroActual);
                 agregarMensaje(FacesMessage.SEVERITY_INFO, "Éxito", "Registro creado correctamente.");
             } else if (estado == Estado.MODIFICAR) {
-                getDAO().update(registroActual);
+                persistirCambios(registroActual);
                 agregarMensaje(FacesMessage.SEVERITY_INFO, "Éxito", "Registro actualizado correctamente.");
             }
             cargarDatos();
-            cancelar(); 
+            cancelar();
+        } catch (ValidacionNegocioException e) {
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Validación", e.getMessage());
+            marcarValidacionFallida();
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error al guardar registro", e);
+            registrarError("guardar registro", e);
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Error", clasificarError(e));
+            marcarValidacionFallida();
         }
     }
 
@@ -103,21 +138,30 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
      * @param registro el registro a eliminar
      */
     public void eliminar(T registro) {
+        if (registro == null) {
+            agregarMensaje(FacesMessage.SEVERITY_WARN, "Aviso", "Seleccione un registro para eliminar.");
+            return;
+        }
+        Estado estadoAnterior = estado;
         try {
             estado = Estado.ELIMINAR;
             getDAO().delete(registro);
             cargarDatos();
+            if (registro != null && registro.equals(seleccion)) {
+                seleccion = null;
+            }
             if (registroActual != null && registro.equals(registroActual)) {
                 cancelar();
+            } else {
+                estado = estadoAnterior;
             }
             agregarMensaje(FacesMessage.SEVERITY_INFO, "Éxito", "Registro eliminado correctamente.");
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error al eliminar registro", e);
+            estado = estadoAnterior;
+            registrarError("eliminar registro", e);
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Error", clasificarError(e));
         }
     }
-
-    // ─── Manejo de errores ───────────────────────────────────────────
 
     /**
      * Extrae y clasifica la causa raíz de una excepción JPA/PostgreSQL
@@ -127,77 +171,86 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
      * @return mensaje descriptivo
      */
     protected String clasificarError(Exception e) {
-        Throwable causa = e;
-        while (causa.getCause() != null && causa.getCause() != causa) {
-            causa = causa.getCause();
-        }
-        String msg = causa.getMessage();
-        if (msg == null) {
-            return "Error inesperado. Contacte al administrador del sistema.";
-        }
-
-        String msgLower = msg.toLowerCase();
-
-        // ── Violación de restricción UNIQUE ──
-        if (msgLower.contains("unique") || msgLower.contains("duplicate key")
-                || msgLower.contains("llave duplicada") || msgLower.contains("duplicat")) {
-            return "Ya existe un registro con estos datos. Verifique los campos que deben ser únicos.";
-        }
-
-        // ── Violación de FK / integridad referencial ──
-        if (msgLower.contains("foreign key") || msgLower.contains("fk_")
-                || msgLower.contains("referential integrity") || msgLower.contains("llave foránea")
-                || msgLower.contains("is still referenced")) {
-            return "No se puede completar la operación: este registro está relacionado con otros datos.";
-        }
-
-        // ── NOT NULL ──
-        if (msgLower.contains("not-null") || msgLower.contains("not null")
-                || msgLower.contains("violates not-null") || msgLower.contains("null value")) {
-            return "Faltan campos obligatorios. Complete todos los datos requeridos.";
-        }
-
-        // ── Texto demasiado largo ──
-        if (msgLower.contains("value too long") || msgLower.contains("character varying")) {
-            return "Uno de los campos excede la longitud máxima permitida.";
-        }
-
-        // ── Genérico con detalle (truncado a 200 chars) ──
-        return "Error al procesar: " + (msg.length() > 200 ? msg.substring(0, 200) + "…" : msg);
-    }
-
-    // ─── Mensajes JSF ────────────────────────────────────────────────
-
-    /**
-     * Agrega un mensaje global a la cola de mensajes de JSF.
-     *
-     * @param severidad nivel de severidad del mensaje
-     * @param titulo    resumen corto
-     * @param detalle   descripción detallada
-     */
-    protected void agregarMensaje(FacesMessage.Severity severidad, String titulo, String detalle) {
-        try {
-            FacesContext facesContext = FacesContext.getCurrentInstance();
-            if (facesContext != null) {
-                facesContext.addMessage(null, new FacesMessage(severidad, titulo, detalle));
+        Set<Throwable> visitadas = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (Throwable causa = e; causa != null && visitadas.add(causa); causa = causa.getCause()) {
+            if (causa instanceof ValidacionNegocioException) return causa.getMessage();
+            if (causa instanceof ConstraintViolationException cve && !cve.getConstraintViolations().isEmpty()) {
+                return cve.getConstraintViolations().stream().map(ConstraintViolation::getMessage)
+                        .distinct().sorted().collect(Collectors.joining("; "));
             }
-        } catch (Throwable t) {
-            LOGGER.log(Level.FINE, "FacesContext no disponible para mensaje: {0} - {1}", new Object[]{titulo, detalle});
+            if (causa instanceof SQLException sql) {
+                Set<SQLException> sqlVisitadas = Collections.newSetFromMap(new IdentityHashMap<>());
+                for (SQLException actual = sql; actual != null && sqlVisitadas.add(actual); actual = actual.getNextException()) {
+                    String mensaje = mensajeSql(actual.getSQLState());
+                    if (mensaje != null) return mensaje;
+                }
+            }
+        }
+        return "No fue posible completar la operación. Intente nuevamente o contacte al administrador.";
+    }
+
+    private String mensajeSql(String sqlState) {
+        if (sqlState == null) return null;
+        return switch (sqlState) {
+            case "23505" -> "Ya existe un registro con estos datos. Verifique los campos que deben ser únicos.";
+            case "23503" -> "No se puede completar la operación: este registro está relacionado con otros datos.";
+            case "23502" -> "Faltan campos obligatorios. Complete todos los datos requeridos.";
+            case "23514" -> "Los datos no cumplen las reglas requeridas. Revise las fechas y los valores ingresados.";
+            case "22001" -> "Uno de los campos excede la longitud máxima permitida.";
+            case "40001", "40P01", "55P03" -> "Otro usuario está modificando estos datos. Recargue el registro e intente nuevamente.";
+            default -> null;
+        };
+    }
+
+    private void registrarError(String operacion, Exception e) {
+        // SQL puede incluir documentos o información clínica; registrar sólo el tipo del error.
+        LOGGER.log(Level.WARNING, "No se pudo {0}. Tipo: {1}", new Object[]{operacion, e.getClass().getName()});
+    }
+
+    protected void marcarValidacionFallida() {
+        FacesContext contexto = FacesContext.getCurrentInstance();
+        if (contexto != null) contexto.validationFailed();
+    }
+
+    protected void agregarMensaje(FacesMessage.Severity severidad, String titulo, String detalle) {
+        FacesContext contexto = FacesContext.getCurrentInstance();
+        if (contexto != null) contexto.addMessage(null, new FacesMessage(severidad, titulo, detalle));
+    }
+
+    /** @return true si se está creando un registro */
+    /** Verifica que el padre esté guardado y en edición; si no, avisa. */
+    protected boolean relacionesHabilitadas(String titulo) {
+        if (!isEstadoModificar() || getRegistroActual() == null) {
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, titulo,
+                    "Guarde el registro antes de administrar sus relaciones.");
+            return false;
+        }
+        return true;
+    }
+
+    /** Ejecuta una operación sobre una relación con manejo uniforme de errores. */
+    protected void ejecutarRelacion(String titulo, Runnable accion, String mensajeOk) {
+        try {
+            accion.run();
+            agregarMensaje(FacesMessage.SEVERITY_INFO, titulo, mensajeOk);
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error en relación: " + titulo, e);
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, titulo, clasificarError(e));
         }
     }
 
-    // ─── Estado ──────────────────────────────────────────────────────
 
-    /** @return true si el estado actual es  */
+
+    /** @return true si se está creando un registro */
     public boolean isEstadoCrear() { return estado == Estado.CREAR; }
 
-    /** @return true si el estado actual es  */
+    /** @return true si se está modificando un registro */
     public boolean isEstadoModificar() { return estado == Estado.MODIFICAR; }
 
-    /** @return true si el estado actual es  */
+    /** @return true si se está eliminando un registro */
     public boolean isEstadoEliminar() { return estado == Estado.ELIMINAR; }
 
-    /** @return true si el estado actual es  */
+    /** @return true si no hay una operación activa */
     public boolean isEstadoNinguno() { return estado == Estado.NINGUNO; }
 
     // ─── Accessors ───────────────────────────────────────────────────
@@ -206,6 +259,8 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
     public void setRegistros(List<T> registros) { this.registros = registros; }
     public T getRegistroActual() { return registroActual; }
     public void setRegistroActual(T registroActual) { this.registroActual = registroActual; }
+    public T getSeleccion() { return seleccion; }
+    public void setSeleccion(T seleccion) { this.seleccion = seleccion; }
     public Estado getEstado() { return estado; }
     public void setEstado(Estado estado) { this.estado = estado; }
 }

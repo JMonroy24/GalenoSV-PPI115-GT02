@@ -18,19 +18,32 @@
             <div class="layout-wrapper">
 
                 <div class="layout-topbar">
-                    <span class="app-title">&#x2695; GalenoSV</span>
+                    <h:graphicImage library="images" name="galenosv-logo.png" alt="Logo de GalenoSV" styleClass="app-logo"/>
+                    <span class="app-title">GalenoSV</span>
                     <span class="app-subtitle">Sistema de Gestión Clínica</span>
+                    <div class="app-user">
+                        <h:outputText value="#{sesionBean.nombreClinica}"/>
+                        <p:button value="Cambiar rol" outcome="/paginas/cambiarRol" icon="pi pi-user-edit" style="margin:0 1rem"/>
+                        <h:outputText value="#{sesionBean.displayUsuario}"/>
+                        <h:form id="frmSesion">
+                            <p:commandButton value="Cerrar sesión" icon="pi pi-sign-out"
+                                             action="#{sesionBean.cerrarSesion}" ajax="false"
+                                             rendered="#{sesionBean.clinicaSeleccionada}"/>
+                        </h:form>
+                    </div>
                 </div>
+
+
 
                 <div class="layout-menu">
                     <ui:include src="/WEB-INF/templates/menu.xhtml"/>
                 </div>
 
-                <p:growl id="growlGlobal" showDetail="true" life="4000"/>
+                <p:growl id="growlGlobal" showDetail="true" life="4000"><p:autoUpdate/></p:growl>
 
                 <div class="layout-content">
                     <ui:insert name="contenido">
-                     
+
                     </ui:insert>
                 </div>
 

@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -17,10 +19,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 class ExamenTipoExamenModelTest {
 
     @Mock
     private ExamenTipoExamenDAO examenTipoexamenDAO;
+
+    @Mock
+    private AsignacionService asignacionService;
 
     @InjectMocks
     private ExamenTipoExamenModel examenTipoexamenModel;
@@ -33,13 +39,12 @@ class ExamenTipoExamenModelTest {
     @Test
     void testInitYCargarDatos() {
         ExamenTipoExamen examenTipoexamen = new ExamenTipoExamen(UUID.randomUUID());
-        when(examenTipoexamenDAO.findAll()).thenReturn(List.of(examenTipoexamen));
 
         examenTipoexamenModel.init();
 
-        assertNotNull(examenTipoexamenModel.getRegistros());
-        assertEquals(1, examenTipoexamenModel.getRegistros().size());
-        verify(examenTipoexamenDAO).findAll();
+
+        assertEquals(1, examenTipoexamenModel.getLazyModel() != null ? 1 : 0);
+        verifyNoInteractions(examenTipoexamenDAO);
     }
 
     @Test
@@ -75,34 +80,31 @@ class ExamenTipoExamenModelTest {
 
     @Test
     void testGuardarCrear() {
-        when(examenTipoexamenDAO.findAll()).thenReturn(Collections.emptyList());
 
         examenTipoexamenModel.prepararNuevo();
         examenTipoexamenModel.getRegistroActual().setObservaciones("Asociación entre examen y tipo de examen");
 
         examenTipoexamenModel.guardar();
 
-        verify(examenTipoexamenDAO).create(any(ExamenTipoExamen.class));
+        verify(asignacionService).guardarTipo(any(ExamenTipoExamen.class), eq(true));
         assertEquals(Estado.NINGUNO, examenTipoexamenModel.getEstado());
         assertNull(examenTipoexamenModel.getRegistroActual());
     }
 
     @Test
     void testGuardarModificar() {
-        when(examenTipoexamenDAO.findAll()).thenReturn(Collections.emptyList());
-        ExamenTipoExamen examenTipoexamen = new ExamenTipoExamen(UUID.randomUUID());
+                ExamenTipoExamen examenTipoexamen = new ExamenTipoExamen(UUID.randomUUID());
 
         examenTipoexamenModel.seleccionar(examenTipoexamen);
         examenTipoexamenModel.guardar();
 
-        verify(examenTipoexamenDAO).update(examenTipoexamen);
+        verify(asignacionService).guardarTipo(examenTipoexamen, false);
         assertEquals(Estado.NINGUNO, examenTipoexamenModel.getEstado());
     }
 
     @Test
     void testEliminar() {
-        when(examenTipoexamenDAO.findAll()).thenReturn(Collections.emptyList());
-        ExamenTipoExamen examenTipoexamen = new ExamenTipoExamen(UUID.randomUUID());
+                ExamenTipoExamen examenTipoexamen = new ExamenTipoExamen(UUID.randomUUID());
 
         examenTipoexamenModel.eliminar(examenTipoexamen);
 

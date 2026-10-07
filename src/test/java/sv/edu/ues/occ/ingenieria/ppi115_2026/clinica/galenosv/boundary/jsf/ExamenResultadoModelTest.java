@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +15,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 public class ExamenResultadoModelTest {
 
     @Mock
@@ -32,14 +31,10 @@ public class ExamenResultadoModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        ExamenResultado er = new ExamenResultado(UUID.randomUUID());
-        when(examenResultadoDAO.findAll()).thenReturn(List.of(er));
-
         examenResultadoModel.init();
+        assertNotNull(examenResultadoModel.getLazyModel());
+        assertNull(examenResultadoModel.getRegistros());
 
-        assertNotNull(examenResultadoModel.getRegistros());
-        assertEquals(1, examenResultadoModel.getRegistros().size());
-        verify(examenResultadoDAO).findAll();
     }
 
     @Test
@@ -73,11 +68,12 @@ public class ExamenResultadoModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(examenResultadoDAO.findAll()).thenReturn(Collections.emptyList());
-
         examenResultadoModel.prepararNuevo();
         examenResultadoModel.getRegistroActual().setResultado("Normal");
 
+        examenResultadoModel.getRegistroActual().setResultado("Resultado de prueba");
+        examenResultadoModel.getRegistroActual().setInterpretacion("Interpretación de prueba");
+        examenResultadoModel.getRegistroActual().setIdOrdenExamen(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExamen(UUID.randomUUID()));
         examenResultadoModel.guardar();
 
         verify(examenResultadoDAO).create(any(ExamenResultado.class));
@@ -87,11 +83,12 @@ public class ExamenResultadoModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(examenResultadoDAO.findAll()).thenReturn(Collections.emptyList());
-
         ExamenResultado er = new ExamenResultado(UUID.randomUUID());
         examenResultadoModel.seleccionar(er);
 
+        examenResultadoModel.getRegistroActual().setResultado("Resultado de prueba");
+        examenResultadoModel.getRegistroActual().setInterpretacion("Interpretación de prueba");
+        examenResultadoModel.getRegistroActual().setIdOrdenExamen(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExamen(UUID.randomUUID()));
         examenResultadoModel.guardar();
 
         verify(examenResultadoDAO).update(er);
@@ -100,8 +97,6 @@ public class ExamenResultadoModelTest {
 
     @Test
     public void testEliminar() {
-        when(examenResultadoDAO.findAll()).thenReturn(Collections.emptyList());
-
         ExamenResultado er = new ExamenResultado(UUID.randomUUID());
         examenResultadoModel.eliminar(er);
 
@@ -110,8 +105,10 @@ public class ExamenResultadoModelTest {
 
     @Test
     public void testGettersAndSetters() {
+        examenResultadoModel.init();
         assertEquals(examenResultadoDAO, examenResultadoModel.getDAO());
         assertEquals(examenResultadoDAO, examenResultadoModel.getExamenResultadoDAO());
         assertNotNull(examenResultadoModel.crearNuevoRegistro());
+        assertNotNull(examenResultadoModel.getLazyModel());
     }
 }

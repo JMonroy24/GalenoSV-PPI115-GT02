@@ -123,8 +123,6 @@ public class ProcedimientoPasoModel extends Model<ProcedimientoPaso, UUID> imple
         if (rol == null || !Boolean.TRUE.equals(rol.getActivo())) return error("Seleccione un rol activo.");
         List<ProcedimientoPaso> otros = procedimientoPasoDAO.findByProcedimiento(procedimiento.getIdProcedimiento())
                 .stream().filter(p -> !p.equals(paso)).toList();
-        if (otros.stream().anyMatch(p -> rol.equals(p.getIdRol())))
-            return error("Cada paso del procedimiento debe tener un rol distinto.");
         if (isEstadoModificar() && (!Objects.equals(rolOriginal, rol.getIdRol())
                 || !Objects.equals(padreOriginal, dependeDe == null ? null : dependeDe.getIdProcedimientoPaso())))
             return error("El rol y la dependencia solo se pueden elegir al crear el paso.");

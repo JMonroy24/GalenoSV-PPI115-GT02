@@ -8,20 +8,22 @@
         <cc:attribute name="model" required="true"/>
         <cc:attribute name="update" required="true"/>
         <cc:attribute name="dialog" required="true"/>
+        <cc:attribute name="process" default="@form" type="java.lang.String" />
     </cc:interface>
 
     <cc:implementation>
         <p:commandButton value="Guardar" icon="pi pi-check"
                          styleClass="ui-button-success"
                          action="#{cc.attrs.model.guardar()}"
-                         update="#{cc.attrs.update}"
-                         oncomplete="if(!args.validationFailed) PF('#{cc.attrs.dialog}').hide()"/>
+                         process="#{cc.attrs.process}"
+                         update="#{cc.attrs.update} @([id$=msgForm])"
+                         />
         <p:commandButton value="Cancelar" icon="pi pi-times"
                          styleClass="ui-button-secondary"
                          action="#{cc.attrs.model.cancelar()}"
                          process="@this"
-                         update="#{cc.attrs.update}"
-                         oncomplete="PF('#{cc.attrs.dialog}').hide()"
+                         update="#{cc.attrs.update} @([id$=msgForm])"
+
                          immediate="true"/>
     </cc:implementation>
 </html>

@@ -1,5 +1,8 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.view.ViewScoped;
@@ -25,7 +28,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoExame
  */
 @Named("examenModel")
 @ViewScoped
-public class ExamenModel extends Model<Examen, UUID> implements Serializable {
+public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = Logger.getLogger(ExamenModel.class.getName());
@@ -38,11 +41,21 @@ public class ExamenModel extends Model<Examen, UUID> implements Serializable {
 
     private List<ExamenTipoExamen> tiposAsignados = Collections.emptyList();
     private TipoExamen tipoSeleccionado;
+    private ExamenTipoExamen asignacionTipoSeleccionada;
+    public ExamenTipoExamen getAsignacionTipoSeleccionada() { return asignacionTipoSeleccionada; }
+    public void setAsignacionTipoSeleccionada(ExamenTipoExamen seleccionada) { asignacionTipoSeleccionada = seleccionada; }
+    public void quitarTipoSeleccionado() {
+        quitarTipo(asignacionTipoSeleccionada);
+        asignacionTipoSeleccionada = null;
+    }
     private String observacionesTipo;
+
+    @Inject
+    protected AsignacionService asignacionService;
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override
@@ -59,6 +72,7 @@ public class ExamenModel extends Model<Examen, UUID> implements Serializable {
     protected Examen crearNuevoRegistro() {
         Examen examen = new Examen();
         examen.setIdExamen(UUID.randomUUID());
+        examen.setActivo(true);
         return examen;
     }
 
@@ -69,6 +83,7 @@ public class ExamenModel extends Model<Examen, UUID> implements Serializable {
      */
     @Override
     public void seleccionar(Examen examen) {
+        if (examen == null) return;
         super.seleccionar(examen);
         tiposAsignados = examenTipoExamenDAO.findByExamen(examen.getIdExamen());
         limpiarSeleccionTipo();
@@ -94,24 +109,16 @@ public class ExamenModel extends Model<Examen, UUID> implements Serializable {
      */
     public void agregarTipo() {
         if (!isEstadoModificar() || getRegistroActual() == null
-                || tipoSeleccionado == null) {
+                || tipoSeleccionado == null || tipoSeleccionado.getIdTipoExamen() == null) {
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Tipo de examen",
                     "Seleccione un tipo para un examen guardado.");
             return;
         }
 
-        UUID idTipo = tipoSeleccionado.getIdTipoExamen();
-        boolean yaAsignado = tiposAsignados.stream()
-                .anyMatch(asignacion -> asignacion.getIdTipoExamen() != null
-                && idTipo.equals(
-                        asignacion.getIdTipoExamen().getIdTipoExamen()));
-
-        if (yaAsignado) {
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Tipo de examen",
-                    "Este tipo ya está asignado al examen.");
+        if (!Boolean.TRUE.equals(tipoSeleccionado.getActivo())) {
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Tipo de examen", "No se puede asignar un tipo de examen inactivo.");
             return;
         }
-
         ExamenTipoExamen asignacion = new ExamenTipoExamen(UUID.randomUUID());
         asignacion.setIdExamen(getRegistroActual());
         asignacion.setIdTipoExamen(tipoSeleccionado);
@@ -119,13 +126,17 @@ public class ExamenModel extends Model<Examen, UUID> implements Serializable {
         asignacion.setObservaciones(observacionesTipo);
 
         try {
-            examenTipoExamenDAO.create(asignacion);
+            asignacionService.guardarTipo(asignacion, true);
             tiposAsignados = examenTipoExamenDAO.findByExamen(
                     getRegistroActual().getIdExamen());
             limpiarSeleccionTipo();
             agregarMensaje(FacesMessage.SEVERITY_INFO, "Tipo de examen",
                     "Tipo asignado correctamente.");
+        } catch (ValidacionNegocioException e) {
+            agregarMensaje(FacesMessage.SEVERITY_WARN, "Validación", e.getMessage());
+            marcarValidacionFallida();
         } catch (Exception e) {
+            marcarValidacionFallida();
             LOGGER.log(Level.SEVERE, "Error al asignar un tipo al examen", e);
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Tipo de examen",
                     clasificarError(e));
@@ -154,7 +165,11 @@ public class ExamenModel extends Model<Examen, UUID> implements Serializable {
                     getRegistroActual().getIdExamen());
             agregarMensaje(FacesMessage.SEVERITY_INFO, "Tipo de examen",
                     "Tipo quitado correctamente.");
+        } catch (ValidacionNegocioException e) {
+            agregarMensaje(FacesMessage.SEVERITY_WARN, "Validación", e.getMessage());
+            marcarValidacionFallida();
         } catch (Exception e) {
+            marcarValidacionFallida();
             LOGGER.log(Level.SEVERE, "Error al quitar un tipo del examen", e);
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Tipo de examen",
                     clasificarError(e));
@@ -162,6 +177,7 @@ public class ExamenModel extends Model<Examen, UUID> implements Serializable {
     }
 
     private void limpiarSeleccionTipo() {
+        asignacionTipoSeleccionada = null;
         tipoSeleccionado = null;
         observacionesTipo = null;
     }
@@ -193,4 +209,41 @@ public class ExamenModel extends Model<Examen, UUID> implements Serializable {
     public void setExamenDAO(ExamenDAO examenDAO) {
         this.examenDAO = examenDAO;
     }
+
+    /**
+     * Fuente de opciones para selectores de FK en otras vistas (p.ej. ProcedimientoPaso).
+     * Retorna solo los exámenes activos sin cargar el modelo completo.
+     *
+     * @return lista de Examen con activo = true, ordenados por nombre
+     */
+    public java.util.List<Examen> getExamenesActivos() {
+        return examenDAO.findAllActivos();
+    }
+
+    @Override
+    protected void validarNegocio(Examen registro) {
+        registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre"));
+        if (isEstadoCrear() && tipoSeleccionado != null) {
+            ValidadorComun.activo(tipoSeleccionado.getActivo(), "El tipo de examen");
+        }
+        if (examenDAO.existePorCampo("nombre", registro.getNombre(), registro.getIdExamen())) {
+            throw new ValidacionNegocioException("Ya existe un registro con este nombre.");
+        }
+    }
+
+
+    @Override
+    protected void persistirNuevo(Examen examen) {
+        if (tipoSeleccionado == null) {
+            super.persistirNuevo(examen);
+            return;
+        }
+        ExamenTipoExamen asignacion = new ExamenTipoExamen(UUID.randomUUID());
+        asignacion.setIdExamen(examen);
+        asignacion.setIdTipoExamen(tipoSeleccionado);
+        asignacion.setFechaCreacion(new Date());
+        asignacion.setObservaciones(observacionesTipo);
+        asignacionService.crearExamenConTipo(examen, asignacion);
+    }
+
 }

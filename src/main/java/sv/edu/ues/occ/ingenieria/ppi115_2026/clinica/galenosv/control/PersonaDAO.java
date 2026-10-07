@@ -3,18 +3,13 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.List;
 import jakarta.persistence.EntityManager;
-import java.util.List;
 import jakarta.persistence.PersistenceContext;
-import java.util.List;
 import java.io.Serializable;
-import java.util.List;
 import java.util.UUID;
-import java.util.List;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona;
-import java.util.List;
 
 /**
- * Acceso a datos para la entidad .
+ * Acceso a datos para la entidad Persona.
  */
 @ApplicationScoped
 public class PersonaDAO extends DefaultDAO<Persona, UUID> implements Serializable {
@@ -42,4 +37,5 @@ public class PersonaDAO extends DefaultDAO<Persona, UUID> implements Serializabl
     protected List<String> getCamposBusqueda() {
         return List.of("nombres", "apellidos");
     }
+
 }

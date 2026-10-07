@@ -17,6 +17,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 public class RolModelTest {
 
     @Mock
@@ -32,14 +33,10 @@ public class RolModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        Rol r = new Rol(UUID.randomUUID());
-        when(rolDAO.findAll()).thenReturn(List.of(r));
-
         rolModel.init();
+        assertNotNull(rolModel.getLazyModel());
+        assertNull(rolModel.getRegistros());
 
-        assertNotNull(rolModel.getRegistros());
-        assertEquals(1, rolModel.getRegistros().size());
-        verify(rolDAO).findAll();
     }
 
     @Test
@@ -73,11 +70,11 @@ public class RolModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(rolDAO.findAll()).thenReturn(Collections.emptyList());
 
         rolModel.prepararNuevo();
         rolModel.getRegistroActual().setNombre("Medico");
 
+        rolModel.getRegistroActual().setNombre("Registro válido");
         rolModel.guardar();
 
         verify(rolDAO).create(any(Rol.class));
@@ -87,11 +84,11 @@ public class RolModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(rolDAO.findAll()).thenReturn(Collections.emptyList());
 
         Rol r = new Rol(UUID.randomUUID());
         rolModel.seleccionar(r);
 
+        rolModel.getRegistroActual().setNombre("Registro válido");
         rolModel.guardar();
 
         verify(rolDAO).update(r);
@@ -100,7 +97,6 @@ public class RolModelTest {
 
     @Test
     public void testEliminar() {
-        when(rolDAO.findAll()).thenReturn(Collections.emptyList());
 
         Rol r = new Rol(UUID.randomUUID());
         rolModel.eliminar(r);

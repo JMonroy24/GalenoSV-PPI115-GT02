@@ -24,7 +24,7 @@ import java.util.UUID;
 @NamedQueries({
     @NamedQuery(name = "PersonaRol.findAll", query = "SELECT p FROM PersonaRol p"),
     @NamedQuery(name = "PersonaRol.findByFechaCreacion", query = "SELECT p FROM PersonaRol p WHERE p.fechaCreacion = :fechaCreacion")})
-public class PersonaRol implements Serializable {
+public class PersonaRol implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -142,4 +142,7 @@ public class PersonaRol implements Serializable {
     public String toString() {
         return "entity.PersonaRol[ idPersonaRol=" + idPersonaRol + " ]";
     }
+
+    @Override
+    public String getIdKey() { return idPersonaRol == null ? null : idPersonaRol.toString(); }
 }

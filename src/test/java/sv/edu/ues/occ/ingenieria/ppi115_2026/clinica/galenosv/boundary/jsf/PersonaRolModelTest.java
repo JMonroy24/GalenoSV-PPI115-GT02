@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +15,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 public class PersonaRolModelTest {
 
     @Mock
@@ -32,14 +31,10 @@ public class PersonaRolModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        PersonaRol pr = new PersonaRol(UUID.randomUUID());
-        when(personaRolDAO.findAll()).thenReturn(List.of(pr));
-
         personaRolModel.init();
+        assertNotNull(personaRolModel.getLazyModel());
+        assertNull(personaRolModel.getRegistros());
 
-        assertNotNull(personaRolModel.getRegistros());
-        assertEquals(1, personaRolModel.getRegistros().size());
-        verify(personaRolDAO).findAll();
     }
 
     @Test
@@ -73,10 +68,14 @@ public class PersonaRolModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(personaRolDAO.findAll()).thenReturn(Collections.emptyList());
-
         personaRolModel.prepararNuevo();
 
+        personaRolModel.getRegistroActual().setIdPersona(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona(UUID.randomUUID()));
+        var rolValido = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol(UUID.randomUUID());
+        rolValido.setActivo(true);
+        personaRolModel.getRegistroActual().setIdRol(rolValido);
+        var clinica = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica(UUID.randomUUID());
+        clinica.setActivo(true); personaRolModel.getRegistroActual().setIdClinica(clinica);
         personaRolModel.guardar();
 
         verify(personaRolDAO).create(any(PersonaRol.class));
@@ -86,11 +85,15 @@ public class PersonaRolModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(personaRolDAO.findAll()).thenReturn(Collections.emptyList());
-
         PersonaRol pr = new PersonaRol(UUID.randomUUID());
         personaRolModel.seleccionar(pr);
 
+        personaRolModel.getRegistroActual().setIdPersona(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona(UUID.randomUUID()));
+        var rolValido = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol(UUID.randomUUID());
+        rolValido.setActivo(true);
+        personaRolModel.getRegistroActual().setIdRol(rolValido);
+        var clinica = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica(UUID.randomUUID());
+        clinica.setActivo(true); personaRolModel.getRegistroActual().setIdClinica(clinica);
         personaRolModel.guardar();
 
         verify(personaRolDAO).update(pr);
@@ -99,8 +102,6 @@ public class PersonaRolModelTest {
 
     @Test
     public void testEliminar() {
-        when(personaRolDAO.findAll()).thenReturn(Collections.emptyList());
-
         PersonaRol pr = new PersonaRol(UUID.randomUUID());
         personaRolModel.eliminar(pr);
 
@@ -109,8 +110,10 @@ public class PersonaRolModelTest {
 
     @Test
     public void testGettersAndSetters() {
+        personaRolModel.init();
         assertEquals(personaRolDAO, personaRolModel.getDAO());
         assertEquals(personaRolDAO, personaRolModel.getPersonaRolDAO());
         assertNotNull(personaRolModel.crearNuevoRegistro());
+        assertNotNull(personaRolModel.getLazyModel());
     }
 }

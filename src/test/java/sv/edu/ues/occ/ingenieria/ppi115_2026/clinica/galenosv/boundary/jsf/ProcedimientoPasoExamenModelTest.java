@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -25,10 +27,14 @@ import static org.mockito.Mockito.*;
  * formulario y la delegación de las operaciones CRUD.
  */
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 public class ProcedimientoPasoExamenModelTest {
 
     @Mock
     private ProcedimientoPasoExamenDAO procedimientoPasoExamenDAO;
+
+    @Mock
+    private AsignacionService asignacionService;
 
     @InjectMocks
     private ProcedimientoPasoExamenModel procedimientoPasoExamenModel;
@@ -48,20 +54,10 @@ public class ProcedimientoPasoExamenModelTest {
      */
     @Test
     public void testInitYCargarDatos() {
-        ProcedimientoPasoExamen asociacion =
-                new ProcedimientoPasoExamen(UUID.randomUUID());
-
-        when(procedimientoPasoExamenDAO.findAll())
-                .thenReturn(List.of(asociacion));
-
         procedimientoPasoExamenModel.init();
+        assertNotNull(procedimientoPasoExamenModel.getLazyModel());
+        assertNull(procedimientoPasoExamenModel.getRegistros());
 
-        assertNotNull(procedimientoPasoExamenModel.getRegistros());
-        assertEquals(
-                1,
-                procedimientoPasoExamenModel.getRegistros().size()
-        );
-        verify(procedimientoPasoExamenDAO).findAll();
     }
 
     /**
@@ -138,8 +134,7 @@ public class ProcedimientoPasoExamenModelTest {
 
         procedimientoPasoExamenModel.guardar();
 
-        verify(procedimientoPasoExamenDAO)
-                .create(any(ProcedimientoPasoExamen.class));
+        verify(asignacionService).guardarExamen(any(ProcedimientoPasoExamen.class), eq(true));
         assertEquals(
                 Estado.NINGUNO,
                 procedimientoPasoExamenModel.getEstado()
@@ -162,7 +157,7 @@ public class ProcedimientoPasoExamenModelTest {
         procedimientoPasoExamenModel.seleccionar(asociacion);
         procedimientoPasoExamenModel.guardar();
 
-        verify(procedimientoPasoExamenDAO).update(asociacion);
+        verify(asignacionService).guardarExamen(asociacion, false);
         assertEquals(
                 Estado.NINGUNO,
                 procedimientoPasoExamenModel.getEstado()

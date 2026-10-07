@@ -1,14 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Componente CRUD para entidades TRANSACCIONALES (alto volumen).
-  Paginación server-side con LazyDataModel y soporte de búsqueda global.
-
-  Uso típico:
-  <crud:crudTransaccional model="#{personaModel}" lazyModel="#{personaModel.lazyModel}" titulo="Personas">
-    <p:column headerText="Nombres">...</p:column>
-    <f:facet name="formulario">...</f:facet>
-  </crud:crudTransaccional>
--->
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="jakarta.faces.html"
       xmlns:f="jakarta.faces.core"
@@ -18,32 +8,32 @@
       xmlns:pt="jakarta.faces.passthrough">
 
     <cc:interface>
-        <cc:attribute name="model" required="true"
-                      shortDescription="Backing bean que extiende ModelTransaccional."/>
-        <cc:attribute name="lazyModel" required="true"
-                      shortDescription="GenericLazyDataModel obtenido de model.getLazyModel()."/>
-        <cc:attribute name="titulo" required="true" type="java.lang.String"
-                      shortDescription="Título visible del CRUD (ej. 'Personas', 'Consultas')."/>
-        <cc:facet     name="formulario"
-                      shortDescription="Campos del formulario crear/editar en panelGrid 2 columnas."/>
-        <cc:facet     name="accionesExtra"
-                      shortDescription="(Opcional) Botones adicionales en la columna Acciones, ej. drill-down."/>
+        <cc:attribute name="model"         required="true" />
+        <cc:attribute name="lazyModel"     required="true" />
+        <cc:attribute name="titulo"        required="true" type="java.lang.String" />
+        <cc:attribute name="anchoDialogo"  default="600"   type="java.lang.Integer" />
+        <cc:facet     name="formulario" />
+        <cc:facet     name="relaciones" />
+        <cc:facet     name="accionesExtra" />
     </cc:interface>
 
     <cc:implementation>
-        <h:form id="frmCrud">
-            <p:growl id="mensajes" showDetail="true" life="3000"/>
+        <p:outputPanel id="crudContainer">
+
+        <!-- ═══ VISTA LISTA (tabla) ═══ -->
+        <p:outputPanel id="frmCrud" rendered="#{cc.attrs.model.registroActual == null}">
+            <p:growl id="mensajes" showDetail="true" life="3000"><p:autoUpdate/></p:growl>
 
             <p:panel header="#{cc.attrs.titulo}">
-
                 <p:toolbar id="toolbarTop">
                     <p:toolbarGroup>
-                        <crud:botonesTop model="#{cc.attrs.model}" update="frmCrud:pnlFormulario" dialog="dlgFormularioTx" />
+                        <cc:renderFacet name="accionesExtra"/>
+                        <crud:botonesTop model="#{cc.attrs.model}" update="crudContainer" dialog="dlgFormularioTx" />
                     </p:toolbarGroup>
                     <p:toolbarGroup align="right">
                         <p:inputText id="campoBusqueda"
                                      value="#{cc.attrs.lazyModel.filtroGlobal}"
-                                     placeholder="Buscar..."/>
+                                     placeholder="Buscar..." maxlength="100"/>
                         <p:commandButton icon="pi pi-search"
                                          title="Buscar" pt:aria-label="Ejecutar búsqueda"
                                          styleClass="ui-button-info"
@@ -72,46 +62,15 @@
                              stripedRows="true"
                              size="small"
                              selectionMode="single"
-                             selection="#{cc.attrs.model.registroActual}"
-                             rowKey="#{registro.hashCode()}">
-                             
-                    <p:ajax event="rowSelect" update="frmCrud:toolbarTop"/>
-                    <p:ajax event="rowUnselect" update="frmCrud:toolbarTop"/>
+                             selection="#{cc.attrs.model.seleccion}"
+                             rowKey="#{registro.idKey}">
+
+                    <p:ajax event="rowSelect"   update="toolbarTop"/>
+                    <p:ajax event="rowUnselect" update="toolbarTop"/>
 
                     <cc:insertChildren/>
-
-                    <p:column headerText="Acciones" width="100"
-                              exportable="false" styleClass="col-acciones"
-                              rendered="#{not empty cc.facets.accionesExtra}">
-                        <cc:renderFacet name="accionesExtra"/>
-                    </p:column>
                 </p:dataTable>
             </p:panel>
-
-            <p:dialog header="#{cc.attrs.model.estadoCrear ? 'Nuevo' : 'Editar'} — #{cc.attrs.titulo}"
-                      widgetVar="dlgFormularioTx"
-                      modal="true" responsive="true"
-                      width="600" closable="true">
-
-                <p:outputPanel id="pnlFormulario">
-                    <h:panelGrid columns="2" cellpadding="7"
-                                 columnClasses="ui-grid-col-4,ui-grid-col-8"
-                                 rendered="#{cc.attrs.model.registroActual != null}"
-                                 style="width:100%">
-
-                        <cc:renderFacet name="formulario"/>
-
-                    </h:panelGrid>
-
-                    <p:divider/>
-
-                    <p:toolbar>
-                        <p:toolbarGroup align="right">
-                            <crud:botonesFormulario model="#{cc.attrs.model}" update="@form" dialog="dlgFormularioTx" />
-                        </p:toolbarGroup>
-                    </p:toolbar>
-                </p:outputPanel>
-            </p:dialog>
 
             <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
                 <p:commandButton value="Sí" type="button"
@@ -121,8 +80,52 @@
                                  styleClass="ui-confirmdialog-no ui-button-secondary"
                                  icon="pi pi-times"/>
             </p:confirmDialog>
+        </p:outputPanel>
 
-        </h:form>
+        <!-- ═══ VISTA FORMULARIO (crear / editar) ═══ -->
+        <p:outputPanel id="frmDialogo" rendered="#{cc.attrs.model.registroActual != null}">
+            <p:panel header="#{cc.attrs.model.estadoCrear ? 'Nuevo' : 'Editar'} — #{cc.attrs.titulo}">
+                <p:messages id="msgForm" showDetail="true" closable="true"/>
+
+                <!-- ─── Campos principales del formulario ─── -->
+                <p:outputPanel id="pnlFormulario" style="display:block">
+                    <cc:renderFacet name="formulario"/>
+                </p:outputPanel>
+
+                <!-- ─── Relaciones (solo en modo editar) ─── -->
+                <p:outputPanel rendered="#{not empty cc.facets.relaciones}">
+                    <p:divider/>
+                    <p:tabView id="tabRelaciones">
+                        <p:tab title="Relaciones">
+                            <cc:renderFacet name="relaciones"/>
+                        </p:tab>
+                    </p:tabView>
+                </p:outputPanel>
+
+                <p:divider/>
+
+                <!-- ─── Botones Guardar / Cancelar ─── -->
+                <p:toolbar>
+                    <p:toolbarGroup align="right">
+                        <p:commandButton id="btnGuardar"
+                                         value="Guardar" icon="pi pi-check"
+                                         styleClass="ui-button-success"
+                                         action="#{cc.attrs.model.guardar()}"
+                                         process="@form"
+                                         update="crudContainer"/>
+                        <p:commandButton id="btnCancelar"
+                                         value="Cancelar" icon="pi pi-times"
+                                         styleClass="ui-button-secondary"
+                                         action="#{cc.attrs.model.cancelar()}"
+                                         process="@this"
+                                         update="crudContainer"
+                                         immediate="true"/>
+                    </p:toolbarGroup>
+                </p:toolbar>
+
+            </p:panel>
+        </p:outputPanel>
+
+        </p:outputPanel>
     </cc:implementation>
-
 </html>

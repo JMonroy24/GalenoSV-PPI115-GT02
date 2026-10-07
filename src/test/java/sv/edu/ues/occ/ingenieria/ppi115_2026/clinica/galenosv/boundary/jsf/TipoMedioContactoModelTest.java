@@ -17,6 +17,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 public class TipoMedioContactoModelTest {
 
     @Mock
@@ -32,14 +33,10 @@ public class TipoMedioContactoModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        TipoMedioContacto tmc = new TipoMedioContacto(UUID.randomUUID());
-        when(tipoMedioContactoDAO.findAll()).thenReturn(List.of(tmc));
-
         tipoMedioContactoModel.init();
+        assertNotNull(tipoMedioContactoModel.getLazyModel());
+        assertNull(tipoMedioContactoModel.getRegistros());
 
-        assertNotNull(tipoMedioContactoModel.getRegistros());
-        assertEquals(1, tipoMedioContactoModel.getRegistros().size());
-        verify(tipoMedioContactoDAO).findAll();
     }
 
     @Test
@@ -73,11 +70,11 @@ public class TipoMedioContactoModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(tipoMedioContactoDAO.findAll()).thenReturn(Collections.emptyList());
 
         tipoMedioContactoModel.prepararNuevo();
         tipoMedioContactoModel.getRegistroActual().setNombre("Telefono");
 
+        tipoMedioContactoModel.getRegistroActual().setNombre("Registro válido");
         tipoMedioContactoModel.guardar();
 
         verify(tipoMedioContactoDAO).create(any(TipoMedioContacto.class));
@@ -87,11 +84,11 @@ public class TipoMedioContactoModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(tipoMedioContactoDAO.findAll()).thenReturn(Collections.emptyList());
 
         TipoMedioContacto tmc = new TipoMedioContacto(UUID.randomUUID());
         tipoMedioContactoModel.seleccionar(tmc);
 
+        tipoMedioContactoModel.getRegistroActual().setNombre("Registro válido");
         tipoMedioContactoModel.guardar();
 
         verify(tipoMedioContactoDAO).update(tmc);
@@ -100,7 +97,6 @@ public class TipoMedioContactoModelTest {
 
     @Test
     public void testEliminar() {
-        when(tipoMedioContactoDAO.findAll()).thenReturn(Collections.emptyList());
 
         TipoMedioContacto tmc = new TipoMedioContacto(UUID.randomUUID());
         tipoMedioContactoModel.eliminar(tmc);

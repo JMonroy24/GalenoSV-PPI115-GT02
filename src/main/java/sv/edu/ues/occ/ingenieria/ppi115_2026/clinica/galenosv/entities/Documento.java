@@ -21,7 +21,7 @@ import java.util.UUID;
     @NamedQuery(name = "Documento.findAll", query = "SELECT d FROM Documento d"),
     @NamedQuery(name = "Documento.findByValor", query = "SELECT d FROM Documento d WHERE d.valor = :valor"),
     @NamedQuery(name = "Documento.findByRutaFisica", query = "SELECT d FROM Documento d WHERE d.rutaFisica = :rutaFisica")})
-public class Documento implements Serializable {
+public class Documento implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -117,4 +117,7 @@ public class Documento implements Serializable {
     public String toString() {
         return "entity.Documento[ idDocumento=" + idDocumento + " ]";
     }
+
+    @Override
+    public String getIdKey() { return idDocumento == null ? null : idDocumento.toString(); }
 }

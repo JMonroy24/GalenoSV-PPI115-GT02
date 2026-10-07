@@ -24,7 +24,7 @@ import java.util.UUID;
     @NamedQuery(name = "MedioContacto.findAll", query = "SELECT m FROM MedioContacto m"),
     @NamedQuery(name = "MedioContacto.findByValor", query = "SELECT m FROM MedioContacto m WHERE m.valor = :valor"),
     @NamedQuery(name = "MedioContacto.findByFechaCreacion", query = "SELECT m FROM MedioContacto m WHERE m.fechaCreacion = :fechaCreacion")})
-public class MedioContacto implements Serializable {
+public class MedioContacto implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -120,4 +120,7 @@ public class MedioContacto implements Serializable {
     public String toString() {
         return "entity.MedioContacto[ idMedioContacto=" + idMedioContacto + " ]";
     }
+
+    @Override
+    public String getIdKey() { return idMedioContacto == null ? null : idMedioContacto.toString(); }
 }

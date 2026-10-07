@@ -8,9 +8,9 @@ import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Examen;
 
 /**
- * Acceso a datos para la entidad .
+ * Acceso a datos para la entidad Examen.
  *
- * Hereda las operaciones CRUD proporcionadas por .
+ * Hereda las operaciones CRUD de DefaultDAO.
  */
 
 @ApplicationScoped
@@ -33,5 +33,25 @@ public class ExamenDAO extends DefaultDAO<Examen, UUID> implements Serializable 
     @Override
     public EntityManager getEntityManager() {
         return em;
+    }
+
+    @Override
+    protected java.util.List<String> getCamposBusqueda() {
+        return java.util.List.of("nombre");
+    }
+
+
+
+    /**
+     * Devuelve todos los exámenes activos, para alimentar selectores de FK
+     * en formularios. Consulta específica sobre catálogo pequeño.
+     *
+     * @return lista de Examen con activo = true, ordenados por nombre
+     */
+    public java.util.List<Examen> findAllActivos() {
+        return getEntityManager().createQuery(
+                "SELECT e FROM Examen e WHERE e.activo = true ORDER BY e.nombre",
+                Examen.class)
+                .getResultList();
     }
 }

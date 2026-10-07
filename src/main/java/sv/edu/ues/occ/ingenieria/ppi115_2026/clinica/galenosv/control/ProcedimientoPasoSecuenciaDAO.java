@@ -68,4 +68,18 @@ public class ProcedimientoPasoSecuenciaDAO
                 + "WHERE p.idProcedimiento.idProcedimiento = :id", ProcedimientoPasoSecuencia.class)
                 .setParameter("id", idProcedimiento).getResultList();
     }
+    public boolean existeSecuencia(UUID idPaso, UUID idReferencia, String tipo) {
+        return existeSecuencia(idPaso, idReferencia, tipo, null);
+    }
+    public boolean existeSecuencia(UUID idPaso, UUID idReferencia, String tipo, UUID excluirId) {
+        if (idPaso == null || idReferencia == null || tipo == null || tipo.isBlank()) return false;
+        String jpql = "SELECT COUNT(s) FROM ProcedimientoPasoSecuencia s"
+                + " WHERE s.idProcedimientoPaso.idProcedimientoPaso = :paso"
+                + " AND s.idProcedimientoPasoReferencia = :referencia AND LOWER(s.tipoSecuencia) = :tipo"
+                + (excluirId == null ? "" : " AND s.idProcedimientoPasoSecuencia <> :excluir");
+        var query = getEntityManager().createQuery(jpql, Long.class).setParameter("paso", idPaso)
+                .setParameter("referencia", idReferencia).setParameter("tipo", tipo.trim().toLowerCase(java.util.Locale.ROOT));
+        if (excluirId != null) query.setParameter("excluir", excluirId);
+        return query.getSingleResult() > 0;
+    }
 }

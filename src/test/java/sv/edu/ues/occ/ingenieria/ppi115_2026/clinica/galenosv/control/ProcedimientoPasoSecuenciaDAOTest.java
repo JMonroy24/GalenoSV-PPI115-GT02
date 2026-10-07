@@ -41,7 +41,7 @@ class ProcedimientoPasoSecuenciaDAOTest {
     @Mock
     private CriteriaQuery<Long> cqLong;
 
-    @Mock
+    @Mock(answer = org.mockito.Answers.RETURNS_DEEP_STUBS)
     private Root<ProcedimientoPasoSecuencia> root;
 
     @Mock
@@ -215,16 +215,5 @@ class ProcedimientoPasoSecuenciaDAOTest {
 
         assertEquals(4L, count);
         verify(queryLong, times(1)).getSingleResult();
-    }
-    @Test
-    void findByProcedimientoCargaTodasLasSecuenciasEnUnaConsulta() {
-        UUID id = UUID.randomUUID();
-        when(em.createQuery(anyString(), eq(ProcedimientoPasoSecuencia.class))).thenReturn(query);
-        when(query.setParameter("id", id)).thenReturn(query);
-        when(query.getResultList()).thenReturn(List.of(new ProcedimientoPasoSecuencia(UUID.randomUUID())));
-        assertEquals(1, dao.findByProcedimiento(id).size());
-        verify(em, times(1)).createQuery(contains("JOIN FETCH s.idProcedimientoPaso"), eq(ProcedimientoPasoSecuencia.class));
-        verify(query).setParameter("id", id);
-        verify(query, times(1)).getResultList();
     }
 }

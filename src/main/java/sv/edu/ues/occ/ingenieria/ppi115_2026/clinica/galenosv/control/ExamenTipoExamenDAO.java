@@ -39,6 +39,12 @@ public class ExamenTipoExamenDAO
         return em;
     }
 
+    @Override
+    protected java.util.List<String> getCamposBusqueda() {
+        return java.util.List.of("observaciones");
+    }
+
+
     /**
      * Obtiene los tipos asignados a un examen y carga el tipo necesario
      * para mostrar su nombre en la vista.
@@ -61,5 +67,26 @@ public class ExamenTipoExamenDAO
                 ));
 
         return em.createQuery(cq).getResultList();
+    }
+
+
+    @Override
+    protected java.util.List<String> getRelacionesCarga() {
+        return java.util.List.of("idExamen", "idTipoExamen");
+    }
+
+    public boolean existeExamenTipo(UUID idExamen, UUID idTipo) {
+        return existeExamenTipo(idExamen, idTipo, null);
+    }
+
+    public boolean existeExamenTipo(UUID idExamen, UUID idTipo, UUID excluirId) {
+        if (idExamen == null || idTipo == null) return false;
+        String jpql = "SELECT COUNT(e) FROM ExamenTipoExamen e"
+                + " WHERE e.idExamen.idExamen = :examen AND e.idTipoExamen.idTipoExamen = :tipo"
+                + (excluirId == null ? "" : " AND e.idExamenTipoExamen <> :excluir");
+        var query = getEntityManager().createQuery(jpql, Long.class)
+                .setParameter("examen", idExamen).setParameter("tipo", idTipo);
+        if (excluirId != null) query.setParameter("excluir", excluirId);
+        return query.getSingleResult() > 0;
     }
 }

@@ -17,6 +17,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 public class TipoExamenModelTest {
 
     @Mock
@@ -32,14 +33,10 @@ public class TipoExamenModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        TipoExamen te = new TipoExamen(UUID.randomUUID());
-        when(tipoExamenDAO.findAll()).thenReturn(List.of(te));
-
         tipoExamenModel.init();
+        assertNotNull(tipoExamenModel.getLazyModel());
+        assertNull(tipoExamenModel.getRegistros());
 
-        assertNotNull(tipoExamenModel.getRegistros());
-        assertEquals(1, tipoExamenModel.getRegistros().size());
-        verify(tipoExamenDAO).findAll();
     }
 
     @Test
@@ -73,11 +70,11 @@ public class TipoExamenModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(tipoExamenDAO.findAll()).thenReturn(Collections.emptyList());
 
         tipoExamenModel.prepararNuevo();
         tipoExamenModel.getRegistroActual().setNombre("Hemograma");
 
+        tipoExamenModel.getRegistroActual().setNombre("Registro válido");
         tipoExamenModel.guardar();
 
         verify(tipoExamenDAO).create(any(TipoExamen.class));
@@ -87,11 +84,11 @@ public class TipoExamenModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(tipoExamenDAO.findAll()).thenReturn(Collections.emptyList());
 
         TipoExamen te = new TipoExamen(UUID.randomUUID());
         tipoExamenModel.seleccionar(te);
 
+        tipoExamenModel.getRegistroActual().setNombre("Registro válido");
         tipoExamenModel.guardar();
 
         verify(tipoExamenDAO).update(te);
@@ -100,7 +97,6 @@ public class TipoExamenModelTest {
 
     @Test
     public void testEliminar() {
-        when(tipoExamenDAO.findAll()).thenReturn(Collections.emptyList());
 
         TipoExamen te = new TipoExamen(UUID.randomUUID());
         tipoExamenModel.eliminar(te);

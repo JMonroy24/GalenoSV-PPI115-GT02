@@ -7,18 +7,27 @@
         <p:growl id="mensajes" showDetail="true"><p:autoUpdate/></p:growl>
         <h:form id="frmLista">
             <p:panel header="Procedimientos">
-                <p:commandButton value="Nuevo procedimiento" action="#{procedimientoModel.prepararNuevo()}"
-                                 process="@this" update=":detalle" resetValues="true"/>
-                <p:dataTable value="#{procedimientoModel.registros}" var="registro" emptyMessage="No se encontraron registros.">
+                <p:toolbar id="accionesProcedimiento">
+                    <p:toolbarGroup>
+                        <p:commandButton value="Nuevo procedimiento" icon="pi pi-plus" action="#{procedimientoModel.prepararNuevo()}"
+                                         process="@this" update="@form :detalle" resetValues="true"/>
+                        <p:commandButton value="Editar" icon="pi pi-pencil" action="#{procedimientoModel.editarSeleccionado()}"
+                                         disabled="#{empty procedimientoModel.procedimientoSeleccionado}"
+                                         process="@this" update=":detalle :mensajes" resetValues="true"/>
+                        <p:commandButton value="Eliminar" icon="pi pi-trash" action="#{procedimientoModel.eliminarSeleccionado()}"
+                                         disabled="#{empty procedimientoModel.procedimientoSeleccionado}"
+                                         process="@this" update="@form :detalle :mensajes" resetValues="true" styleClass="ui-button-danger"/>
+                    </p:toolbarGroup>
+                </p:toolbar>
+                <p:dataTable id="tablaProcedimientos" value="#{procedimientoModel.registros}" var="registro"
+                             selectionMode="single" selection="#{procedimientoModel.procedimientoSeleccionado}"
+                             rowKey="#{registro.idProcedimiento}" emptyMessage="No se encontraron registros.">
+                    <p:ajax event="rowSelect" process="@this" update="accionesProcedimiento"/>
+                    <p:ajax event="rowUnselect" process="@this" update="accionesProcedimiento"/>
                     <p:column headerText="Nombre"><h:outputText value="#{registro.nombre}"/></p:column>
                     <p:column headerText="Activo"><h:outputText value="#{registro.activo ? 'Sí' : 'No'}"/></p:column>
                     <p:column headerText="Observaciones"><h:outputText value="#{registro.observaciones}"/></p:column>
-                    <p:column headerText="Acciones">
-                        <p:commandButton icon="pi pi-pencil" title="Editar procedimiento" action="#{procedimientoModel.seleccionar(registro)}"
-                                         process="@this" update=":detalle :mensajes" resetValues="true"/>
-                        <p:commandButton icon="pi pi-trash" title="Eliminar procedimiento" action="#{procedimientoModel.eliminar(registro)}"
-                                         process="@this" update="@form :detalle :mensajes" resetValues="true" styleClass="ui-button-danger"/>
-                    </p:column>
+
                 </p:dataTable>
             </p:panel>
         </h:form>

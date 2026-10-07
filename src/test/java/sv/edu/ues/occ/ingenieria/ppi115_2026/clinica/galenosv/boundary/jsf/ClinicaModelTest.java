@@ -17,6 +17,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@org.mockito.junit.jupiter.MockitoSettings(strictness = org.mockito.quality.Strictness.LENIENT)
 public class ClinicaModelTest {
 
     @Mock
@@ -32,14 +33,10 @@ public class ClinicaModelTest {
 
     @Test
     public void testInitYCargarDatos() {
-        Clinica c = new Clinica(UUID.randomUUID());
-        when(clinicaDAO.findAll()).thenReturn(List.of(c));
-
         clinicaModel.init();
+        assertNotNull(clinicaModel.getLazyModel());
+        assertNull(clinicaModel.getRegistros());
 
-        assertNotNull(clinicaModel.getRegistros());
-        assertEquals(1, clinicaModel.getRegistros().size());
-        verify(clinicaDAO).findAll();
     }
 
     @Test
@@ -73,11 +70,12 @@ public class ClinicaModelTest {
 
     @Test
     public void testGuardarCrear() {
-        when(clinicaDAO.findAll()).thenReturn(Collections.emptyList());
 
         clinicaModel.prepararNuevo();
         clinicaModel.getRegistroActual().setNombre("Clinica Central");
 
+        clinicaModel.getRegistroActual().setNombre("Registro válido");
+        clinicaModel.getRegistroActual().setTipo("GENERAL");
         clinicaModel.guardar();
 
         verify(clinicaDAO).create(any(Clinica.class));
@@ -87,11 +85,12 @@ public class ClinicaModelTest {
 
     @Test
     public void testGuardarModificar() {
-        when(clinicaDAO.findAll()).thenReturn(Collections.emptyList());
 
         Clinica c = new Clinica(UUID.randomUUID());
         clinicaModel.seleccionar(c);
 
+        clinicaModel.getRegistroActual().setNombre("Registro válido");
+        clinicaModel.getRegistroActual().setTipo("GENERAL");
         clinicaModel.guardar();
 
         verify(clinicaDAO).update(c);
@@ -100,7 +99,6 @@ public class ClinicaModelTest {
 
     @Test
     public void testEliminar() {
-        when(clinicaDAO.findAll()).thenReturn(Collections.emptyList());
 
         Clinica c = new Clinica(UUID.randomUUID());
         clinicaModel.eliminar(c);

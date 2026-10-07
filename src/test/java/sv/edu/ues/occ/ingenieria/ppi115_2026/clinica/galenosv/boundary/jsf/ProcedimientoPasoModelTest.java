@@ -59,11 +59,12 @@ class ProcedimientoPasoModelTest {
         model.setDependeDe(padre); assertTrue(model.guardarPaso());
         verify(asignacionService).guardarPaso(any(), eq(true), eq(padre), anyList());
     }
-    @Test void rechazaRolInactivoYRepetido() {
+    @Test void rechazaRolInactivoPeroPermiteRepetirRolEnPasos() {
         rol.setActivo(false); assertFalse(model.guardarPaso()); rol.setActivo(true);
         ProcedimientoPaso padre = padre(); padre.setIdRol(rol);
         when(procedimientoPasoDAO.findByProcedimiento(procedimiento.getIdProcedimiento())).thenReturn(List.of(padre));
-        model.setDependeDe(padre); assertFalse(model.guardarPaso()); verifyNoInteractions(asignacionService);
+        model.setDependeDe(padre); assertTrue(model.guardarPaso());
+        verify(asignacionService).guardarPaso(any(), eq(true), eq(padre), anyList());
     }
     @Test void noAgregarHijoAPasoDeFin() {
         ProcedimientoPaso padre = padre(); padre.setIndicaFin(true);
@@ -127,5 +128,17 @@ class ProcedimientoPasoModelTest {
         doThrow(new IllegalStateException("fallo")).when(asignacionService).guardarPaso(any(), anyBoolean(), any(), anyList());
         ProcedimientoPaso borrador = model.getRegistroActual();
         assertFalse(model.guardarPaso()); assertSame(borrador, model.getRegistroActual());
+    }
+    @Test void mismoRolPuedeUsarseEnDosProcedimientosDiferentes() {
+        assertTrue(model.guardarPaso());
+        Procedimiento otro = new Procedimiento(UUID.randomUUID()); otro.setActivo(true);
+        model.abrirProcedimiento(otro);
+        model.getRegistroActual().setNombre("Inicio del otro procedimiento");
+        model.getRegistroActual().setIdRol(rol);
+        assertTrue(model.guardarPaso());
+        verify(asignacionService).guardarPaso(argThat(p -> procedimiento.equals(p.getIdProcedimiento())
+                && rol.equals(p.getIdRol())), eq(true), isNull(), anyList());
+        verify(asignacionService).guardarPaso(argThat(p -> otro.equals(p.getIdProcedimiento())
+                && rol.equals(p.getIdRol())), eq(true), isNull(), anyList());
     }
 }

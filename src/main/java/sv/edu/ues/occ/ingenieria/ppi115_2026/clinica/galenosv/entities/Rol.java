@@ -22,7 +22,7 @@ import java.util.UUID;
     @NamedQuery(name = "Rol.findByNombre", query = "SELECT r FROM Rol r WHERE r.nombre = :nombre"),
     @NamedQuery(name = "Rol.findByActivo", query = "SELECT r FROM Rol r WHERE r.activo = :activo"),
     @NamedQuery(name = "Rol.findByObservaciones", query = "SELECT r FROM Rol r WHERE r.observaciones = :observaciones")})
-public class Rol implements Serializable {
+public class Rol implements IdentificableEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -127,4 +127,7 @@ public class Rol implements Serializable {
     public String toString() {
         return "entity.Rol[ idRol=" + idRol + " ]";
     }
+
+    @Override
+    public String getIdKey() { return idRol == null ? null : idRol.toString(); }
 }

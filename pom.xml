@@ -6,21 +6,21 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
     <name>GalenoSV-1.0-SNAPSHOT</name>
-    
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jakartaee>11.0.0-M1</jakartaee>
         <liberty.installDir>${env.WLP_INSTALL_DIR}</liberty.installDir>
     </properties>
-    
-    
-    
+
+
+
     <dependencyManagement>
         <dependencies>
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>5.10.2</version> 
+                <version>5.10.2</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -41,7 +41,7 @@
             <version>${jakartaee}</version>
             <scope>provided</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
@@ -68,15 +68,15 @@
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.2</version>
             <scope>provided</scope>
         </dependency>
-        
-        
+
+
         <dependency>
             <groupId>org.primefaces</groupId>
             <artifactId>primefaces</artifactId>
@@ -84,8 +84,15 @@
             <scope>compile</scope>
             <classifier>jakarta</classifier>
         </dependency>
+        <!-- Implementación de Faces sólo para ejecutar los modelos fuera del servidor. -->
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>jakarta.faces</artifactId>
+            <version>4.1.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
-    
+
     <build>
         <plugins>
             <plugin>
@@ -106,7 +113,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>3.4.0</version>
-                
+
             </plugin>
             <plugin>
                 <groupId>io.openliberty.tools</groupId>
@@ -114,7 +121,7 @@
                 <version>3.12.2</version>
                 <configuration>
                     <installDirectory>${liberty.installDir}</installDirectory>
-                
+
                     <copyDependencies>
                         <dependencyGroup>
                             <location>lib</location>
@@ -126,7 +133,7 @@
                     </copyDependencies>
                 </configuration>
             </plugin>
-            
+
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>

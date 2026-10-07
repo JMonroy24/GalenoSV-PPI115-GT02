@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -15,14 +17,16 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoMedio
  */
 @Named("tipoMedioContactoModel")
 @ViewScoped
-public class TipoMedioContactoModel extends Model<TipoMedioContacto, UUID> implements Serializable {
+public class TipoMedioContactoModel extends ModelTransaccional<TipoMedioContacto, UUID> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Inject
     protected TipoMedioContactoDAO tipoMedioContactoDAO;
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override
@@ -32,7 +36,9 @@ public class TipoMedioContactoModel extends Model<TipoMedioContacto, UUID> imple
 
     @Override
     protected TipoMedioContacto crearNuevoRegistro() {
-        return new TipoMedioContacto();
+        TipoMedioContacto registro = new TipoMedioContacto(UUID.randomUUID());
+        registro.setActivo(true);
+        return registro;
     }
 
     public TipoMedioContactoDAO getTipoMedioContactoDAO() {
@@ -42,4 +48,18 @@ public class TipoMedioContactoModel extends Model<TipoMedioContacto, UUID> imple
     public void setTipoMedioContactoDAO(TipoMedioContactoDAO tipoMedioContactoDAO) {
         this.tipoMedioContactoDAO = tipoMedioContactoDAO;
     }
+
+    @Override
+    protected void validarNegocio(TipoMedioContacto registro) {
+        registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre"));
+        ValidadorComun.expresionRegular(registro.getExpresionRegular());
+        if (tipoMedioContactoDAO.existePorCampo("nombre", registro.getNombre(), registro.getIdTipoMedioContacto())) {
+            throw new ValidacionNegocioException("Ya existe un registro con este nombre.");
+        }
+    }
+
+    public java.util.List<TipoMedioContacto> getActivos() {
+        return tipoMedioContactoDAO.findAllActivos();
+    }
+
 }

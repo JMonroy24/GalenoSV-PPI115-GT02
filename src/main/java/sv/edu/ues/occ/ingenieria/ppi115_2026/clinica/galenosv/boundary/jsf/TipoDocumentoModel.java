@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -15,14 +17,16 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoDocum
  */
 @Named("tipoDocumentoModel")
 @ViewScoped
-public class TipoDocumentoModel extends Model<TipoDocumento, UUID> implements Serializable {
+public class TipoDocumentoModel extends ModelTransaccional<TipoDocumento, UUID> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Inject
     protected TipoDocumentoDAO tipoDocumentoDAO;
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override
@@ -32,7 +36,9 @@ public class TipoDocumentoModel extends Model<TipoDocumento, UUID> implements Se
 
     @Override
     protected TipoDocumento crearNuevoRegistro() {
-        return new TipoDocumento();
+        TipoDocumento registro = new TipoDocumento(UUID.randomUUID());
+        registro.setActivo(true);
+        return registro;
     }
 
     public TipoDocumentoDAO getTipoDocumentoDAO() {
@@ -42,4 +48,18 @@ public class TipoDocumentoModel extends Model<TipoDocumento, UUID> implements Se
     public void setTipoDocumentoDAO(TipoDocumentoDAO tipoDocumentoDAO) {
         this.tipoDocumentoDAO = tipoDocumentoDAO;
     }
+
+    @Override
+    protected void validarNegocio(TipoDocumento registro) {
+        registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre"));
+        ValidadorComun.expresionRegular(registro.getExpresionRegular());
+        if (tipoDocumentoDAO.existePorCampo("nombre", registro.getNombre(), registro.getIdTipoDocumento())) {
+            throw new ValidacionNegocioException("Ya existe un registro con este nombre.");
+        }
+    }
+
+    public java.util.List<TipoDocumento> getActivos() {
+        return tipoDocumentoDAO.findAllActivos();
+    }
+
 }

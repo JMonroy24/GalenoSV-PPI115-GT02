@@ -1,35 +1,25 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortMeta;
+import org.primefaces.model.SortOrder;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DefaultDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.FiltroConsulta;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.OrdenConsulta;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.IdentificableEntity;
 
-/**
- * DataModel genérico para paginación server-side y búsqueda con PrimeFaces.
- * Delega al DAO para cargar solo la página visible y procesar el filtro global.
- *
- * @param <T> tipo de la entidad JPA
- */
+/** Paginación, orden y filtros de PrimeFaces procesados en la base de datos. */
 public class GenericLazyDataModel<T> extends LazyDataModel<T> {
 
     private static final long serialVersionUID = 1L;
-
     private final DAOInterface<T, ?> dao;
-
-    /**
-     * Texto de búsqueda global, enlazado desde el p:inputText
-     * del composite crudTransaccional.xhtml.
-     * Cuando es null o vacío, no se aplica filtro.
-     */
     private String filtroGlobal;
 
-    /**
-     * @param dao el DAO que provee findRange() y count();
-     *            no debe ser null
-     */
     public GenericLazyDataModel(DAOInterface<T, ?> dao) {
         if (dao == null) {
             throw new IllegalArgumentException("El DAO no puede ser null");
@@ -37,38 +27,58 @@ public class GenericLazyDataModel<T> extends LazyDataModel<T> {
         this.dao = dao;
     }
 
-    /**
-     * Retorna la cantidad total de registros que coinciden con el filtro global.
-     * PrimeFaces usa este valor para calcular el número de páginas del paginador.
-     */
     @Override
     public int count(Map<String, FilterMeta> filterBy) {
-        return (int) dao.count(filtroGlobal);
+        return Math.toIntExact(dao.count(filtroGlobal, filtros(filterBy)));
     }
 
-    /**
-     * Carga únicamente la página solicitada, aplicando el filtro global
-     * si está definido.
-     * 
-     * Los parámetros sortBy y filterBy de PrimeFaces se
-     * reciben pero no se delegan al DAO (requeriría un findRange con
-     * más parámetros). Se pueden implementar progresivamente.
-     * 
-     */
     @Override
-    public List<T> load(int first, int pageSize,
-                        Map<String, SortMeta> sortBy,
-                        Map<String, FilterMeta> filterBy) {
-        return dao.findRange(first, pageSize, filtroGlobal);
+    public List<T> load(int first, int pageSize, Map<String, SortMeta> sortBy, Map<String, FilterMeta> filterBy) {
+        List<OrdenConsulta> orden = sortBy == null ? List.of() : sortBy.values().stream()
+                .filter(meta -> meta.getField() != null && meta.getOrder() != SortOrder.UNSORTED)
+                .sorted(Comparator.comparingInt(SortMeta::getPriority))
+                .map(meta -> new OrdenConsulta(meta.getField(), meta.getOrder() == SortOrder.ASCENDING))
+                .toList();
+        return dao.findRange(first, pageSize, filtroGlobal, orden, filtros(filterBy));
     }
 
-    // ─── Filtro global ───────────────────────────────────────────────
+    private List<FiltroConsulta> filtros(Map<String, FilterMeta> filterBy) {
+        if (filterBy == null) {
+            return List.of();
+        }
+        return filterBy.values().stream()
+                .filter(meta -> meta.getField() != null && meta.getFilterValue() != null)
+                .map(meta -> new FiltroConsulta(meta.getField(), meta.getFilterValue(),
+                        meta.getMatchMode() == null ? "CONTAINS" : meta.getMatchMode().name()))
+                .toList();
+    }
+
+    @Override
+    public String getRowKey(T object) {
+        return object instanceof IdentificableEntity entity ? entity.getIdKey() : null;
+    }
+
+    @Override
+    public T getRowData(String rowKey) {
+        if (rowKey == null || rowKey.isEmpty()) {
+            return null;
+        }
+        List<T> data = getWrappedData();
+        if (data != null) {
+            for (T item : data) {
+                if (item instanceof IdentificableEntity entity && rowKey.equals(entity.getIdKey())) {
+                    return item;
+                }
+            }
+        }
+        return null;
+    }
 
     public String getFiltroGlobal() {
         return filtroGlobal;
     }
 
     public void setFiltroGlobal(String filtroGlobal) {
-        this.filtroGlobal = filtroGlobal;
+        this.filtroGlobal = DefaultDAO.normalizarFiltro(filtroGlobal);
     }
 }

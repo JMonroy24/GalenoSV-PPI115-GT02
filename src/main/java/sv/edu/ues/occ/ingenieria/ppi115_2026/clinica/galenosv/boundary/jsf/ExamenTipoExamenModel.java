@@ -1,5 +1,6 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -15,7 +16,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ExamenTip
  */
 @Named("examenTipoexamenModel")
 @ViewScoped
-public class ExamenTipoExamenModel extends Model<ExamenTipoExamen, UUID> implements Serializable {
+public class ExamenTipoExamenModel extends ModelTransaccional<ExamenTipoExamen, UUID> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -24,7 +25,7 @@ public class ExamenTipoExamenModel extends Model<ExamenTipoExamen, UUID> impleme
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override
@@ -34,7 +35,7 @@ public class ExamenTipoExamenModel extends Model<ExamenTipoExamen, UUID> impleme
 
     @Override
     protected ExamenTipoExamen crearNuevoRegistro() {
-        return new ExamenTipoExamen();
+        return new ExamenTipoExamen(UUID.randomUUID());
     }
 
     public ExamenTipoExamenDAO getExamenTipoExamenDAO() {
@@ -44,4 +45,18 @@ public class ExamenTipoExamenModel extends Model<ExamenTipoExamen, UUID> impleme
     public void setExamenTipoExamenDAO(ExamenTipoExamenDAO examenTipoexamenDAO) {
         this.examenTipoexamenDAO = examenTipoexamenDAO;
     }
+
+    @Inject
+    protected AsignacionService asignacionService;
+
+    @Override
+    protected void persistirNuevo(ExamenTipoExamen registro) {
+        asignacionService.guardarTipo(registro, true);
+    }
+
+    @Override
+    protected void persistirCambios(ExamenTipoExamen registro) {
+        asignacionService.guardarTipo(registro, false);
+    }
+
 }

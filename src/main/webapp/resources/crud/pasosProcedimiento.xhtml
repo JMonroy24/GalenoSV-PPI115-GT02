@@ -3,8 +3,23 @@
                 xmlns:h="jakarta.faces.html" xmlns:f="jakarta.faces.core"
                 xmlns:ui="jakarta.faces.facelets" xmlns:p="http://primefaces.org/ui">
     <h:form id="frmPasos" rendered="#{procedimientoModel.estadoModificar}">
-        <p:treeTable id="arbol" value="#{procedimientoModel.arbolPasos}" var="paso"
+        <p:toolbar id="accionesPaso">
+            <p:toolbarGroup>
+                <p:commandButton value="Nuevo paso" icon="pi pi-plus" action="#{procedimientoModel.nuevoPaso()}"
+                                 process="@this" update="@form" resetValues="true"/>
+                <p:commandButton value="Editar" icon="pi pi-pencil" action="#{procedimientoModel.editarPasoSeleccionado()}"
+                                 disabled="#{empty procedimientoModel.nodoPasoSeleccionado}"
+                                 process="@this" update="editorPaso :mensajes" resetValues="true"/>
+                <p:commandButton value="Eliminar" icon="pi pi-trash" action="#{procedimientoModel.eliminarPasoSeleccionado()}"
+                                 disabled="#{empty procedimientoModel.nodoPasoSeleccionado}"
+                                 process="@this" update="@form :mensajes" resetValues="true" styleClass="ui-button-danger"/>
+            </p:toolbarGroup>
+        </p:toolbar>
+        <p:treeTable id="arbol" value="#{procedimientoModel.arbolPasos}" var="paso" selectionMode="single"
+                     selection="#{procedimientoModel.nodoPasoSeleccionado}"
                      emptyMessage="Este procedimiento aún no tiene pasos.">
+            <p:ajax event="select" process="@this" update="accionesPaso"/>
+            <p:ajax event="unselect" process="@this" update="accionesPaso"/>
             <p:column headerText="Nombre">
                 <h:outputText value="#{paso.nombre}"/>
                 <p:tag value="Inicial" rendered="#{procedimientoModel.esInicial(paso)}"/>
@@ -15,12 +30,7 @@
             <p:column headerText="Procede de"><h:outputText value="#{procedimientoModel.procedeDe(paso)}"/></p:column>
             <p:column headerText="Indica fin"><h:outputText value="#{paso.indicaFin ? 'Sí' : 'No'}"/></p:column>
             <p:column headerText="Exámenes"><h:outputText value="#{procedimientoModel.examenesDe(paso)}"/></p:column>
-            <p:column headerText="Acciones">
-                <p:commandButton icon="pi pi-pencil" title="Editar paso" action="#{procedimientoPasoModel.seleccionar(paso)}"
-                                 process="@this" update="@form" resetValues="true"/>
-                <p:commandButton icon="pi pi-trash" title="Eliminar paso" action="#{procedimientoModel.eliminarPaso(paso)}"
-                                 process="@this" update="@form :mensajes" resetValues="true" styleClass="ui-button-danger"/>
-            </p:column>
+
         </p:treeTable>
         <p:panel id="editorPaso" header="#{procedimientoPasoModel.estadoModificar ? 'Editar paso' : 'Nuevo paso'}">
             <p:panelGrid columns="2">
@@ -57,19 +67,24 @@
                 <p:inputTextarea id="observacionesExamen" value="#{procedimientoPasoModel.observacionesExamen}" rows="2"/>
                 <p:commandButton value="Agregar examen" icon="pi pi-plus" action="#{procedimientoPasoModel.agregarExamen()}"
                                  process="@this examenPaso observacionesExamen" update="panelExamenes :mensajes"/>
+                <p:toolbar id="accionesExamen"><p:toolbarGroup>
+                <p:commandButton value="Eliminar seleccionado" action="#{procedimientoPasoModel.quitarExamenSeleccionado()}"
+                                 process="@this" update="panelExamenes :mensajes" disabled="#{empty procedimientoPasoModel.examenAsignadoSeleccionado}" styleClass="ui-button-danger"/>
+                </p:toolbarGroup></p:toolbar>
                 <p:dataTable id="examenes" value="#{procedimientoPasoModel.examenesAsignados}" var="asignacion"
                              rowKey="#{asignacion.idProcedimientoPasoExamen}" selectionMode="single"
                              selection="#{procedimientoPasoModel.examenAsignadoSeleccionado}"
                              emptyMessage="Este paso aún no tiene exámenes.">
+                    <p:ajax event="rowSelect" process="@this" update="accionesExamen"/>
+                    <p:ajax event="rowUnselect" process="@this" update="accionesExamen"/>
                     <p:column headerText="Examen"><h:outputText value="#{asignacion.idExamen.nombre}"/></p:column>
                     <p:column headerText="Observaciones"><h:outputText value="#{asignacion.observaciones}"/></p:column>
                 </p:dataTable>
-                <p:commandButton value="Eliminar seleccionado" action="#{procedimientoPasoModel.quitarExamenSeleccionado()}"
-                                 process="@this examenes" update="panelExamenes :mensajes" styleClass="ui-button-danger"/>
+
             </p:panel>
             <p:commandButton value="Guardar paso" action="#{procedimientoModel.guardarPaso()}"
                              process="editorPaso" update="@form :mensajes"/>
-            <p:commandButton value="Cancelar paso" action="#{procedimientoPasoModel.cancelar()}"
+            <p:commandButton value="Cancelar paso" action="#{procedimientoModel.nuevoPaso()}"
                              process="@this" update="@form" resetValues="true" styleClass="ui-button-secondary"/>
         </p:panel>
     </h:form>
