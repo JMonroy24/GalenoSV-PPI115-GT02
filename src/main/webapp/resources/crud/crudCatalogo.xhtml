@@ -29,7 +29,7 @@
 
                 <p:dataTable id="tabla" var="registro"
                              value="#{cc.attrs.model.registros}"
-                             emptyMessage="No se encontraron registros."
+                             emptyMessage="#{msg['msg.empty_records']}"
                              rows="15"
                              paginator="true"
                              paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
@@ -49,10 +49,10 @@
             </p:panel>
 
             <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
-                <p:commandButton value="Sí" type="button"
+                <p:commandButton value="#{msg['btn.yes']}" type="button"
                                  styleClass="ui-confirmdialog-yes ui-button-danger"
                                  icon="pi pi-check"/>
-                <p:commandButton value="No" type="button"
+                <p:commandButton value="#{msg['btn.no']}" type="button"
                                  styleClass="ui-confirmdialog-no ui-button-secondary"
                                  icon="pi pi-times"/>
             </p:confirmDialog>
@@ -60,7 +60,7 @@
 
         <!-- ═══ VISTA FORMULARIO (crear / editar) ═══ -->
         <p:outputPanel id="frmDialogo" rendered="#{cc.attrs.model.registroActual != null}">
-            <p:panel header="#{cc.attrs.model.estadoCrear ? 'Nuevo' : 'Editar'} — #{cc.attrs.titulo}">
+            <p:panel header="#{cc.attrs.model.estadoCrear ? msg['lbl.new'] : msg['lbl.edit']} — #{cc.attrs.titulo}">
                 <p:messages id="msgForm" showDetail="true" closable="true"/>
 
                 <!-- ─── Campos del formulario ─── -->
@@ -75,13 +75,13 @@
                 <p:toolbar>
                     <p:toolbarGroup align="right">
                         <p:commandButton id="btnGuardar"
-                                         value="Guardar" icon="pi pi-check"
+                                         value="#{msg['btn.save']}" icon="pi pi-check"
                                          styleClass="ui-button-success"
                                          action="#{cc.attrs.model.guardar()}"
                                          process="@form"
                                          update="crudContainer"/>
                         <p:commandButton id="btnCancelar"
-                                         value="Cancelar" icon="pi pi-times"
+                                         value="#{msg['btn.cancel']}" icon="pi pi-times"
                                          styleClass="ui-button-secondary"
                                          action="#{cc.attrs.model.cancelar()}"
                                          process="@this"

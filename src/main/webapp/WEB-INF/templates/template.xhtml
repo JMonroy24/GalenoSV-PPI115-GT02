@@ -6,29 +6,46 @@
       xmlns:ui="jakarta.faces.facelets"
       xmlns:p="http://primefaces.org/ui">
 
-    <f:view contentType="text/html">
+    <f:view locale="#{localeBean.locale}" contentType="text/html">
         <h:head>
             <meta charset="UTF-8"/>
             <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-            <title>GalenoSV — <ui:insert name="titulo">Sistema Clínico</ui:insert></title>
+            <title>#{msg['app.name']} — <ui:insert name="titulo">#{msg['app.title']}</ui:insert></title>
             <h:outputStylesheet library="css" name="styles.css"/>
         </h:head>
 
         <h:body>
             <div class="layout-wrapper">
 
-                <div class="layout-topbar">
-                    <h:graphicImage library="images" name="galenosv-logo.png" alt="Logo de GalenoSV" styleClass="app-logo" style="height: 40px; margin-right: 10px;"/>
-                    <span class="app-title">GalenoSV</span>
-                    <span class="app-subtitle">Sistema de Gestión Clínica</span>
-                    <div class="app-user">
-                        <h:outputText value="#{sesionBean.nombreClinica}"/>
-                        <p:button value="Cambiar rol" outcome="/paginas/cambiarRol" icon="pi pi-user-edit" style="margin:0 1rem"/>
-                        <h:outputText value="#{sesionBean.displayUsuario}"/>
-                        <h:form id="frmSesion">
-                            <p:commandButton value="Cerrar sesión" icon="pi pi-sign-out"
+                <div class="layout-topbar" style="justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <h:graphicImage library="images" name="galenosv-logo.png" alt="#{msg['app.name']}" styleClass="app-logo" style="height: 35px;"/>
+                        <span class="app-title">#{msg['app.name']}</span>
+                        <span class="app-subtitle" style="opacity: 0.8; font-weight: normal; margin-left: 0.5rem; border-left: 1px solid rgba(255,255,255,0.3); padding-left: 0.75rem;">#{msg['app.title']}</span>
+                    </div>
+                    
+                    <div class="app-user" style="display: flex; align-items: center; gap: 1rem;">
+                        
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; font-size: 0.85rem; line-height: 1.2;">
+                            <h:outputText value="#{sesionBean.clinicaSeleccionada ? sesionBean.clinicaActual.nombre : msg['header.no_clinic']}" style="font-weight: 600;"/>
+                            <h:outputText value="#{sesionBean.personaActual != null ? sesionBean.displayUsuario : msg['header.no_role']}" style="opacity: 0.85; font-weight: 400;"/>
+                        </div>
+                        
+                        <p:button title="#{msg['menu.change_role']}" outcome="/paginas/cambiarRol" icon="pi pi-users" styleClass="ui-button-outlined" style="color: white; border-color: rgba(255,255,255,0.4); border-radius: 4px;"/>
+                        
+                        <h:form id="frmLang" style="margin: 0;">
+                            <p:commandButton id="btnLang" type="button" icon="pi pi-globe" value="#{localeBean.language.toUpperCase()}" styleClass="ui-button-flat" style="color: white;"/>
+                            <p:menu overlay="true" trigger="btnLang" my="left top" at="left bottom">
+                                <p:menuitem value="Español" action="#{localeBean.setLanguage('es')}" ajax="false" />
+                                <p:menuitem value="English" action="#{localeBean.setLanguage('en')}" ajax="false" />
+                            </p:menu>
+                        </h:form>
+                        
+                        <h:form id="frmSesion" style="margin: 0;">
+                            <p:commandButton title="#{msg['template.logout']}" icon="pi pi-sign-out"
                                              action="#{sesionBean.cerrarSesion}" ajax="false"
-                                             rendered="#{sesionBean.clinicaSeleccionada}"/>
+                                             rendered="#{sesionBean.clinicaSeleccionada}"
+                                             styleClass="ui-button-flat" style="color: white;"/>
                         </h:form>
                     </div>
                 </div>
@@ -48,7 +65,7 @@
                 </div>
 
                 <div class="layout-footer">
-                    GalenoSV v1.0 &#8212; Universidad de El Salvador &#183; Facultad Multidisciplinaria de Occidente &#183; PPI-115 2026
+                    #{msg['app.name']} v1.0 &#8212; #{msg['app.footer.text']}
                 </div>
 
             </div>

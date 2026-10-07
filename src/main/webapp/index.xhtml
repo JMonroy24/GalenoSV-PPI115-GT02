@@ -2,16 +2,16 @@
 <ui:composition template="/WEB-INF/templates/template.xhtml"
                 xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="jakarta.faces.facelets"
                 xmlns:h="jakarta.faces.html" xmlns:p="http://primefaces.org/ui">
-    <ui:define name="titulo">Inicio — GalenoSV</ui:define>
+    <ui:define name="titulo">#{msg['page.index.title']} — #{msg['app.name']}</ui:define>
     <ui:define name="contenido">
-        <p:panel header="GalenoSV — Gestión Clínica">
-            <p>Seleccione una pantalla para comenzar.</p>
+        <p:panel header="#{msg['page.index.header']}">
+            <p>#{msg['page.index.welcome']}</p>
             <h:panelGroup layout="block" style="display:flex;gap:1rem;flex-wrap:wrap">
-                <p:button value="Procedimientos y pasos" outcome="/paginas/catalogo/procedimiento" icon="pi pi-cog"/>
-                <p:button value="Exámenes" outcome="/paginas/catalogo/examen" icon="pi pi-search"/>
-                <p:button value="Documentos" outcome="/paginas/persona/documento" icon="pi pi-file"/>
+                <p:button value="#{msg['menu.procedures_and_steps']}" outcome="/paginas/catalogo/procedimiento" icon="pi pi-cog"/>
+                <p:button value="#{msg['menu.exams']}" outcome="/paginas/catalogo/examen" icon="pi pi-search"/>
+                <p:button value="#{msg['menu.documents']}" outcome="/paginas/persona/documento" icon="pi pi-file"/>
             </h:panelGroup>
-            <p>Seleccione la clínica y el rol de trabajo desde Cambiar rol para registrar consultas.</p>
+            <p>#{msg['page.index.instructions']}</p>
         </p:panel>
     </ui:define>
 </ui:composition>

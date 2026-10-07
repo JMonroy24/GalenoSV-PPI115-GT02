@@ -1,14 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-    Menú principal con 3 grupos de navegación:
-      1. Catálogos       — 8 entidades, tablas simples, crudCatalogo
-      2. Personas         — 4 entidades transaccionales, crudTransaccional
-      3. Atención Clínica — Consulta como punto de entrada + drill-down
-
-    Las tablas de unión (ExamenTipoExamen, ProcedimientoPasoExamen,
-    ProcedimientoPasoSecuencia) NO aparecen en el menú; se editan como
-    sub-tablas embebidas dentro del formulario del padre.
--->
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:h="jakarta.faces.html"
                 xmlns:ui="jakarta.faces.facelets"
@@ -16,62 +6,62 @@
 
     <h:form id="frmMenu">
         <p:menubar>
-            <p:submenu label="Catálogos" icon="pi pi-book">
-                <p:menuitem value="Roles"
+            <p:submenu label="#{msg['menu.catalogs']}" icon="pi pi-book">
+                <p:menuitem value="#{msg['menu.roles']}"
                             outcome="/paginas/catalogo/rol"
                             icon="pi pi-id-card"/>
-                <p:menuitem value="Tipos de Documento"
+                <p:menuitem value="#{msg['menu.document_types']}"
                             outcome="/paginas/catalogo/tipoDocumento"
                             icon="pi pi-file"/>
-                <p:menuitem value="Tipos de Medio de Contacto"
+                <p:menuitem value="#{msg['menu.contact_media_types']}"
                             outcome="/paginas/catalogo/tipoMedioContacto"
                             icon="pi pi-phone"/>
-                <p:menuitem value="Tipos de Examen"
+                <p:menuitem value="#{msg['menu.exam_types']}"
                             outcome="/paginas/catalogo/tipoExamen"
                             icon="pi pi-list"/>
-                <p:menuitem value="Exámenes"
+                <p:menuitem value="#{msg['menu.exams']}"
                             outcome="/paginas/catalogo/examen"
                             icon="pi pi-search"/>
-                <p:menuitem value="Procedimientos"
+                <p:menuitem value="#{msg['menu.procedures']}"
                             outcome="/paginas/catalogo/procedimiento"
                             icon="pi pi-cog"/>
-                <p:menuitem value="Clínicas"
+                <p:menuitem value="#{msg['menu.clinics']}"
                             outcome="/paginas/catalogo/clinica"
                             icon="pi pi-building"/>
             </p:submenu>
 
-            <p:submenu label="Personas" icon="pi pi-users">
-                <p:menuitem value="Personas"
+            <p:submenu label="#{msg['menu.persons']}" icon="pi pi-users">
+                <p:menuitem value="#{msg['menu.persons']}"
                             outcome="/paginas/persona/persona"
                             icon="pi pi-user"/>
-                <p:menuitem value="Documentos"
+                <p:menuitem value="#{msg['menu.documents']}"
                                outcome="/paginas/persona/documento"
                                icon="pi pi-file-edit"/>
 
-                  <p:menuitem value="Medios de Contacto"
+                  <p:menuitem value="#{msg['menu.contact_media']}"
                                outcome="/paginas/persona/medioContacto"
                                icon="pi pi-envelope"/>
-                   <p:menuitem value="Roles de Persona"
+                   <p:menuitem value="#{msg['menu.person_roles']}"
                                outcome="/paginas/persona/personaRol"
                                icon="pi pi-sitemap"/>
 
             </p:submenu>
 
-            <p:submenu label="Atención Clínica" icon="pi pi-heart">
+            <p:submenu label="#{msg['menu.clinical_attention']}" icon="pi pi-heart">
 
-                <p:menuitem value="Consultas"
+                <p:menuitem value="#{msg['menu.consultations']}"
                             outcome="/paginas/clinica/consulta"
                             icon="pi pi-calendar"/>
-                <p:menuitem value="Órdenes de Examen"
+                <p:menuitem value="#{msg['menu.exam_orders']}"
                             outcome="/paginas/clinica/ordenExamen"
                             icon="pi pi-clipboard"/>
 
-                 <p:menuitem value="Resultados de Examen"
+                 <p:menuitem value="#{msg['menu.exam_results']}"
                              outcome="/paginas/clinica/examenResultado"
                              icon="pi pi-chart-bar"/>
 
             </p:submenu>
-            <p:menuitem value="Cambiar rol" outcome="/paginas/cambiarRol" icon="pi pi-user-edit"/>
+            <p:menuitem value="#{msg['menu.change_role']}" outcome="/paginas/cambiarRol" icon="pi pi-user-edit"/>
         </p:menubar>
     </h:form>
 

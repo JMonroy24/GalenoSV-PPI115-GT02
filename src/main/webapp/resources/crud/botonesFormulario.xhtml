@@ -12,13 +12,13 @@
     </cc:interface>
 
     <cc:implementation>
-        <p:commandButton value="Guardar" icon="pi pi-check"
+        <p:commandButton value="#{msg['btn.save']}" icon="pi pi-check"
                          styleClass="ui-button-success"
                          action="#{cc.attrs.model.guardar()}"
                          process="#{cc.attrs.process}"
                          update="#{cc.attrs.update} @([id$=msgForm])"
                          />
-        <p:commandButton value="Cancelar" icon="pi pi-times"
+        <p:commandButton value="#{msg['btn.cancel']}" icon="pi pi-times"
                          styleClass="ui-button-secondary"
                          action="#{cc.attrs.model.cancelar()}"
                          process="@this"

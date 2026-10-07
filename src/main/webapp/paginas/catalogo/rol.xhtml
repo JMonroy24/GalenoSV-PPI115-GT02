@@ -7,36 +7,36 @@
                 xmlns:p="http://primefaces.org/ui"
                 xmlns:crud="jakarta.faces.composite/crud">
 
-    <ui:define name="titulo">Roles</ui:define>
+    <ui:define name="titulo">#{msg['menu.roles']}</ui:define>
 
     <ui:define name="contenido">
 
         <h:form id="frmPrincipal">
 <crud:crudTransaccional model="#{rolModel}" lazyModel="#{rolModel.lazyModel}"
-                                titulo="Roles">
+                                titulo="#{msg['menu.roles']}">
 
-            <p:column headerText="Nombre" sortBy="#{registro.nombre}">
+            <p:column headerText="#{msg['label.name']}" sortBy="#{registro.nombre}">
                 <h:outputText value="#{registro.nombre}"/>
             </p:column>
 
-            <p:column headerText="Activo">
-                <h:outputText value="#{registro.activo eq true ? 'Sí' : 'No'}"/>
+            <p:column headerText="#{msg['label.active']}">
+                <h:outputText value="#{registro.activo eq true ? msg['val.yes'] : msg['val.no']}"/>
             </p:column>
 
-            <p:column headerText="Observaciones" sortBy="#{registro.observaciones}">
+            <p:column headerText="#{msg['lbl.observations']}" sortBy="#{registro.observaciones}">
                 <h:outputText value="#{registro.observaciones}"/>
             </p:column>
 
             <f:facet name="formulario">
                 <h:panelGrid columns="2" cellpadding="7" columnClasses="ui-grid-col-4,ui-grid-col-8" style="width:100%">
 
-                <p:outputLabel value="Nombre:" for="nombre"/>
-                <p:inputText id="nombre" value="#{rolModel.registroActual.nombre}" required="true" label="Nombre" requiredMessage="Complete el campo nombre." maxlength="155"/>
+                <p:outputLabel value="#{msg['label.name']}:" for="nombre"/>
+                <p:inputText id="nombre" value="#{rolModel.registroActual.nombre}" required="true" label="#{msg['label.name']}" requiredMessage="#{msg['req.name']}" maxlength="155"/>
 
-                <p:outputLabel value="Observaciones:" for="observaciones"/>
-                <p:inputTextarea id="observaciones" value="#{rolModel.registroActual.observaciones}" label="Observaciones" maxlength="2000"/>
+                <p:outputLabel value="#{msg['lbl.observations']}:" for="observaciones"/>
+                <p:inputTextarea id="observaciones" value="#{rolModel.registroActual.observaciones}" label="#{msg['lbl.observations']}" maxlength="2000"/>
 
-                <p:outputLabel value="Activo:" for="activo"/>
+                <p:outputLabel value="#{msg['label.active']}:" for="activo"/>
                 <p:selectBooleanCheckbox id="activo" value="#{rolModel.registroActual.activo}"/>
 
                 </h:panelGrid>
