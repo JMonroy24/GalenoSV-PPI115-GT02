@@ -143,4 +143,15 @@ class TipoMedioContactoDAOTest {
         assertEquals(7L, count);
         verify(queryLong, times(1)).getSingleResult();
     }
+
+    @Test
+    void testFindAllActivos() {
+        when(em.createQuery(anyString(), eq(TipoMedioContacto.class))).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new TipoMedioContacto(UUID.randomUUID())));
+
+        List<TipoMedioContacto> result = dao.findAllActivos();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
 }

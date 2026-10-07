@@ -143,4 +143,99 @@ class DocumentoDAOTest {
         assertEquals(7L, count);
         verify(queryLong, times(1)).getSingleResult();
     }
+
+    @Test
+    void testExisteTipoValor() {
+        UUID tipo = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("tipo"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("valor"), anyString())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(1L);
+
+        boolean result = dao.existeTipoValor(tipo, "valor", null);
+
+        assertTrue(result);
+    }
+
+    @Test
+    void testExisteTipoValorNulls() {
+        assertFalse(dao.existeTipoValor(null, "v", null));
+        assertFalse(dao.existeTipoValor(UUID.randomUUID(), null, null));
+        assertFalse(dao.existeTipoValor(UUID.randomUUID(), " ", null));
+    }
+
+    @Test
+    void testExisteTipoValorWithExclude() {
+        UUID tipo = UUID.randomUUID();
+        UUID ex = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("tipo"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("valor"), anyString())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("excluir"), any())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(0L);
+
+        boolean result = dao.existeTipoValor(tipo, "valor", ex);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void testExistePersonaTipoValor() {
+        UUID per = UUID.randomUUID();
+        UUID tipo = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("persona"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("tipo"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("valor"), anyString())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(1L);
+
+        boolean result = dao.existePersonaTipoValor(per, tipo, "valor", null);
+
+        assertTrue(result);
+    }
+
+    @Test
+    void testExistePersonaTipoValorNulls() {
+        assertFalse(dao.existePersonaTipoValor(null, UUID.randomUUID(), "v", null));
+        assertFalse(dao.existePersonaTipoValor(UUID.randomUUID(), null, "v", null));
+        assertFalse(dao.existePersonaTipoValor(UUID.randomUUID(), UUID.randomUUID(), null, null));
+        assertFalse(dao.existePersonaTipoValor(UUID.randomUUID(), UUID.randomUUID(), " ", null));
+    }
+
+    @Test
+    void testExistePersonaTipoValorWithExclude() {
+        UUID per = UUID.randomUUID();
+        UUID tipo = UUID.randomUUID();
+        UUID ex = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("persona"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("tipo"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("valor"), anyString())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("excluir"), any())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(0L);
+
+        boolean result = dao.existePersonaTipoValor(per, tipo, "valor", ex);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void testFindByPersona() {
+        UUID id = UUID.randomUUID();
+        when(em.getCriteriaBuilder()).thenReturn(cb);
+        when(cb.createQuery(Documento.class)).thenReturn(cq);
+        
+        @SuppressWarnings("unchecked")
+        Root<Documento> rootMock = mock(Root.class, RETURNS_DEEP_STUBS);
+        when(cq.from(Documento.class)).thenReturn(rootMock);
+        when(cq.select(rootMock)).thenReturn(cq);
+        when(cq.where((jakarta.persistence.criteria.Predicate) any())).thenReturn(cq);
+        when(em.createQuery(cq)).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new Documento(UUID.randomUUID())));
+
+        List<Documento> result = dao.findByPersona(id);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
 }

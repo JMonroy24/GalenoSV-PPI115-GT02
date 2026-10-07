@@ -149,4 +149,109 @@ class ProcedimientoPasoDAOTest {
         assertEquals(1L, result);
         verify(queryLong).getSingleResult();
     }
+
+    @Test
+    void testFindByProcedimiento() {
+        UUID id = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(ProcedimientoPaso.class))).thenReturn(query);
+        when(query.setParameter(eq("idProc"), any())).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new ProcedimientoPaso(UUID.randomUUID())));
+
+        List<ProcedimientoPaso> result = dao.findByProcedimiento(id, null);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void testFindByProcedimientoNull() {
+        List<ProcedimientoPaso> result = dao.findByProcedimiento(null, null);
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+    
+    @Test
+    void testFindByProcedimientoWithExclude() {
+        UUID id = UUID.randomUUID();
+        UUID ex = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(ProcedimientoPaso.class))).thenReturn(query);
+        when(query.setParameter(eq("idProc"), any())).thenReturn(query);
+        when(query.setParameter(eq("excluir"), any())).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new ProcedimientoPaso(UUID.randomUUID())));
+
+        List<ProcedimientoPaso> result = dao.findByProcedimiento(id, ex);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void testExisteNombreEnProcedimiento() {
+        UUID id = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("procedimiento"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("nombre"), anyString())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(1L);
+
+        boolean result = dao.existeNombreEnProcedimiento(id, "nombre", null);
+
+        assertTrue(result);
+    }
+    
+    @Test
+    void testExisteNombreEnProcedimientoNulls() {
+        assertFalse(dao.existeNombreEnProcedimiento(null, "n", null));
+        assertFalse(dao.existeNombreEnProcedimiento(UUID.randomUUID(), null, null));
+        assertFalse(dao.existeNombreEnProcedimiento(UUID.randomUUID(), "  ", null));
+    }
+    
+    @Test
+    void testExisteNombreEnProcedimientoWithExclude() {
+        UUID id = UUID.randomUUID();
+        UUID ex = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("procedimiento"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("nombre"), anyString())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("excluir"), any())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(0L);
+
+        boolean result = dao.existeNombreEnProcedimiento(id, "nombre", ex);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void testTieneFin() {
+        UUID id = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("idProc"), any())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(1L);
+
+        boolean result = dao.tieneFin(id);
+
+        assertTrue(result);
+    }
+
+    @Test
+    void testTieneFinNull() {
+        assertFalse(dao.tieneFin(null));
+    }
+
+    @Test
+    void testFindPasoInicial() {
+        UUID id = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(ProcedimientoPaso.class))).thenReturn(query);
+        when(query.setParameter(eq("idProc"), any())).thenReturn(query);
+        when(query.setMaxResults(1)).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new ProcedimientoPaso(UUID.randomUUID())));
+
+        ProcedimientoPaso result = dao.findPasoInicial(id);
+
+        assertNotNull(result);
+    }
+    
+    @Test
+    void testFindPasoInicialNull() {
+        assertNull(dao.findPasoInicial(null));
+    }
 }

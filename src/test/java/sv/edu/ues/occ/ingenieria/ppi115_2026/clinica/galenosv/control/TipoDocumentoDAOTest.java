@@ -143,4 +143,15 @@ class TipoDocumentoDAOTest {
         assertEquals(7L, count);
         verify(queryLong, times(1)).getSingleResult();
     }
+
+    @Test
+    void testFindAllActivos() {
+        when(em.createQuery(anyString(), eq(TipoDocumento.class))).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new TipoDocumento(UUID.randomUUID())));
+
+        List<TipoDocumento> result = dao.findAllActivos();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
 }

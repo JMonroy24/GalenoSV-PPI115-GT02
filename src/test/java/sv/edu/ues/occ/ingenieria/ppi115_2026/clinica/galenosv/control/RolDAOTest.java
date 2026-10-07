@@ -143,4 +143,15 @@ class RolDAOTest {
         assertEquals(3L, count);
         verify(queryLong, times(1)).getSingleResult();
     }
+
+    @Test
+    void testFindAllActivos() {
+        when(em.createQuery(anyString(), eq(Rol.class))).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new Rol(UUID.randomUUID())));
+
+        List<Rol> result = dao.findAllActivos();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
 }

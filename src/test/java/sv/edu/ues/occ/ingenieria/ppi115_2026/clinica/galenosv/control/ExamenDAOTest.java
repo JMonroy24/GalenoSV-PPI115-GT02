@@ -149,4 +149,15 @@ class ExamenDAOTest {
         assertEquals(1L, result);
         verify(queryLong).getSingleResult();
     }
+
+    @Test
+    void testFindAllActivos() {
+        when(em.createQuery(anyString(), eq(Examen.class))).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new Examen(UUID.randomUUID())));
+
+        List<Examen> result = dao.findAllActivos();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
 }
