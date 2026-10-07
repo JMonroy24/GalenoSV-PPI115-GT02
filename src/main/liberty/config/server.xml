@@ -20,7 +20,7 @@
             portNumber="5432"
             databaseName="galenoSV"
             user="admin"
-            password="${env.GALENOSV_DB_PASSWORD}"/>
+            password=""/>
     </dataSource>
 
     <library id="PostgreSQLLib">
