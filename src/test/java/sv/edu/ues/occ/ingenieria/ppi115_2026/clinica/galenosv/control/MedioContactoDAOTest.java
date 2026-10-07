@@ -143,4 +143,64 @@ class MedioContactoDAOTest {
         assertEquals(3L, count);
         verify(queryLong, times(1)).getSingleResult();
     }
+
+    @Test
+    void testExistePersonaTipoValor() {
+        UUID idPersona = UUID.randomUUID();
+        UUID idTipo = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("persona"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("tipo"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("valor"), anyString())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(1L);
+
+        boolean result = dao.existePersonaTipoValor(idPersona, idTipo, "valor1", null);
+
+        assertTrue(result);
+    }
+
+    @Test
+    void testExistePersonaTipoValorNulls() {
+        assertFalse(dao.existePersonaTipoValor(null, UUID.randomUUID(), "v", null));
+        assertFalse(dao.existePersonaTipoValor(UUID.randomUUID(), null, "v", null));
+        assertFalse(dao.existePersonaTipoValor(UUID.randomUUID(), UUID.randomUUID(), null, null));
+        assertFalse(dao.existePersonaTipoValor(UUID.randomUUID(), UUID.randomUUID(), " ", null));
+    }
+
+    @Test
+    void testExistePersonaTipoValorWithExclude() {
+        UUID idPersona = UUID.randomUUID();
+        UUID idTipo = UUID.randomUUID();
+        UUID idExclude = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("persona"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("tipo"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("valor"), anyString())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("excluir"), any())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(0L);
+
+        boolean result = dao.existePersonaTipoValor(idPersona, idTipo, "valor1", idExclude);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void testFindByPersona() {
+        UUID idPersona = UUID.randomUUID();
+        when(em.getCriteriaBuilder()).thenReturn(cb);
+        when(cb.createQuery(MedioContacto.class)).thenReturn(cq);
+        
+        @SuppressWarnings("unchecked")
+        Root<MedioContacto> rootMock = mock(Root.class, RETURNS_DEEP_STUBS);
+        when(cq.from(MedioContacto.class)).thenReturn(rootMock);
+        when(cq.select(rootMock)).thenReturn(cq);
+        when(cq.where((jakarta.persistence.criteria.Predicate) any())).thenReturn(cq);
+        when(em.createQuery(cq)).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new MedioContacto(UUID.randomUUID())));
+
+        List<MedioContacto> result = dao.findByPersona(idPersona);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
 }

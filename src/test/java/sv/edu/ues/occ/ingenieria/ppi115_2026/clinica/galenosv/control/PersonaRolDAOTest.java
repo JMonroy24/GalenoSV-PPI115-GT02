@@ -143,4 +143,146 @@ class PersonaRolDAOTest {
         assertEquals(3L, count);
         verify(queryLong, times(1)).getSingleResult();
     }
+
+    @Test
+    void testBuscarParaAutocompletar() {
+        when(em.createQuery(anyString(), eq(PersonaRol.class))).thenReturn(query);
+        when(query.setParameter(eq("patron"), anyString())).thenReturn(query);
+        when(query.setMaxResults(anyInt())).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new PersonaRol(UUID.randomUUID())));
+
+        List<PersonaRol> result = dao.buscarParaAutocompletar("test", 10);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+    
+    @Test
+    void testBuscarParaAutocompletar_Null() {
+        assertNotNull(dao.buscarParaAutocompletar(null, 10));
+        assertTrue(dao.buscarParaAutocompletar("t", 10).isEmpty());
+    }
+
+    @Test
+    void testFindByClinicaAndRol() {
+        UUID clinica = UUID.randomUUID();
+        UUID rol = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(PersonaRol.class))).thenReturn(query);
+        when(query.setParameter(eq("clinica"), any())).thenReturn(query);
+        when(query.setParameter(eq("rol"), any())).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new PersonaRol(UUID.randomUUID())));
+
+        List<PersonaRol> result = dao.findByClinicaAndRol(clinica, rol);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+    
+    @Test
+    void testFindByClinicaAndRolNull() {
+        assertTrue(dao.findByClinicaAndRol(null, UUID.randomUUID()).isEmpty());
+        assertTrue(dao.findByClinicaAndRol(UUID.randomUUID(), null).isEmpty());
+    }
+
+    @Test
+    void testExisteAsignacion() {
+        UUID persona = UUID.randomUUID();
+        UUID rol = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("persona"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("rol"), any())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(1L);
+
+        boolean result = dao.existeAsignacion(persona, rol, null, null);
+
+        assertTrue(result);
+    }
+    
+    @Test
+    void testExisteAsignacionWithClinicaAndExclude() {
+        UUID persona = UUID.randomUUID();
+        UUID rol = UUID.randomUUID();
+        UUID clinica = UUID.randomUUID();
+        UUID excluir = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("persona"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("rol"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("clinica"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("excluir"), any())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(0L);
+
+        boolean result = dao.existeAsignacion(persona, rol, clinica, excluir);
+
+        assertFalse(result);
+    }
+
+    @Test
+    void testExisteAsignacionNulls() {
+        assertFalse(dao.existeAsignacion(null, UUID.randomUUID(), null, null));
+        assertFalse(dao.existeAsignacion(UUID.randomUUID(), null, null, null));
+    }
+
+    @Test
+    void testFindByPersona() {
+        UUID idPersona = UUID.randomUUID();
+        when(em.getCriteriaBuilder()).thenReturn(cb);
+        when(cb.createQuery(PersonaRol.class)).thenReturn(cq);
+        
+        @SuppressWarnings("unchecked")
+        Root<PersonaRol> rootMock = mock(Root.class, RETURNS_DEEP_STUBS);
+        when(cq.from(PersonaRol.class)).thenReturn(rootMock);
+        when(cq.select(rootMock)).thenReturn(cq);
+        when(cq.where((jakarta.persistence.criteria.Predicate) any())).thenReturn(cq);
+        when(em.createQuery(cq)).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new PersonaRol(UUID.randomUUID())));
+
+        List<PersonaRol> result = dao.findByPersona(idPersona);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void testBuscarPacientes() {
+        UUID idClinica = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(PersonaRol.class))).thenReturn(query);
+        when(query.setParameter(eq("clinica"), any())).thenReturn(query);
+        when(query.setParameter(eq("rolPaciente"), anyString())).thenReturn(query);
+        when(query.setParameter(eq("patron"), anyString())).thenReturn(query);
+        when(query.setMaxResults(anyInt())).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new PersonaRol(UUID.randomUUID())));
+
+        List<PersonaRol> result = dao.buscarPacientes("test", idClinica, 10);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+    
+    @Test
+    void testBuscarPacientes_Null() {
+        assertTrue(dao.buscarPacientes(null, UUID.randomUUID(), 10).isEmpty());
+        assertTrue(dao.buscarPacientes("t", UUID.randomUUID(), 10).isEmpty());
+        assertTrue(dao.buscarPacientes("test", null, 10).isEmpty());
+    }
+
+    @Test
+    void testFindResponsable() {
+        UUID idClinica = UUID.randomUUID();
+        UUID idRol = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(PersonaRol.class))).thenReturn(query);
+        when(query.setParameter(eq("clinica"), any())).thenReturn(query);
+        when(query.setParameter(eq("rol"), any())).thenReturn(query);
+        when(query.setMaxResults(1)).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new PersonaRol(UUID.randomUUID())));
+
+        PersonaRol result = dao.findResponsable(idClinica, idRol);
+
+        assertNotNull(result);
+    }
+    
+    @Test
+    void testFindResponsableNulls() {
+        assertNull(dao.findResponsable(null, UUID.randomUUID()));
+        assertNull(dao.findResponsable(UUID.randomUUID(), null));
+    }
 }

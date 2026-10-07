@@ -146,4 +146,15 @@ class ClinicaDAOTest {
         assertEquals(5L, count);
         verify(queryLong, times(1)).getSingleResult();
     }
+
+    @Test
+    void testFindAllActivos() {
+        when(em.createQuery(anyString(), eq(Clinica.class))).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new Clinica(UUID.randomUUID())));
+
+        List<Clinica> result = dao.findAllActivos();
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
 }

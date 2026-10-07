@@ -149,4 +149,61 @@ class ExamenTipoExamenDAOTest {
         assertEquals(1L, result);
         verify(queryLong).getSingleResult();
     }
+
+    @Test
+    void testFindByExamen() {
+        UUID idExamen = UUID.randomUUID();
+        when(em.getCriteriaBuilder()).thenReturn(cb);
+        when(cb.createQuery(ExamenTipoExamen.class)).thenReturn(cq);
+        
+        @SuppressWarnings("unchecked")
+        Root<ExamenTipoExamen> rootMock = mock(Root.class, RETURNS_DEEP_STUBS);
+        when(cq.from(ExamenTipoExamen.class)).thenReturn(rootMock);
+        when(cq.select(rootMock)).thenReturn(cq);
+        when(cq.where((jakarta.persistence.criteria.Predicate) any())).thenReturn(cq);
+        
+        when(em.createQuery(cq)).thenReturn(query);
+        when(query.getResultList()).thenReturn(List.of(new ExamenTipoExamen(UUID.randomUUID())));
+
+        List<ExamenTipoExamen> result = dao.findByExamen(idExamen);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void testExisteExamenTipo() {
+        UUID idExamen = UUID.randomUUID();
+        UUID idTipo = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("examen"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("tipo"), any())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(1L);
+
+        boolean result = dao.existeExamenTipo(idExamen, idTipo);
+
+        assertTrue(result);
+    }
+    
+    @Test
+    void testExisteExamenTipoNulls() {
+        assertFalse(dao.existeExamenTipo(null, UUID.randomUUID()));
+        assertFalse(dao.existeExamenTipo(UUID.randomUUID(), null));
+    }
+    
+    @Test
+    void testExisteExamenTipoWithExclude() {
+        UUID idExamen = UUID.randomUUID();
+        UUID idTipo = UUID.randomUUID();
+        UUID idExclude = UUID.randomUUID();
+        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("examen"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("tipo"), any())).thenReturn(queryLong);
+        when(queryLong.setParameter(eq("excluir"), any())).thenReturn(queryLong);
+        when(queryLong.getSingleResult()).thenReturn(0L);
+
+        boolean result = dao.existeExamenTipo(idExamen, idTipo, idExclude);
+
+        assertFalse(result);
+    }
 }
