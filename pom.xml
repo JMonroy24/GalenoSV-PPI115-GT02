@@ -31,7 +31,7 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-        </dependencies>
+    </dependencies>
     </dependencyManagement>
 
     <dependencies>
@@ -84,11 +84,31 @@
             <scope>compile</scope>
             <classifier>jakarta</classifier>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>eclipselink</artifactId>
+            <version>5.0.0</version>
+            <scope>provided</scope>
+        </dependency>
         <!-- Implementación de Faces sólo para ejecutar los modelos fuera del servidor. -->
         <dependency>
             <groupId>org.glassfish</groupId>
             <artifactId>jakarta.faces</artifactId>
             <version>4.1.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>9.0.1.Final</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>1.21.3</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ${GALENOSV_DB_NAME:-galenoSV}
+      POSTGRES_USER: ${GALENOSV_DB_USER:-admin}
+      POSTGRES_PASSWORD: ${GALENOSV_DB_PASSWORD:?Defina GALENOSV_DB_PASSWORD en .env}
+    ports:
+      - "127.0.0.1:${GALENOSV_DB_PORT:-5432}:5432"
+    volumes:
+      - galenosv-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  galenosv-db:
