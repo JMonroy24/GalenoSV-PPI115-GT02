@@ -1,6 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,7 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.RolDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.RolService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,14 +20,14 @@ import static org.mockito.Mockito.*;
 public class RolModelTest {
 
     @Mock
-    private RolDAO rolDAO;
+    private RolService rolService;
 
     @InjectMocks
     private RolModel rolModel;
 
     @BeforeEach
     public void setUp() {
-        rolModel.setRolDAO(rolDAO);
+        rolModel.setRolService(rolService);
     }
 
     @Test
@@ -36,7 +35,6 @@ public class RolModelTest {
         rolModel.init();
         assertNotNull(rolModel.getLazyModel());
         assertNull(rolModel.getRegistros());
-
     }
 
     @Test
@@ -70,44 +68,48 @@ public class RolModelTest {
 
     @Test
     public void testGuardarCrear() {
-
         rolModel.prepararNuevo();
-        rolModel.getRegistroActual().setNombre("Medico");
-
         rolModel.getRegistroActual().setNombre("Registro válido");
         rolModel.guardar();
 
-        verify(rolDAO).create(any(Rol.class));
+        verify(rolService).create(any(Rol.class));
         assertEquals(Estado.NINGUNO, rolModel.getEstado());
         assertNull(rolModel.getRegistroActual());
     }
 
     @Test
     public void testGuardarModificar() {
-
         Rol r = new Rol(UUID.randomUUID());
         rolModel.seleccionar(r);
 
         rolModel.getRegistroActual().setNombre("Registro válido");
         rolModel.guardar();
 
-        verify(rolDAO).update(r);
+        verify(rolService).update(r);
         assertEquals(Estado.NINGUNO, rolModel.getEstado());
     }
 
     @Test
     public void testEliminar() {
-
         Rol r = new Rol(UUID.randomUUID());
         rolModel.eliminar(r);
 
-        verify(rolDAO).delete(r);
+        verify(rolService).delete(r);
+    }
+
+    @Test
+    public void testGetRolesActivos() {
+        List<Rol> lista = List.of(new Rol(UUID.randomUUID()));
+        when(rolService.getRolesActivos()).thenReturn(lista);
+
+        assertSame(lista, rolModel.getRolesActivos());
+        verify(rolService).getRolesActivos();
     }
 
     @Test
     public void testGettersAndSetters() {
-        assertEquals(rolDAO, rolModel.getDAO());
-        assertEquals(rolDAO, rolModel.getRolDAO());
+        assertEquals(rolService, rolModel.getDAO());
+        assertEquals(rolService, rolModel.getRolService());
         assertNotNull(rolModel.crearNuevoRegistro());
     }
 }

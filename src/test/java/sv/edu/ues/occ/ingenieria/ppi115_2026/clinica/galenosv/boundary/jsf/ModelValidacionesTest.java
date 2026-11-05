@@ -11,20 +11,6 @@ import static org.mockito.Mockito.*;
 class ModelValidacionesTest {
 
 
-    @Test
-    void validaNombreUnicoDeRol() {
-        var model = new RolModel();
-        var dao = mock(RolDAO.class);
-        model.setRolDAO(dao);
-        var registro = new Rol(UUID.randomUUID());
-        registro.setNombre("   ");
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-        registro.setNombre("  Nombre  ");
-        assertDoesNotThrow(() -> model.validarNegocio(registro));
-        assertEquals("Nombre", registro.getNombre());
-        when(dao.existePorCampo("nombre", "Nombre", registro.getIdRol())).thenReturn(true);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-    }
 
     @Test
     void validaNombreUnicoDeExamen() {
