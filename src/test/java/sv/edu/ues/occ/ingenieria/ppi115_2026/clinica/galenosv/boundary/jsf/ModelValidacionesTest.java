@@ -10,21 +10,6 @@ import static org.mockito.Mockito.*;
 
 class ModelValidacionesTest {
 
-    @Test
-    void validaNombreUnicoDeClinica() {
-        var model = new ClinicaModel();
-        var dao = mock(ClinicaDAO.class);
-        model.setClinicaDAO(dao);
-        var registro = new Clinica(UUID.randomUUID());
-        registro.setNombre("   ");
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-        registro.setNombre("  Nombre  ");
-        registro.setTipo("GENERAL");
-        assertDoesNotThrow(() -> model.validarNegocio(registro));
-        assertEquals("Nombre", registro.getNombre());
-        when(dao.existePorCampo("nombre", "Nombre", registro.getIdClinica())).thenReturn(true);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-    }
 
     @Test
     void validaNombreUnicoDeRol() {

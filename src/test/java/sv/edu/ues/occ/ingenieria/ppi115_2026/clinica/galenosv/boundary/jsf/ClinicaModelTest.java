@@ -1,6 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,7 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ClinicaDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ClinicaService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,14 +20,14 @@ import static org.mockito.Mockito.*;
 public class ClinicaModelTest {
 
     @Mock
-    private ClinicaDAO clinicaDAO;
+    private ClinicaService clinicaService;
 
     @InjectMocks
     private ClinicaModel clinicaModel;
 
     @BeforeEach
     public void setUp() {
-        clinicaModel.setClinicaDAO(clinicaDAO);
+        clinicaModel.setClinicaService(clinicaService);
     }
 
     @Test
@@ -36,7 +35,6 @@ public class ClinicaModelTest {
         clinicaModel.init();
         assertNotNull(clinicaModel.getLazyModel());
         assertNull(clinicaModel.getRegistros());
-
     }
 
     @Test
@@ -70,22 +68,18 @@ public class ClinicaModelTest {
 
     @Test
     public void testGuardarCrear() {
-
         clinicaModel.prepararNuevo();
-        clinicaModel.getRegistroActual().setNombre("Clinica Central");
-
         clinicaModel.getRegistroActual().setNombre("Registro válido");
         clinicaModel.getRegistroActual().setTipo("GENERAL");
         clinicaModel.guardar();
 
-        verify(clinicaDAO).create(any(Clinica.class));
+        verify(clinicaService).create(any(Clinica.class));
         assertEquals(Estado.NINGUNO, clinicaModel.getEstado());
         assertNull(clinicaModel.getRegistroActual());
     }
 
     @Test
     public void testGuardarModificar() {
-
         Clinica c = new Clinica(UUID.randomUUID());
         clinicaModel.seleccionar(c);
 
@@ -93,23 +87,31 @@ public class ClinicaModelTest {
         clinicaModel.getRegistroActual().setTipo("GENERAL");
         clinicaModel.guardar();
 
-        verify(clinicaDAO).update(c);
+        verify(clinicaService).update(c);
         assertEquals(Estado.NINGUNO, clinicaModel.getEstado());
     }
 
     @Test
     public void testEliminar() {
-
         Clinica c = new Clinica(UUID.randomUUID());
         clinicaModel.eliminar(c);
 
-        verify(clinicaDAO).delete(c);
+        verify(clinicaService).delete(c);
+    }
+
+    @Test
+    public void testGetActivos() {
+        List<Clinica> lista = List.of(new Clinica(UUID.randomUUID()));
+        when(clinicaService.getActivos()).thenReturn(lista);
+
+        assertSame(lista, clinicaModel.getActivos());
+        verify(clinicaService).getActivos();
     }
 
     @Test
     public void testGettersAndSetters() {
-        assertEquals(clinicaDAO, clinicaModel.getDAO());
-        assertEquals(clinicaDAO, clinicaModel.getClinicaDAO());
+        assertEquals(clinicaService, clinicaModel.getDAO());
+        assertEquals(clinicaService, clinicaModel.getClinicaService());
         assertNotNull(clinicaModel.crearNuevoRegistro());
     }
 }
