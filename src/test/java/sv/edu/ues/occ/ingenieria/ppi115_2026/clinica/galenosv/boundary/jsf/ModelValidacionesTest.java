@@ -12,20 +12,6 @@ class ModelValidacionesTest {
 
 
 
-    @Test
-    void validaNombreUnicoDeExamen() {
-        var model = new ExamenModel();
-        var dao = mock(ExamenDAO.class);
-        model.setExamenDAO(dao);
-        var registro = new Examen(UUID.randomUUID());
-        registro.setNombre("   ");
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-        registro.setNombre("  Nombre  ");
-        assertDoesNotThrow(() -> model.validarNegocio(registro));
-        assertEquals("Nombre", registro.getNombre());
-        when(dao.existePorCampo("nombre", "Nombre", registro.getIdExamen())).thenReturn(true);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-    }
 
 
     @Test

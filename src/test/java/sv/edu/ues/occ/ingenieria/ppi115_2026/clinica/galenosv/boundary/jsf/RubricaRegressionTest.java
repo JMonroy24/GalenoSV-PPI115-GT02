@@ -176,21 +176,21 @@ class RubricaRegressionTest {
 
     @Test
     void examenGuardaTipoInicialYObservacionesEnUnaSolaOperacion() {
-        ExamenModel m = new ExamenModel(); m.examenDAO = mock(ExamenDAO.class); m.asignacionService = mock(AsignacionService.class);
+        ExamenModel m = new ExamenModel(); m.examenService = mock(ExamenService.class);
         m.prepararNuevo(); Examen examen = m.getRegistroActual(); examen.setNombre("Hemograma"); TipoExamen tipo = new TipoExamen(UUID.randomUUID());
-        tipo.setActivo(false); m.setTipoSeleccionado(tipo); m.guardar(); verifyNoInteractions(m.asignacionService); assertTrue(m.isEstadoCrear());
+        tipo.setActivo(false); m.setTipoSeleccionado(tipo); m.guardar(); verifyNoInteractions(m.examenService); assertTrue(m.isEstadoCrear());
         tipo.setActivo(true); m.setObservacionesTipo("Muestra sanguínea"); m.guardar();
         ArgumentCaptor<ExamenTipoExamen> captor = ArgumentCaptor.forClass(ExamenTipoExamen.class);
-        verify(m.asignacionService).crearExamenConTipo(eq(examen), captor.capture());
+        verify(m.examenService).crearExamenConTipo(eq(examen), captor.capture());
         assertSame(tipo, captor.getValue().getIdTipoExamen()); assertEquals("Muestra sanguínea", captor.getValue().getObservaciones());
-        verify(m.examenDAO, never()).create(any()); assertTrue(m.isEstadoNinguno());
+        verify(m.examenService, never()).create(any()); assertTrue(m.isEstadoNinguno());
     }
 
     @Test
     void errorAlCrearExamenConTipoConservaElFormulario() {
-        ExamenModel m = new ExamenModel(); m.examenDAO = mock(ExamenDAO.class); m.asignacionService = mock(AsignacionService.class);
+        ExamenModel m = new ExamenModel(); m.examenService = mock(ExamenService.class);
         m.prepararNuevo(); m.getRegistroActual().setNombre("Hemograma"); TipoExamen tipo = new TipoExamen(UUID.randomUUID()); tipo.setActivo(true);
-        m.setTipoSeleccionado(tipo); doThrow(new IllegalStateException("fallo")).when(m.asignacionService).crearExamenConTipo(any(), any());
+        m.setTipoSeleccionado(tipo); doThrow(new IllegalStateException("fallo")).when(m.examenService).crearExamenConTipo(any(), any());
         m.guardar(); assertTrue(m.isEstadoCrear()); assertNotNull(m.getRegistroActual()); assertSame(tipo, m.getTipoSeleccionado());
     }
 }

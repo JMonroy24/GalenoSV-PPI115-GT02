@@ -1,6 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -8,11 +7,11 @@ import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenTipoExamenDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenTipoExamenService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ExamenTipoExamen;
 
 /**
- * Backing bean JSF para la gestión de la entidad .
+ * Backing bean JSF para la gestión de la entidad ExamenTipoExamen.
  */
 @Named("examenTipoexamenModel")
 @ViewScoped
@@ -21,7 +20,7 @@ public class ExamenTipoExamenModel extends ModelTransaccional<ExamenTipoExamen, 
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected ExamenTipoExamenDAO examenTipoexamenDAO;
+    protected ExamenTipoExamenService examenTipoExamenService;
 
     @PostConstruct
     public void init() {
@@ -30,7 +29,7 @@ public class ExamenTipoExamenModel extends ModelTransaccional<ExamenTipoExamen, 
 
     @Override
     protected DAOInterface<ExamenTipoExamen, UUID> getDAO() {
-        return examenTipoexamenDAO;
+        return examenTipoExamenService;
     }
 
     @Override
@@ -38,25 +37,11 @@ public class ExamenTipoExamenModel extends ModelTransaccional<ExamenTipoExamen, 
         return new ExamenTipoExamen(UUID.randomUUID());
     }
 
-    public ExamenTipoExamenDAO getExamenTipoExamenDAO() {
-        return examenTipoexamenDAO;
+    public ExamenTipoExamenService getExamenTipoExamenService() {
+        return examenTipoExamenService;
     }
 
-    public void setExamenTipoExamenDAO(ExamenTipoExamenDAO examenTipoexamenDAO) {
-        this.examenTipoexamenDAO = examenTipoexamenDAO;
+    public void setExamenTipoExamenService(ExamenTipoExamenService examenTipoExamenService) {
+        this.examenTipoExamenService = examenTipoExamenService;
     }
-
-    @Inject
-    protected AsignacionService asignacionService;
-
-    @Override
-    protected void persistirNuevo(ExamenTipoExamen registro) {
-        asignacionService.guardarTipo(registro, true);
-    }
-
-    @Override
-    protected void persistirCambios(ExamenTipoExamen registro) {
-        asignacionService.guardarTipo(registro, false);
-    }
-
 }

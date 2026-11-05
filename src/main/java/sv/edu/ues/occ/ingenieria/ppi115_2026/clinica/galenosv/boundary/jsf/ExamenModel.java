@@ -1,6 +1,6 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
@@ -16,15 +16,12 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenTipoExamenDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Examen;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ExamenTipoExamen;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoExamen;
 
 /**
  * Administra el catálogo de exámenes y sus asociaciones con tipos de examen.
- * Cada asociación se guarda mediante ExamenTipoExamenDAO.
  */
 @Named("examenModel")
 @ViewScoped
@@ -34,24 +31,19 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
     private static final Logger LOGGER = Logger.getLogger(ExamenModel.class.getName());
 
     @Inject
-    protected ExamenDAO examenDAO;
-
-    @Inject
-    protected ExamenTipoExamenDAO examenTipoExamenDAO;
+    protected ExamenService examenService;
 
     private List<ExamenTipoExamen> tiposAsignados = Collections.emptyList();
     private TipoExamen tipoSeleccionado;
     private ExamenTipoExamen asignacionTipoSeleccionada;
+    private String observacionesTipo;
+
     public ExamenTipoExamen getAsignacionTipoSeleccionada() { return asignacionTipoSeleccionada; }
     public void setAsignacionTipoSeleccionada(ExamenTipoExamen seleccionada) { asignacionTipoSeleccionada = seleccionada; }
     public void quitarTipoSeleccionado() {
         quitarTipo(asignacionTipoSeleccionada);
         asignacionTipoSeleccionada = null;
     }
-    private String observacionesTipo;
-
-    @Inject
-    protected AsignacionService asignacionService;
 
     @PostConstruct
     public void init() {
@@ -60,14 +52,9 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
 
     @Override
     protected DAOInterface<Examen, UUID> getDAO() {
-        return examenDAO;
+        return examenService;
     }
 
-    /**
-     * Crea un examen con el identificador requerido para guardarlo.
-     *
-     * @return examen nuevo con UUID asignado
-     */
     @Override
     protected Examen crearNuevoRegistro() {
         Examen examen = new Examen();
@@ -76,16 +63,11 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
         return examen;
     }
 
-    /**
-     * Carga los tipos asociados al examen seleccionado para edición.
-     *
-     * @param examen examen seleccionado en el catálogo
-     */
     @Override
     public void seleccionar(Examen examen) {
         if (examen == null) return;
         super.seleccionar(examen);
-        tiposAsignados = examenTipoExamenDAO.findByExamen(examen.getIdExamen());
+        tiposAsignados = examenService.findTiposByExamen(examen.getIdExamen());
         limpiarSeleccionTipo();
     }
 
@@ -103,10 +85,6 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
         limpiarSeleccionTipo();
     }
 
-    /**
-     * Asocia el tipo elegido con un examen guardado. Impide que el mismo
-     * tipo se asigne dos veces al examen.
-     */
     public void agregarTipo() {
         if (!isEstadoModificar() || getRegistroActual() == null
                 || tipoSeleccionado == null || tipoSeleccionado.getIdTipoExamen() == null) {
@@ -126,9 +104,8 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
         asignacion.setObservaciones(observacionesTipo);
 
         try {
-            asignacionService.guardarTipo(asignacion, true);
-            tiposAsignados = examenTipoExamenDAO.findByExamen(
-                    getRegistroActual().getIdExamen());
+            examenService.agregarTipo(asignacion);
+            tiposAsignados = examenService.findTiposByExamen(getRegistroActual().getIdExamen());
             limpiarSeleccionTipo();
             agregarMensaje(FacesMessage.SEVERITY_INFO, "Tipo de examen",
                     "Tipo asignado correctamente.");
@@ -143,11 +120,6 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
         }
     }
 
-    /**
-     * Quita una asociación perteneciente al examen seleccionado.
-     *
-     * @param asignacion asociación que se quitará
-     */
     public void quitarTipo(ExamenTipoExamen asignacion) {
         if (!isEstadoModificar() || getRegistroActual() == null
                 || asignacion == null
@@ -160,9 +132,8 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
         }
 
         try {
-            examenTipoExamenDAO.delete(asignacion);
-            tiposAsignados = examenTipoExamenDAO.findByExamen(
-                    getRegistroActual().getIdExamen());
+            examenService.quitarTipo(asignacion);
+            tiposAsignados = examenService.findTiposByExamen(getRegistroActual().getIdExamen());
             agregarMensaje(FacesMessage.SEVERITY_INFO, "Tipo de examen",
                     "Tipo quitado correctamente.");
         } catch (ValidacionNegocioException e) {
@@ -202,35 +173,24 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
         this.observacionesTipo = observacionesTipo;
     }
 
-    public ExamenDAO getExamenDAO() {
-        return examenDAO;
+    public ExamenService getExamenService() {
+        return examenService;
     }
 
-    public void setExamenDAO(ExamenDAO examenDAO) {
-        this.examenDAO = examenDAO;
+    public void setExamenService(ExamenService examenService) {
+        this.examenService = examenService;
     }
 
-    /**
-     * Fuente de opciones para selectores de FK en otras vistas (p.ej. ProcedimientoPaso).
-     * Retorna solo los exámenes activos sin cargar el modelo completo.
-     *
-     * @return lista de Examen con activo = true, ordenados por nombre
-     */
     public java.util.List<Examen> getExamenesActivos() {
-        return examenDAO.findAllActivos();
+        return examenService.getActivos();
     }
 
     @Override
     protected void validarNegocio(Examen registro) {
-        registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre"));
         if (isEstadoCrear() && tipoSeleccionado != null) {
             ValidadorComun.activo(tipoSeleccionado.getActivo(), "El tipo de examen");
         }
-        if (examenDAO.existePorCampo("nombre", registro.getNombre(), registro.getIdExamen())) {
-            throw new ValidacionNegocioException("Ya existe un registro con este nombre.");
-        }
     }
-
 
     @Override
     protected void persistirNuevo(Examen examen) {
@@ -243,7 +203,6 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
         asignacion.setIdTipoExamen(tipoSeleccionado);
         asignacion.setFechaCreacion(new Date());
         asignacion.setObservaciones(observacionesTipo);
-        asignacionService.crearExamenConTipo(examen, asignacion);
+        examenService.crearExamenConTipo(examen, asignacion);
     }
-
 }
