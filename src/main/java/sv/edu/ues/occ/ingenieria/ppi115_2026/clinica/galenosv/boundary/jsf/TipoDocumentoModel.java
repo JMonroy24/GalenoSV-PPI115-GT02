@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -9,7 +7,7 @@ import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoDocumentoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoDocumentoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoDocumento;
 
 /**
@@ -22,7 +20,7 @@ public class TipoDocumentoModel extends ModelTransaccional<TipoDocumento, UUID> 
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected TipoDocumentoDAO tipoDocumentoDAO;
+    protected TipoDocumentoService tipoDocumentoService;
 
     @PostConstruct
     public void init() {
@@ -31,7 +29,7 @@ public class TipoDocumentoModel extends ModelTransaccional<TipoDocumento, UUID> 
 
     @Override
     protected DAOInterface<TipoDocumento, UUID> getDAO() {
-        return tipoDocumentoDAO;
+        return tipoDocumentoService;
     }
 
     @Override
@@ -41,25 +39,15 @@ public class TipoDocumentoModel extends ModelTransaccional<TipoDocumento, UUID> 
         return registro;
     }
 
-    public TipoDocumentoDAO getTipoDocumentoDAO() {
-        return tipoDocumentoDAO;
+    public TipoDocumentoService getTipoDocumentoService() {
+        return tipoDocumentoService;
     }
 
-    public void setTipoDocumentoDAO(TipoDocumentoDAO tipoDocumentoDAO) {
-        this.tipoDocumentoDAO = tipoDocumentoDAO;
-    }
-
-    @Override
-    protected void validarNegocio(TipoDocumento registro) {
-        registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre"));
-        ValidadorComun.expresionRegular(registro.getExpresionRegular());
-        if (tipoDocumentoDAO.existePorCampo("nombre", registro.getNombre(), registro.getIdTipoDocumento())) {
-            throw new ValidacionNegocioException("Ya existe un registro con este nombre.");
-        }
+    public void setTipoDocumentoService(TipoDocumentoService tipoDocumentoService) {
+        this.tipoDocumentoService = tipoDocumentoService;
     }
 
     public java.util.List<TipoDocumento> getActivos() {
-        return tipoDocumentoDAO.findAllActivos();
+        return tipoDocumentoService.getActivos();
     }
-
 }

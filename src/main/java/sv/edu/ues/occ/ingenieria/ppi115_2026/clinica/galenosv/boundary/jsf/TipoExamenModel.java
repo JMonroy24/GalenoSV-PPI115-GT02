@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -9,7 +7,7 @@ import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoExamenDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoExamenService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoExamen;
 
 /**
@@ -22,7 +20,7 @@ public class TipoExamenModel extends ModelTransaccional<TipoExamen, UUID> implem
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected TipoExamenDAO tipoExamenDAO;
+    protected TipoExamenService tipoExamenService;
 
     @PostConstruct
     public void init() {
@@ -31,7 +29,7 @@ public class TipoExamenModel extends ModelTransaccional<TipoExamen, UUID> implem
 
     @Override
     protected DAOInterface<TipoExamen, UUID> getDAO() {
-        return tipoExamenDAO;
+        return tipoExamenService;
     }
 
     @Override
@@ -48,23 +46,14 @@ public class TipoExamenModel extends ModelTransaccional<TipoExamen, UUID> implem
      * @return lista de TipoExamen activos ordenados por nombre
      */
     public java.util.List<TipoExamen> getTiposActivos() {
-        return tipoExamenDAO.findAllActivos();
+        return tipoExamenService.getTiposActivos();
     }
 
-    public TipoExamenDAO getTipoExamenDAO() {
-        return tipoExamenDAO;
+    public TipoExamenService getTipoExamenService() {
+        return tipoExamenService;
     }
 
-    public void setTipoExamenDAO(TipoExamenDAO tipoExamenDAO) {
-        this.tipoExamenDAO = tipoExamenDAO;
+    public void setTipoExamenService(TipoExamenService tipoExamenService) {
+        this.tipoExamenService = tipoExamenService;
     }
-
-    @Override
-    protected void validarNegocio(TipoExamen registro) {
-        registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre"));
-        if (tipoExamenDAO.existePorCampo("nombre", registro.getNombre(), registro.getIdTipoExamen())) {
-            throw new ValidacionNegocioException("Ya existe un registro con este nombre.");
-        }
-    }
-
 }

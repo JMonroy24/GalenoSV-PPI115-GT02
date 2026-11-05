@@ -1,6 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,7 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoExamenDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoExamenService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoExamen;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,14 +20,14 @@ import static org.mockito.Mockito.*;
 public class TipoExamenModelTest {
 
     @Mock
-    private TipoExamenDAO tipoExamenDAO;
+    private TipoExamenService tipoExamenService;
 
     @InjectMocks
     private TipoExamenModel tipoExamenModel;
 
     @BeforeEach
     public void setUp() {
-        tipoExamenModel.setTipoExamenDAO(tipoExamenDAO);
+        tipoExamenModel.setTipoExamenService(tipoExamenService);
     }
 
     @Test
@@ -36,7 +35,6 @@ public class TipoExamenModelTest {
         tipoExamenModel.init();
         assertNotNull(tipoExamenModel.getLazyModel());
         assertNull(tipoExamenModel.getRegistros());
-
     }
 
     @Test
@@ -70,44 +68,48 @@ public class TipoExamenModelTest {
 
     @Test
     public void testGuardarCrear() {
-
         tipoExamenModel.prepararNuevo();
-        tipoExamenModel.getRegistroActual().setNombre("Hemograma");
-
         tipoExamenModel.getRegistroActual().setNombre("Registro válido");
         tipoExamenModel.guardar();
 
-        verify(tipoExamenDAO).create(any(TipoExamen.class));
+        verify(tipoExamenService).create(any(TipoExamen.class));
         assertEquals(Estado.NINGUNO, tipoExamenModel.getEstado());
         assertNull(tipoExamenModel.getRegistroActual());
     }
 
     @Test
     public void testGuardarModificar() {
-
         TipoExamen te = new TipoExamen(UUID.randomUUID());
         tipoExamenModel.seleccionar(te);
 
         tipoExamenModel.getRegistroActual().setNombre("Registro válido");
         tipoExamenModel.guardar();
 
-        verify(tipoExamenDAO).update(te);
+        verify(tipoExamenService).update(te);
         assertEquals(Estado.NINGUNO, tipoExamenModel.getEstado());
     }
 
     @Test
     public void testEliminar() {
-
         TipoExamen te = new TipoExamen(UUID.randomUUID());
         tipoExamenModel.eliminar(te);
 
-        verify(tipoExamenDAO).delete(te);
+        verify(tipoExamenService).delete(te);
+    }
+
+    @Test
+    public void testGetTiposActivos() {
+        List<TipoExamen> lista = List.of(new TipoExamen(UUID.randomUUID()));
+        when(tipoExamenService.getTiposActivos()).thenReturn(lista);
+
+        assertSame(lista, tipoExamenModel.getTiposActivos());
+        verify(tipoExamenService).getTiposActivos();
     }
 
     @Test
     public void testGettersAndSetters() {
-        assertEquals(tipoExamenDAO, tipoExamenModel.getDAO());
-        assertEquals(tipoExamenDAO, tipoExamenModel.getTipoExamenDAO());
+        assertEquals(tipoExamenService, tipoExamenModel.getDAO());
+        assertEquals(tipoExamenService, tipoExamenModel.getTipoExamenService());
         assertNotNull(tipoExamenModel.crearNuevoRegistro());
     }
 }

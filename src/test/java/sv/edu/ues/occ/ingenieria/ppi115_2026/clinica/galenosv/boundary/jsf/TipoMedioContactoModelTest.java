@@ -1,6 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,7 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoMedioContactoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoMedioContactoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoMedioContacto;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,14 +20,14 @@ import static org.mockito.Mockito.*;
 public class TipoMedioContactoModelTest {
 
     @Mock
-    private TipoMedioContactoDAO tipoMedioContactoDAO;
+    private TipoMedioContactoService tipoMedioContactoService;
 
     @InjectMocks
     private TipoMedioContactoModel tipoMedioContactoModel;
 
     @BeforeEach
     public void setUp() {
-        tipoMedioContactoModel.setTipoMedioContactoDAO(tipoMedioContactoDAO);
+        tipoMedioContactoModel.setTipoMedioContactoService(tipoMedioContactoService);
     }
 
     @Test
@@ -36,7 +35,6 @@ public class TipoMedioContactoModelTest {
         tipoMedioContactoModel.init();
         assertNotNull(tipoMedioContactoModel.getLazyModel());
         assertNull(tipoMedioContactoModel.getRegistros());
-
     }
 
     @Test
@@ -70,44 +68,48 @@ public class TipoMedioContactoModelTest {
 
     @Test
     public void testGuardarCrear() {
-
         tipoMedioContactoModel.prepararNuevo();
-        tipoMedioContactoModel.getRegistroActual().setNombre("Telefono");
-
         tipoMedioContactoModel.getRegistroActual().setNombre("Registro válido");
         tipoMedioContactoModel.guardar();
 
-        verify(tipoMedioContactoDAO).create(any(TipoMedioContacto.class));
+        verify(tipoMedioContactoService).create(any(TipoMedioContacto.class));
         assertEquals(Estado.NINGUNO, tipoMedioContactoModel.getEstado());
         assertNull(tipoMedioContactoModel.getRegistroActual());
     }
 
     @Test
     public void testGuardarModificar() {
-
         TipoMedioContacto tmc = new TipoMedioContacto(UUID.randomUUID());
         tipoMedioContactoModel.seleccionar(tmc);
 
         tipoMedioContactoModel.getRegistroActual().setNombre("Registro válido");
         tipoMedioContactoModel.guardar();
 
-        verify(tipoMedioContactoDAO).update(tmc);
+        verify(tipoMedioContactoService).update(tmc);
         assertEquals(Estado.NINGUNO, tipoMedioContactoModel.getEstado());
     }
 
     @Test
     public void testEliminar() {
-
         TipoMedioContacto tmc = new TipoMedioContacto(UUID.randomUUID());
         tipoMedioContactoModel.eliminar(tmc);
 
-        verify(tipoMedioContactoDAO).delete(tmc);
+        verify(tipoMedioContactoService).delete(tmc);
+    }
+
+    @Test
+    public void testGetActivos() {
+        List<TipoMedioContacto> lista = List.of(new TipoMedioContacto(UUID.randomUUID()));
+        when(tipoMedioContactoService.getActivos()).thenReturn(lista);
+
+        assertSame(lista, tipoMedioContactoModel.getActivos());
+        verify(tipoMedioContactoService).getActivos();
     }
 
     @Test
     public void testGettersAndSetters() {
-        assertEquals(tipoMedioContactoDAO, tipoMedioContactoModel.getDAO());
-        assertEquals(tipoMedioContactoDAO, tipoMedioContactoModel.getTipoMedioContactoDAO());
+        assertEquals(tipoMedioContactoService, tipoMedioContactoModel.getDAO());
+        assertEquals(tipoMedioContactoService, tipoMedioContactoModel.getTipoMedioContactoService());
         assertNotNull(tipoMedioContactoModel.crearNuevoRegistro());
     }
 }
