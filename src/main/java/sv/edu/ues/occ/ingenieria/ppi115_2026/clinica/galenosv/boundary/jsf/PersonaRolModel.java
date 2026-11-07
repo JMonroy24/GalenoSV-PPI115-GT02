@@ -9,7 +9,8 @@ import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRol;
 
 /**
@@ -22,7 +23,7 @@ public class PersonaRolModel extends ModelTransaccional<PersonaRol, UUID> implem
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected PersonaRolDAO personaRolDAO;
+    protected PersonaRolService personaRolService;
 
     @PostConstruct
     public void init() {
@@ -31,7 +32,7 @@ public class PersonaRolModel extends ModelTransaccional<PersonaRol, UUID> implem
 
     @Override
     protected DAOInterface<PersonaRol, UUID> getDAO() {
-        return personaRolDAO;
+        return personaRolService;
     }
 
     @Override
@@ -39,20 +40,20 @@ public class PersonaRolModel extends ModelTransaccional<PersonaRol, UUID> implem
         return new PersonaRol(UUID.randomUUID());
     }
 
-    public PersonaRolDAO getPersonaRolDAO() {
-        return personaRolDAO;
+    public PersonaRolService getPersonaRolService() {
+        return personaRolService;
     }
 
-    public void setPersonaRolDAO(PersonaRolDAO personaRolDAO) {
-        this.personaRolDAO = personaRolDAO;
+    public void setPersonaRolService(PersonaRolService personaRolService) {
+        this.personaRolService = personaRolService;
     }
 
     @Inject
-    protected sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaDAO personaDAO;
+    protected PersonaService personaService;
 
     public java.util.List<sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona> completePersona(String query) {
         if (query == null || query.trim().length() < 2) return java.util.List.of();
-        return personaDAO.buscarParaAutocompletar(query, 10);
+        return personaService.buscarParaAutocompletar(query, 10);
     }
 
 
@@ -66,7 +67,7 @@ public class PersonaRolModel extends ModelTransaccional<PersonaRol, UUID> implem
         var asignada = ValidadorComun.requerido(registro.getIdClinica(), "Seleccione la clínica del rol.");
         UUID clinica = ValidadorComun.requerido(asignada.getIdClinica(), "Seleccione una clínica válida.");
         ValidadorComun.activo(asignada.getActivo(), "La clínica");
-        if (personaRolDAO.existeAsignacion(persona.getIdPersona(), rol.getIdRol(), clinica, registro.getIdPersonaRol())) {
+        if (personaRolService.existeAsignacion(persona.getIdPersona(), rol.getIdRol(), clinica, registro.getIdPersonaRol())) {
             throw new ValidacionNegocioException("La persona ya tiene este rol en la clínica seleccionada.");
         }
     }

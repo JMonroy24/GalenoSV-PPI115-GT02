@@ -7,10 +7,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DocumentoDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.MedioContactoDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DocumentoService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.MedioContactoService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,23 +22,23 @@ import static org.mockito.Mockito.*;
 public class PersonaModelTest {
 
     @Mock
-    private PersonaDAO personaDAO;
+    private PersonaService personaService;
 
     @Mock
-    private DocumentoDAO documentoDAO;
+    private DocumentoService documentoService;
 
     @Mock
-    private MedioContactoDAO medioContactoDAO;
+    private MedioContactoService medioContactoService;
 
     @Mock
-    private PersonaRolDAO personaRolDAO;
+    private PersonaRolService personaRolService;
 
     @InjectMocks
     private PersonaModel personaModel;
 
     @BeforeEach
     public void setUp() {
-        personaModel.setPersonaDAO(personaDAO);
+        personaModel.setPersonaService(personaService);
     }
 
     @Test
@@ -87,7 +87,7 @@ public class PersonaModelTest {
         personaModel.getRegistroActual().setApellidos("Pérez");
         personaModel.guardar();
 
-        verify(personaDAO).create(any(Persona.class));
+        verify(personaService).create(any(Persona.class));
         assertEquals(Estado.NINGUNO, personaModel.getEstado());
         assertNull(personaModel.getRegistroActual());
     }
@@ -101,7 +101,7 @@ public class PersonaModelTest {
         personaModel.getRegistroActual().setApellidos("Pérez");
         personaModel.guardar();
 
-        verify(personaDAO).update(p);
+        verify(personaService).update(p);
         assertEquals(Estado.NINGUNO, personaModel.getEstado());
     }
 
@@ -110,14 +110,14 @@ public class PersonaModelTest {
         Persona p = new Persona(UUID.randomUUID());
         personaModel.eliminar(p);
 
-        verify(personaDAO).delete(p);
+        verify(personaService).delete(p);
     }
 
     @Test
     public void testGettersAndSetters() {
         personaModel.init();
-        assertEquals(personaDAO, personaModel.getDAO());
-        assertEquals(personaDAO, personaModel.getPersonaDAO());
+        assertEquals(personaService, personaModel.getDAO());
+        assertEquals(personaService, personaModel.getPersonaService());
         assertNotNull(personaModel.crearNuevoRegistro());
         assertNotNull(personaModel.getLazyModel());
     }

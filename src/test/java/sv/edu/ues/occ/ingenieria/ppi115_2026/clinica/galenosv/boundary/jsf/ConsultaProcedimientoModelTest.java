@@ -7,7 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimiento;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,7 +19,7 @@ import static org.mockito.Mockito.*;
 public class ConsultaProcedimientoModelTest {
 
     @Mock
-    private ConsultaProcedimientoDAO consultaProcedimientoDAO;
+    private ConsultaProcedimientoService consultaProcedimientoService;
 
     @InjectMocks
     private ConsultaProcedimientoModel consultaProcedimientoModel;
@@ -32,7 +32,7 @@ public class ConsultaProcedimientoModelTest {
     @BeforeEach
     public void setUp() {
         faces = mockStatic(jakarta.faces.context.FacesContext.class);
-        consultaProcedimientoModel.setConsultaProcedimientoDAO(consultaProcedimientoDAO);
+        consultaProcedimientoModel.setConsultaProcedimientoService(consultaProcedimientoService);
     }
 
     @Test
@@ -79,7 +79,7 @@ public class ConsultaProcedimientoModelTest {
 
         consultaProcedimientoModel.guardar();
 
-        verify(consultaProcedimientoDAO).create(any(ConsultaProcedimiento.class));
+        verify(consultaProcedimientoService).create(any(ConsultaProcedimiento.class));
         assertEquals(Estado.NINGUNO, consultaProcedimientoModel.getEstado());
         assertNull(consultaProcedimientoModel.getRegistroActual());
     }
@@ -91,7 +91,7 @@ public class ConsultaProcedimientoModelTest {
 
         consultaProcedimientoModel.guardar();
 
-        verify(consultaProcedimientoDAO).update(cp);
+        verify(consultaProcedimientoService).update(cp);
         assertEquals(Estado.NINGUNO, consultaProcedimientoModel.getEstado());
     }
 
@@ -100,14 +100,14 @@ public class ConsultaProcedimientoModelTest {
         ConsultaProcedimiento cp = new ConsultaProcedimiento(UUID.randomUUID());
         consultaProcedimientoModel.eliminar(cp);
 
-        verify(consultaProcedimientoDAO).delete(cp);
+        verify(consultaProcedimientoService).delete(cp);
     }
 
     @Test
     public void testGettersAndSetters() {
         consultaProcedimientoModel.init();
-        assertEquals(consultaProcedimientoDAO, consultaProcedimientoModel.getDAO());
-        assertEquals(consultaProcedimientoDAO, consultaProcedimientoModel.getConsultaProcedimientoDAO());
+        assertEquals(consultaProcedimientoService, consultaProcedimientoModel.getDAO());
+        assertEquals(consultaProcedimientoService, consultaProcedimientoModel.getConsultaProcedimientoService());
         assertNotNull(consultaProcedimientoModel.crearNuevoRegistro());
         assertNotNull(consultaProcedimientoModel.getLazyModel());
     }

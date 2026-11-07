@@ -10,12 +10,10 @@ import java.util.stream.Collectors;
 import jakarta.faces.application.FacesMessage;
 import org.primefaces.model.TreeNode;
 import org.primefaces.model.DefaultTreeNode;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoSecuenciaDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPaso;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPasoSecuencia;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Procedimiento;
 
 /**
@@ -30,10 +28,8 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected ProcedimientoDAO procedimientoDAO;
+    protected ProcedimientoService procedimientoService;
 
-    @Inject protected ProcedimientoPasoDAO pasoDAO;
-    @Inject protected ProcedimientoPasoSecuenciaDAO secuenciaDAO;
     @Inject protected ProcedimientoPasoModel pasoModel;
     private TreeNode<ProcedimientoPaso> arbolPasos;
     private List<ProcedimientoPaso> pasos = List.of();
@@ -89,8 +85,8 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
     @Override public void guardar() {
         try {
             Procedimiento actual = getRegistroActual();
-            if (isEstadoCrear()) procedimientoDAO.create(actual);
-            else if (isEstadoModificar()) procedimientoDAO.update(actual);
+            if (isEstadoCrear()) procedimientoService.create(actual);
+            else if (isEstadoModificar()) procedimientoService.update(actual);
             else return;
             cargarDatos();
             super.seleccionar(actual);
@@ -134,14 +130,14 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
         padres.clear();
         if (getRegistroActual() == null || !isEstadoModificar()) return arbolPasos;
         UUID id = getRegistroActual().getIdProcedimiento();
-        pasos = new ArrayList<>(pasoDAO.findByProcedimiento(id));
+        pasos = new ArrayList<>(procedimientoService.findPasosByProcedimiento(id));
         pasos.sort(Comparator.comparing(ProcedimientoPaso::getNombre,
                 Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)).thenComparing(ProcedimientoPaso::getIdProcedimientoPaso));
         Map<UUID, ProcedimientoPaso> porId = pasos.stream().collect(Collectors.toMap(
                 ProcedimientoPaso::getIdProcedimientoPaso, p -> p));
         Map<UUID, Set<UUID>> hijos = new HashMap<>();
         Set<UUID> referencias = new HashSet<>();
-        for (ProcedimientoPasoSecuencia s : secuenciaDAO.findByProcedimiento(id)) {
+        for (ProcedimientoPasoSecuencia s : procedimientoService.findSecuenciasByProcedimiento(id)) {
             if (!"SIGUIENTE".equals(s.getTipoSecuencia()) || s.getIdProcedimientoPaso() == null) continue;
             UUID padre = s.getIdProcedimientoPaso().getIdProcedimientoPaso();
             UUID hijo = s.getIdProcedimientoPasoReferencia();
@@ -186,7 +182,7 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
 
     @Override
     protected DAOInterface<Procedimiento, UUID> getDAO() {
-        return procedimientoDAO;
+        return procedimientoService;
     }
 
     /**
@@ -201,15 +197,15 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
         return nuevo;
     }
 
-    public ProcedimientoDAO getProcedimientoDAO() {
-        return procedimientoDAO;
+    public ProcedimientoService getProcedimientoService() {
+        return procedimientoService;
     }
 
-    public void setProcedimientoDAO(ProcedimientoDAO procedimientoDAO) {
-        this.procedimientoDAO = procedimientoDAO;
+    public void setProcedimientoService(ProcedimientoService procedimientoService) {
+        this.procedimientoService = procedimientoService;
     }
 
     public List<Procedimiento> getProcedimientosActivos() {
-        return procedimientoDAO.findAllActivos();
+        return procedimientoService.findAllActivos();
     }
 }

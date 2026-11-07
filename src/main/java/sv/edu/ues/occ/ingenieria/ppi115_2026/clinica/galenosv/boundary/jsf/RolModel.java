@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -9,7 +7,7 @@ import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.RolDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.RolService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol;
 
 /**
@@ -22,7 +20,7 @@ public class RolModel extends ModelTransaccional<Rol, UUID> implements Serializa
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected RolDAO rolDAO;
+    protected RolService rolService;
 
     @PostConstruct
     public void init() {
@@ -31,7 +29,7 @@ public class RolModel extends ModelTransaccional<Rol, UUID> implements Serializa
 
     @Override
     protected DAOInterface<Rol, UUID> getDAO() {
-        return rolDAO;
+        return rolService;
     }
 
     @Override
@@ -48,23 +46,14 @@ public class RolModel extends ModelTransaccional<Rol, UUID> implements Serializa
      * @return lista de Rol ordenada por nombre
      */
     public java.util.List<Rol> getRolesActivos() {
-        return rolDAO.findAllActivos();
+        return rolService.getRolesActivos();
     }
 
-    public RolDAO getRolDAO() {
-        return rolDAO;
+    public RolService getRolService() {
+        return rolService;
     }
 
-    public void setRolDAO(RolDAO rolDAO) {
-        this.rolDAO = rolDAO;
+    public void setRolService(RolService rolService) {
+        this.rolService = rolService;
     }
-
-    @Override
-    protected void validarNegocio(Rol registro) {
-        registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre"));
-        if (rolDAO.existePorCampo("nombre", registro.getNombre(), registro.getIdRol())) {
-            throw new ValidacionNegocioException("Ya existe un registro con este nombre.");
-        }
-    }
-
 }

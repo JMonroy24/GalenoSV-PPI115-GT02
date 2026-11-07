@@ -7,8 +7,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,17 +20,17 @@ import static org.mockito.Mockito.*;
 public class ConsultaModelTest {
 
     @Mock
-    private ConsultaDAO consultaDAO;
+    private ConsultaService consultaService;
 
     @Mock
-    private ConsultaProcedimientoDAO consultaProcedimientoDAO;
+    private ConsultaProcedimientoService consultaProcedimientoService;
 
     @InjectMocks
     private ConsultaModel consultaModel;
 
     @BeforeEach
     public void setUp() {
-        consultaModel.setConsultaDAO(consultaDAO);
+        consultaModel.setConsultaService(consultaService);
         consultaModel.sesionBean = new SesionBean();
         var clinica = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica(UUID.randomUUID());
         clinica.setActivo(true);
@@ -86,7 +86,7 @@ public class ConsultaModelTest {
         consultaModel.getRegistroActual().setIdPersonaRol(paciente);
         consultaModel.guardar();
 
-        verify(consultaDAO).create(any(Consulta.class));
+        verify(consultaService).create(any(Consulta.class));
         assertEquals(Estado.NINGUNO, consultaModel.getEstado());
         assertNull(consultaModel.getRegistroActual());
     }
@@ -103,7 +103,7 @@ public class ConsultaModelTest {
         consultaModel.getRegistroActual().setIdPersonaRol(paciente);
         consultaModel.guardar();
 
-        verify(consultaDAO).update(c);
+        verify(consultaService).update(c);
         assertEquals(Estado.NINGUNO, consultaModel.getEstado());
     }
 
@@ -112,14 +112,14 @@ public class ConsultaModelTest {
         Consulta c = new Consulta(UUID.randomUUID());
         consultaModel.eliminar(c);
 
-        verify(consultaDAO).delete(c);
+        verify(consultaService).delete(c);
     }
 
     @Test
     public void testGettersAndSetters() {
         consultaModel.init();
-        assertEquals(consultaDAO, consultaModel.getDAO());
-        assertEquals(consultaDAO, consultaModel.getConsultaDAO());
+        assertEquals(consultaService, consultaModel.getDAO());
+        assertEquals(consultaService, consultaModel.getConsultaService());
         assertNotNull(consultaModel.crearNuevoRegistro());
         assertNotNull(consultaModel.getLazyModel());
     }

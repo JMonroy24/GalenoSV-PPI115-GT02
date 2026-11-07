@@ -13,15 +13,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ClinicaDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ClinicaService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DocumentoDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.MedioContactoDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.RolDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoDocumentoDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoMedioContactoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DocumentoService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.MedioContactoService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.RolService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoDocumentoService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoMedioContactoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Documento;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.MedioContacto;
@@ -42,21 +42,21 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected PersonaDAO personaDAO;
+    protected PersonaService personaService;
     @Inject
-    protected DocumentoDAO documentoDAO;
+    protected DocumentoService documentoService;
     @Inject
-    protected MedioContactoDAO medioContactoDAO;
+    protected MedioContactoService medioContactoService;
     @Inject
-    protected PersonaRolDAO personaRolDAO;
+    protected PersonaRolService personaRolService;
     @Inject
-    protected TipoDocumentoDAO tipoDocumentoDAO;
+    protected TipoDocumentoService tipoDocumentoService;
     @Inject
-    protected TipoMedioContactoDAO tipoMedioContactoDAO;
+    protected TipoMedioContactoService tipoMedioContactoService;
     @Inject
-    protected RolDAO rolDAO;
+    protected RolService rolService;
     @Inject
-    protected ClinicaDAO clinicaDAO;
+    protected ClinicaService clinicaService;
 
     // Relaciones de la persona en edición
     private List<Documento> documentos = Collections.emptyList();
@@ -82,7 +82,7 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
 
     @Override
     protected DAOInterface<Persona, UUID> getDAO() {
-        return personaDAO;
+        return personaService;
     }
 
     @Override
@@ -127,9 +127,9 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
 
     private void recargarRelaciones() {
         UUID id = getRegistroActual().getIdPersona();
-        documentos = (List<Documento>) documentoDAO.findByPersona(id);
-        mediosContacto = (List<MedioContacto>) medioContactoDAO.findByPersona(id);
-        roles = personaRolDAO.findByPersona(id);
+        documentos = (List<Documento>) documentoService.findByPersona(id);
+        mediosContacto = (List<MedioContacto>) medioContactoService.findByPersona(id);
+        roles = personaRolService.findByPersona(id);
     }
 
     private void vaciarRelaciones() {
@@ -178,8 +178,8 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
         documentoNuevo.setValor(valor);
         documentoNuevo.setIdPersona(getRegistroActual());
         ejecutarRelacion("Documento", () -> {
-            documentoDAO.create(documentoNuevo);
-            documentos = (List<Documento>) documentoDAO.findByPersona(getRegistroActual().getIdPersona());
+            documentoService.create(documentoNuevo);
+            documentos = (List<Documento>) documentoService.findByPersona(getRegistroActual().getIdPersona());
             documentoNuevo = new Documento(UUID.randomUUID());
         }, "Documento agregado correctamente.");
     }
@@ -194,8 +194,8 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
             return;
         }
         ejecutarRelacion("Documento", () -> {
-            documentoDAO.delete(documento);
-            documentos = (List<Documento>) documentoDAO.findByPersona(getRegistroActual().getIdPersona());
+            documentoService.delete(documento);
+            documentos = (List<Documento>) documentoService.findByPersona(getRegistroActual().getIdPersona());
         }, "Documento quitado correctamente.");
     }
 
@@ -221,8 +221,8 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
         medioNuevo.setIdPersona(getRegistroActual());
         medioNuevo.setFechaCreacion(new Date());
         ejecutarRelacion("Medio de contacto", () -> {
-            medioContactoDAO.create(medioNuevo);
-            mediosContacto = (List<MedioContacto>) medioContactoDAO.findByPersona(getRegistroActual().getIdPersona());
+            medioContactoService.create(medioNuevo);
+            mediosContacto = (List<MedioContacto>) medioContactoService.findByPersona(getRegistroActual().getIdPersona());
             medioNuevo = new MedioContacto(UUID.randomUUID());
         }, "Medio de contacto agregado correctamente.");
     }
@@ -237,8 +237,8 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
             return;
         }
         ejecutarRelacion("Medio de contacto", () -> {
-            medioContactoDAO.delete(medio);
-            mediosContacto = (List<MedioContacto>) medioContactoDAO.findByPersona(getRegistroActual().getIdPersona());
+            medioContactoService.delete(medio);
+            mediosContacto = (List<MedioContacto>) medioContactoService.findByPersona(getRegistroActual().getIdPersona());
         }, "Medio de contacto quitado correctamente.");
     }
 
@@ -270,8 +270,8 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
         rolNuevo.setIdPersona(getRegistroActual());
         rolNuevo.setFechaCreacion(new Date());
         ejecutarRelacion("Rol", () -> {
-            personaRolDAO.create(rolNuevo);
-            roles = personaRolDAO.findByPersona(getRegistroActual().getIdPersona());
+            personaRolService.create(rolNuevo);
+            roles = personaRolService.findByPersona(getRegistroActual().getIdPersona());
             rolNuevo = new PersonaRol(UUID.randomUUID());
         }, "Rol asignado correctamente.");
     }
@@ -286,36 +286,36 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
             return;
         }
         ejecutarRelacion("Rol", () -> {
-            personaRolDAO.delete(rol);
-            roles = personaRolDAO.findByPersona(getRegistroActual().getIdPersona());
+            personaRolService.delete(rol);
+            roles = personaRolService.findByPersona(getRegistroActual().getIdPersona());
         }, "Rol quitado correctamente.");
     }
 
 
     public List<TipoDocumento> getTiposDocumento() {
         if (tiposDocumento == null) {
-            tiposDocumento = tipoDocumentoDAO.findAllActivos();
+            tiposDocumento = tipoDocumentoService.findAllActivos();
         }
         return tiposDocumento;
     }
 
     public List<TipoMedioContacto> getTiposMedioContacto() {
         if (tiposMedioContacto == null) {
-            tiposMedioContacto = tipoMedioContactoDAO.findAllActivos();
+            tiposMedioContacto = tipoMedioContactoService.findAllActivos();
         }
         return tiposMedioContacto;
     }
 
     public List<Rol> getRolesActivos() {
         if (rolesActivos == null) {
-            rolesActivos = rolDAO.findAllActivos();
+            rolesActivos = rolService.findAllActivos();
         }
         return rolesActivos;
     }
 
     public List<Clinica> getClinicas() {
         if (clinicas == null) {
-            clinicas = clinicaDAO.findAllActivos();
+            clinicas = clinicaService.findAllActivos();
         }
         return clinicas;
     }
@@ -329,12 +329,12 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
     public MedioContacto getMedioNuevo() { return medioNuevo; }
     public PersonaRol getRolNuevo() { return rolNuevo; }
 
-    public PersonaDAO getPersonaDAO() {
-        return personaDAO;
+    public PersonaService getPersonaService() {
+        return personaService;
     }
 
-    public void setPersonaDAO(PersonaDAO personaDAO) {
-        this.personaDAO = personaDAO;
+    public void setPersonaService(PersonaService personaService) {
+        this.personaService = personaService;
     }
 
     @Override

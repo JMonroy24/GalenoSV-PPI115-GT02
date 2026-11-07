@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -9,7 +7,7 @@ import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoMedioContactoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoMedioContactoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoMedioContacto;
 
 /**
@@ -22,7 +20,7 @@ public class TipoMedioContactoModel extends ModelTransaccional<TipoMedioContacto
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected TipoMedioContactoDAO tipoMedioContactoDAO;
+    protected TipoMedioContactoService tipoMedioContactoService;
 
     @PostConstruct
     public void init() {
@@ -31,7 +29,7 @@ public class TipoMedioContactoModel extends ModelTransaccional<TipoMedioContacto
 
     @Override
     protected DAOInterface<TipoMedioContacto, UUID> getDAO() {
-        return tipoMedioContactoDAO;
+        return tipoMedioContactoService;
     }
 
     @Override
@@ -41,25 +39,15 @@ public class TipoMedioContactoModel extends ModelTransaccional<TipoMedioContacto
         return registro;
     }
 
-    public TipoMedioContactoDAO getTipoMedioContactoDAO() {
-        return tipoMedioContactoDAO;
+    public TipoMedioContactoService getTipoMedioContactoService() {
+        return tipoMedioContactoService;
     }
 
-    public void setTipoMedioContactoDAO(TipoMedioContactoDAO tipoMedioContactoDAO) {
-        this.tipoMedioContactoDAO = tipoMedioContactoDAO;
-    }
-
-    @Override
-    protected void validarNegocio(TipoMedioContacto registro) {
-        registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre"));
-        ValidadorComun.expresionRegular(registro.getExpresionRegular());
-        if (tipoMedioContactoDAO.existePorCampo("nombre", registro.getNombre(), registro.getIdTipoMedioContacto())) {
-            throw new ValidacionNegocioException("Ya existe un registro con este nombre.");
-        }
+    public void setTipoMedioContactoService(TipoMedioContactoService tipoMedioContactoService) {
+        this.tipoMedioContactoService = tipoMedioContactoService;
     }
 
     public java.util.List<TipoMedioContacto> getActivos() {
-        return tipoMedioContactoDAO.findAllActivos();
+        return tipoMedioContactoService.getActivos();
     }
-
 }

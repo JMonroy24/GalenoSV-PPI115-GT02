@@ -9,7 +9,8 @@ import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.MedioContactoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.MedioContactoService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.MedioContacto;
 
 /**
@@ -22,7 +23,7 @@ public class MedioContactoModel extends ModelTransaccional<MedioContacto, UUID> 
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected MedioContactoDAO medioContactoDAO;
+    protected MedioContactoService medioContactoService;
 
     @PostConstruct
     public void init() {
@@ -31,7 +32,7 @@ public class MedioContactoModel extends ModelTransaccional<MedioContacto, UUID> 
 
     @Override
     protected DAOInterface<MedioContacto, UUID> getDAO() {
-        return medioContactoDAO;
+        return medioContactoService;
     }
 
     @Override
@@ -39,20 +40,20 @@ public class MedioContactoModel extends ModelTransaccional<MedioContacto, UUID> 
         return new MedioContacto(UUID.randomUUID());
     }
 
-    public MedioContactoDAO getMedioContactoDAO() {
-        return medioContactoDAO;
+    public MedioContactoService getMedioContactoService() {
+        return medioContactoService;
     }
 
-    public void setMedioContactoDAO(MedioContactoDAO medioContactoDAO) {
-        this.medioContactoDAO = medioContactoDAO;
+    public void setMedioContactoService(MedioContactoService medioContactoService) {
+        this.medioContactoService = medioContactoService;
     }
 
     @Inject
-    protected sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaDAO personaDAO;
+    protected PersonaService personaService;
 
     public java.util.List<sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona> completePersona(String query) {
         if (query == null || query.trim().length() < 2) return java.util.List.of();
-        return personaDAO.buscarParaAutocompletar(query, 10);
+        return personaService.buscarParaAutocompletar(query, 10);
     }
 
 
@@ -65,7 +66,7 @@ public class MedioContactoModel extends ModelTransaccional<MedioContacto, UUID> 
         ValidadorComun.requerido(tipo.getIdTipoMedioContacto(), "Seleccione un tipo de contacto válido.");
         ValidadorComun.activo(tipo.getActivo(), "El tipo de contacto");
         ValidadorComun.formato(registro.getValor(), tipo.getExpresionRegular(), tipo.getIndicaciones());
-        if (medioContactoDAO.existePersonaTipoValor(persona.getIdPersona(), tipo.getIdTipoMedioContacto(),
+        if (medioContactoService.existePersonaTipoValor(persona.getIdPersona(), tipo.getIdTipoMedioContacto(),
                 registro.getValor(), registro.getIdMedioContacto())) {
             throw new ValidacionNegocioException("Este contacto ya está registrado para la persona.");
         }

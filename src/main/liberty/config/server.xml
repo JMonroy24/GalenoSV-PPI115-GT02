@@ -3,32 +3,57 @@
 
     <featureManager>
         <feature>jakartaee-11.0</feature>
+        <feature>mpOpenAPI-4.0</feature>
+        <feature>appSecurity-6.0</feature>
         <feature>localConnector-1.0</feature>
     </featureManager>
 
-    <basicRegistry id="basic" />
+    <basicRegistry id="basic" realm="GalenoSV">
+        <user name="admin" password="${env.GALENO_ADMIN_PASSWORD}"/>
+        <user name="clinico" password="${env.GALENO_CLINICO_PASSWORD}"/>
+        <group name="ADMINISTRADOR">
+            <member name="admin"/>
+        </group>
+        <group name="PERSONAL_CLINICO">
+            <member name="clinico"/>
+        </group>
+    </basicRegistry>
 
 
     <httpEndpoint id="defaultHttpEndpoint"
                   httpPort="9080"
                   httpsPort="9443"/>
 
+    <variable name="GALENOSV_DB_HOST" defaultValue="localhost"/>
+    <variable name="GALENOSV_DB_PORT" defaultValue="5432"/>
+    <variable name="GALENOSV_DB_NAME" defaultValue="galenoSV"/>
+    <variable name="GALENOSV_DB_USER" defaultValue="admin"/>
+
     <dataSource id="galenoSV" jndiName="jdbc/galenoSV">
         <jdbcDriver libraryRef="PostgreSQLLib"/>
         <properties.postgresql
-            serverName="localhost"
-            portNumber="5432"
-            databaseName="galenoSV"
-            user="admin"
-            password=""/>
+            serverName="${env.GALENOSV_DB_HOST}"
+            portNumber="${env.GALENOSV_DB_PORT}"
+            databaseName="${env.GALENOSV_DB_NAME}"
+            user="${env.GALENOSV_DB_USER}"
+            password="${env.GALENOSV_DB_PASSWORD}"/>
+
     </dataSource>
 
     <library id="PostgreSQLLib">
         <fileset dir="${server.config.dir}/lib" includes="postgresql-*.jar"/>
     </library>
 
-    <webApplication location="GalenoSV-1.0-SNAPSHOT.war" contextRoot="/galenoSV">
+    <webApplication location="GalenoSV.war" contextRoot="/galenoSV">
         <classloader apiTypeVisibility="spec, ibm-api, api, third-party" />
+        <application-bnd>
+            <security-role name="ADMINISTRADOR">
+                <group name="ADMINISTRADOR"/>
+            </security-role>
+            <security-role name="PERSONAL_CLINICO">
+                <group name="PERSONAL_CLINICO"/>
+            </security-role>
+        </application-bnd>
     </webApplication>
 
 </server>

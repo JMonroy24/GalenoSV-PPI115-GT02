@@ -1,6 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
 import java.util.Collections;
 import java.util.List;
@@ -11,7 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoSecuenciaDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoSecuenciaService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPasoSecuencia;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,10 +30,7 @@ import static org.mockito.Mockito.*;
 public class ProcedimientoPasoSecuenciaModelTest {
 
     @Mock
-    private ProcedimientoPasoSecuenciaDAO procedimientoPasoSecuenciaDAO;
-
-    @Mock
-    private AsignacionService asignacionService;
+    private ProcedimientoPasoSecuenciaService procedimientoPasoSecuenciaService;
 
     @InjectMocks
     private ProcedimientoPasoSecuenciaModel procedimientoPasoSecuenciaModel;
@@ -45,8 +41,8 @@ public class ProcedimientoPasoSecuenciaModelTest {
     @BeforeEach
     public void setUp() {
         procedimientoPasoSecuenciaModel
-                .setProcedimientoPasoSecuenciaDAO(
-                        procedimientoPasoSecuenciaDAO
+                .setProcedimientoPasoSecuenciaService(
+                        procedimientoPasoSecuenciaService
                 );
     }
 
@@ -134,7 +130,7 @@ public class ProcedimientoPasoSecuenciaModelTest {
      */
     @Test
     public void testGuardarCrear() {
-        when(procedimientoPasoSecuenciaDAO.findAll())
+        when(procedimientoPasoSecuenciaService.findAll())
                 .thenReturn(Collections.emptyList());
 
         procedimientoPasoSecuenciaModel.prepararNuevo();
@@ -144,7 +140,7 @@ public class ProcedimientoPasoSecuenciaModelTest {
 
         procedimientoPasoSecuenciaModel.guardar();
 
-        verify(asignacionService).guardarSecuencia(any(ProcedimientoPasoSecuencia.class), eq(true));
+        verify(procedimientoPasoSecuenciaService).crear(any(ProcedimientoPasoSecuencia.class));
         assertEquals(
                 Estado.NINGUNO,
                 procedimientoPasoSecuenciaModel.getEstado()
@@ -160,7 +156,7 @@ public class ProcedimientoPasoSecuenciaModelTest {
      */
     @Test
     public void testGuardarModificar() {
-        when(procedimientoPasoSecuenciaDAO.findAll())
+        when(procedimientoPasoSecuenciaService.findAll())
                 .thenReturn(Collections.emptyList());
 
         ProcedimientoPasoSecuencia secuencia =
@@ -169,7 +165,7 @@ public class ProcedimientoPasoSecuenciaModelTest {
         procedimientoPasoSecuenciaModel.seleccionar(secuencia);
         procedimientoPasoSecuenciaModel.guardar();
 
-        verify(asignacionService).guardarSecuencia(secuencia, false);
+        verify(procedimientoPasoSecuenciaService).actualizar(secuencia);
         assertEquals(
                 Estado.NINGUNO,
                 procedimientoPasoSecuenciaModel.getEstado()
@@ -181,7 +177,7 @@ public class ProcedimientoPasoSecuenciaModelTest {
      */
     @Test
     public void testEliminar() {
-        when(procedimientoPasoSecuenciaDAO.findAll())
+        when(procedimientoPasoSecuenciaService.findAll())
                 .thenReturn(Collections.emptyList());
 
         ProcedimientoPasoSecuencia secuencia =
@@ -189,7 +185,7 @@ public class ProcedimientoPasoSecuenciaModelTest {
 
         procedimientoPasoSecuenciaModel.eliminar(secuencia);
 
-        verify(procedimientoPasoSecuenciaDAO).delete(secuencia);
+        verify(procedimientoPasoSecuenciaService).delete(secuencia);
     }
 
     /**
@@ -199,13 +195,13 @@ public class ProcedimientoPasoSecuenciaModelTest {
     @Test
     public void testGettersAndProtectedMethods() {
         assertEquals(
-                procedimientoPasoSecuenciaDAO,
+                procedimientoPasoSecuenciaService,
                 procedimientoPasoSecuenciaModel.getDAO()
         );
         assertEquals(
-                procedimientoPasoSecuenciaDAO,
+                procedimientoPasoSecuenciaService,
                 procedimientoPasoSecuenciaModel
-                        .getProcedimientoPasoSecuenciaDAO()
+                        .getProcedimientoPasoSecuenciaService()
         );
         assertNotNull(
                 procedimientoPasoSecuenciaModel.crearNuevoRegistro()

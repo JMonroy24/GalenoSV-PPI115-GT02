@@ -7,7 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoPasoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoPasoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimientoPaso;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,14 +19,14 @@ import static org.mockito.Mockito.*;
 public class ConsultaProcedimientoPasoModelTest {
 
     @Mock
-    private ConsultaProcedimientoPasoDAO consultaProcedimientoPasoDAO;
+    private ConsultaProcedimientoPasoService consultaProcedimientoPasoService;
 
     @InjectMocks
     private ConsultaProcedimientoPasoModel consultaProcedimientoPasoModel;
 
     @BeforeEach
     public void setUp() {
-        consultaProcedimientoPasoModel.setConsultaProcedimientoPasoDAO(consultaProcedimientoPasoDAO);
+        consultaProcedimientoPasoModel.setConsultaProcedimientoPasoService(consultaProcedimientoPasoService);
     }
 
     @Test
@@ -74,7 +74,7 @@ public class ConsultaProcedimientoPasoModelTest {
         consultaProcedimientoPasoModel.getRegistroActual().setEstado("Registrado");
         consultaProcedimientoPasoModel.guardar();
 
-        verify(consultaProcedimientoPasoDAO).create(any(ConsultaProcedimientoPaso.class));
+        verify(consultaProcedimientoPasoService).create(any(ConsultaProcedimientoPaso.class));
         assertEquals(Estado.NINGUNO, consultaProcedimientoPasoModel.getEstado());
         assertNull(consultaProcedimientoPasoModel.getRegistroActual());
     }
@@ -87,7 +87,7 @@ public class ConsultaProcedimientoPasoModelTest {
         consultaProcedimientoPasoModel.getRegistroActual().setEstado("Registrado");
         consultaProcedimientoPasoModel.guardar();
 
-        verify(consultaProcedimientoPasoDAO).update(cpp);
+        verify(consultaProcedimientoPasoService).update(cpp);
         assertEquals(Estado.NINGUNO, consultaProcedimientoPasoModel.getEstado());
     }
 
@@ -96,14 +96,14 @@ public class ConsultaProcedimientoPasoModelTest {
         ConsultaProcedimientoPaso cpp = new ConsultaProcedimientoPaso(UUID.randomUUID());
         consultaProcedimientoPasoModel.eliminar(cpp);
 
-        verify(consultaProcedimientoPasoDAO).delete(cpp);
+        verify(consultaProcedimientoPasoService).delete(cpp);
     }
 
     @Test
     public void testGettersAndSetters() {
         consultaProcedimientoPasoModel.init();
-        assertEquals(consultaProcedimientoPasoDAO, consultaProcedimientoPasoModel.getDAO());
-        assertEquals(consultaProcedimientoPasoDAO, consultaProcedimientoPasoModel.getConsultaProcedimientoPasoDAO());
+        assertEquals(consultaProcedimientoPasoService, consultaProcedimientoPasoModel.getDAO());
+        assertEquals(consultaProcedimientoPasoService, consultaProcedimientoPasoModel.getConsultaProcedimientoPasoService());
         assertNotNull(consultaProcedimientoPasoModel.crearNuevoRegistro());
         assertNotNull(consultaProcedimientoPasoModel.getLazyModel());
     }

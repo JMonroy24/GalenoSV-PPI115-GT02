@@ -7,7 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.MedioContactoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.MedioContactoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.MedioContacto;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,14 +19,14 @@ import static org.mockito.Mockito.*;
 public class MedioContactoModelTest {
 
     @Mock
-    private MedioContactoDAO medioContactoDAO;
+    private MedioContactoService medioContactoService;
 
     @InjectMocks
     private MedioContactoModel medioContactoModel;
 
     @BeforeEach
     public void setUp() {
-        medioContactoModel.setMedioContactoDAO(medioContactoDAO);
+        medioContactoModel.setMedioContactoService(medioContactoService);
     }
 
     @Test
@@ -78,7 +78,7 @@ public class MedioContactoModelTest {
         medioContactoModel.getRegistroActual().setIdTipoMedioContacto(tipoValido);
         medioContactoModel.guardar();
 
-        verify(medioContactoDAO).create(any(MedioContacto.class));
+        verify(medioContactoService).create(any(MedioContacto.class));
         assertEquals(Estado.NINGUNO, medioContactoModel.getEstado());
         assertNull(medioContactoModel.getRegistroActual());
     }
@@ -95,7 +95,7 @@ public class MedioContactoModelTest {
         medioContactoModel.getRegistroActual().setIdTipoMedioContacto(tipoValido);
         medioContactoModel.guardar();
 
-        verify(medioContactoDAO).update(mc);
+        verify(medioContactoService).update(mc);
         assertEquals(Estado.NINGUNO, medioContactoModel.getEstado());
     }
 
@@ -104,14 +104,14 @@ public class MedioContactoModelTest {
         MedioContacto mc = new MedioContacto(UUID.randomUUID());
         medioContactoModel.eliminar(mc);
 
-        verify(medioContactoDAO).delete(mc);
+        verify(medioContactoService).delete(mc);
     }
 
     @Test
     public void testGettersAndSetters() {
         medioContactoModel.init();
-        assertEquals(medioContactoDAO, medioContactoModel.getDAO());
-        assertEquals(medioContactoDAO, medioContactoModel.getMedioContactoDAO());
+        assertEquals(medioContactoService, medioContactoModel.getDAO());
+        assertEquals(medioContactoService, medioContactoModel.getMedioContactoService());
         assertNotNull(medioContactoModel.crearNuevoRegistro());
         assertNotNull(medioContactoModel.getLazyModel());
     }

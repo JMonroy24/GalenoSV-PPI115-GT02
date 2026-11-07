@@ -11,8 +11,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenResultadoDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.OrdenExamenDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenResultadoService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.OrdenExamenService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ExamenResultado;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExamen;
 
@@ -26,10 +26,10 @@ public class ExamenResultadoModel extends ModelTransaccional<ExamenResultado, UU
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected ExamenResultadoDAO examenResultadoDAO;
+    protected ExamenResultadoService examenResultadoService;
 
     @Inject
-    protected OrdenExamenDAO ordenExamenDAO;
+    protected OrdenExamenService ordenExamenService;
 
     @PostConstruct
     public void init() {
@@ -38,7 +38,7 @@ public class ExamenResultadoModel extends ModelTransaccional<ExamenResultado, UU
 
     @Override
     protected DAOInterface<ExamenResultado, UUID> getDAO() {
-        return examenResultadoDAO;
+        return examenResultadoService;
     }
 
     @Override
@@ -51,15 +51,15 @@ public class ExamenResultadoModel extends ModelTransaccional<ExamenResultado, UU
     /** Método para p:autoComplete. Busca órdenes de examen. */
     public List<OrdenExamen> completeOrdenExamen(String query) {
         if (query == null || query.trim().length() < 2) return java.util.List.of();
-        return ordenExamenDAO.buscarParaAutocompletar(query, 20);
+        return ordenExamenService.buscarParaAutocompletar(query, 20);
     }
 
-    public ExamenResultadoDAO getExamenResultadoDAO() {
-        return examenResultadoDAO;
+    public ExamenResultadoService getExamenResultadoService() {
+        return examenResultadoService;
     }
 
-    public void setExamenResultadoDAO(ExamenResultadoDAO examenResultadoDAO) {
-        this.examenResultadoDAO = examenResultadoDAO;
+    public void setExamenResultadoService(ExamenResultadoService examenResultadoService) {
+        this.examenResultadoService = examenResultadoService;
     }
 
     @Override

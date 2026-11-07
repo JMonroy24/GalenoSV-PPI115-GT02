@@ -9,7 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Procedimiento;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,10 +20,8 @@ import static org.mockito.Mockito.*;
 class ProcedimientoModelTest {
 
     @Mock
-    private ProcedimientoDAO procedimientoDAO;
+    private ProcedimientoService procedimientoService;
 
-    @Mock private sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoDAO pasoDAO;
-    @Mock private sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoSecuenciaDAO secuenciaDAO;
     @Mock private ProcedimientoPasoModel pasoModel;
 
     @InjectMocks
@@ -31,19 +29,19 @@ class ProcedimientoModelTest {
 
     @BeforeEach
     void setUp() {
-        procedimientoModel.setProcedimientoDAO(procedimientoDAO);
+        procedimientoModel.setProcedimientoService(procedimientoService);
     }
 
     @Test
     void testInitYCargarDatos() {
         Procedimiento procedimiento = new Procedimiento(UUID.randomUUID());
-        when(procedimientoDAO.findAll()).thenReturn(List.of(procedimiento));
+        when(procedimientoService.findAll()).thenReturn(List.of(procedimiento));
 
         procedimientoModel.init();
 
         assertNotNull(procedimientoModel.getRegistros());
         assertEquals(1, procedimientoModel.getRegistros().size());
-        verify(procedimientoDAO).findAll();
+        verify(procedimientoService).findAll();
     }
 
     @Test
@@ -79,44 +77,44 @@ class ProcedimientoModelTest {
 
     @Test
     void testGuardarCrear() {
-        when(procedimientoDAO.findAll()).thenReturn(Collections.emptyList());
+        when(procedimientoService.findAll()).thenReturn(Collections.emptyList());
 
         procedimientoModel.prepararNuevo();
         procedimientoModel.getRegistroActual().setNombre("Toma de muestra sanguínea");
 
         procedimientoModel.guardar();
 
-        verify(procedimientoDAO).create(any(Procedimiento.class));
+        verify(procedimientoService).create(any(Procedimiento.class));
         assertEquals(Estado.MODIFICAR, procedimientoModel.getEstado());
         assertNotNull(procedimientoModel.getRegistroActual());
     }
 
     @Test
     void testGuardarModificar() {
-        when(procedimientoDAO.findAll()).thenReturn(Collections.emptyList());
+        when(procedimientoService.findAll()).thenReturn(Collections.emptyList());
         Procedimiento procedimiento = new Procedimiento(UUID.randomUUID());
 
         procedimientoModel.seleccionar(procedimiento);
         procedimientoModel.guardar();
 
-        verify(procedimientoDAO).update(procedimiento);
+        verify(procedimientoService).update(procedimiento);
         assertEquals(Estado.MODIFICAR, procedimientoModel.getEstado());
     }
 
     @Test
     void testEliminar() {
-        when(procedimientoDAO.findAll()).thenReturn(Collections.emptyList());
+        when(procedimientoService.findAll()).thenReturn(Collections.emptyList());
         Procedimiento procedimiento = new Procedimiento(UUID.randomUUID());
 
         procedimientoModel.eliminar(procedimiento);
 
-        verify(procedimientoDAO).delete(procedimiento);
+        verify(procedimientoService).delete(procedimiento);
     }
 
     @Test
     void testGettersYMetodosProtegidos() {
-        assertEquals(procedimientoDAO, procedimientoModel.getDAO());
-        assertEquals(procedimientoDAO, procedimientoModel.getProcedimientoDAO());
+        assertEquals(procedimientoService, procedimientoModel.getDAO());
+        assertEquals(procedimientoService, procedimientoModel.getProcedimientoService());
         assertNotNull(procedimientoModel.crearNuevoRegistro());
     }
 
@@ -134,8 +132,8 @@ class ProcedimientoModelTest {
     @Test void arbolAnidadoOrdenadoExpandidoYConsultaUnica() {
         var procedimiento = new Procedimiento(UUID.randomUUID());
         var raiz = paso("Recepción"); var b = paso("B"); var a = paso("A"); var fin = paso("Fin");
-        when(pasoDAO.findByProcedimiento(procedimiento.getIdProcedimiento())).thenReturn(List.of(b, fin, raiz, a));
-        when(secuenciaDAO.findByProcedimiento(procedimiento.getIdProcedimiento()))
+        when(procedimientoService.findPasosByProcedimiento(procedimiento.getIdProcedimiento())).thenReturn(List.of(b, fin, raiz, a));
+        when(procedimientoService.findSecuenciasByProcedimiento(procedimiento.getIdProcedimiento()))
                 .thenReturn(List.of(relacion(raiz, b), relacion(raiz, a), relacion(a, fin)));
         procedimientoModel.seleccionar(procedimiento);
         var arbol = procedimientoModel.getArbolPasos();
@@ -145,13 +143,13 @@ class ProcedimientoModelTest {
         assertEquals(fin, nodo.getChildren().getFirst().getChildren().getFirst().getData());
         assertEquals("Recepción", procedimientoModel.procedeDe(a));
         assertSame(arbol, procedimientoModel.getArbolPasos());
-        verify(secuenciaDAO, times(1)).findByProcedimiento(procedimiento.getIdProcedimiento());
+        verify(procedimientoService, times(1)).findSecuenciasByProcedimiento(procedimiento.getIdProcedimiento());
     }
     @Test void arbolToleraCiclosYHuerfanosSinPerderPasos() {
         var procedimiento = new Procedimiento(UUID.randomUUID());
         var a = paso("A"); var b = paso("B"); var huerfano = paso("Huérfano");
-        when(pasoDAO.findByProcedimiento(procedimiento.getIdProcedimiento())).thenReturn(List.of(a, b, huerfano));
-        when(secuenciaDAO.findByProcedimiento(procedimiento.getIdProcedimiento()))
+        when(procedimientoService.findPasosByProcedimiento(procedimiento.getIdProcedimiento())).thenReturn(List.of(a, b, huerfano));
+        when(procedimientoService.findSecuenciasByProcedimiento(procedimiento.getIdProcedimiento()))
                 .thenReturn(List.of(relacion(a, b), relacion(b, a), relacion(paso("Ausente"), huerfano)));
         procedimientoModel.seleccionar(procedimiento);
         var arbol = procedimientoModel.getArbolPasos();
@@ -169,6 +167,6 @@ class ProcedimientoModelTest {
         procedimientoModel.guardarPaso();
         assertNotSame(anterior, procedimientoModel.getArbolPasos());
         assertEquals(1, procedimientoModel.getPestanaActiva());
-        verify(secuenciaDAO, times(2)).findByProcedimiento(procedimiento.getIdProcedimiento());
+        verify(procedimientoService, times(2)).findSecuenciasByProcedimiento(procedimiento.getIdProcedimiento());
     }
 }

@@ -7,7 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DocumentoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DocumentoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Documento;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,14 +19,14 @@ import static org.mockito.Mockito.*;
 public class DocumentoModelTest {
 
     @Mock
-    private DocumentoDAO documentoDAO;
+    private DocumentoService documentoService;
 
     @InjectMocks
     private DocumentoModel documentoModel;
 
     @BeforeEach
     public void setUp() {
-        documentoModel.setDocumentoDAO(documentoDAO);
+        documentoModel.setDocumentoService(documentoService);
     }
 
     @Test
@@ -77,7 +77,7 @@ public class DocumentoModelTest {
         documentoModel.getRegistroActual().setIdTipoDocumento(tipoValido);
         documentoModel.guardar();
 
-        verify(documentoDAO).create(any(Documento.class));
+        verify(documentoService).create(any(Documento.class));
         assertEquals(Estado.NINGUNO, documentoModel.getEstado());
         assertNull(documentoModel.getRegistroActual());
     }
@@ -94,7 +94,7 @@ public class DocumentoModelTest {
         documentoModel.getRegistroActual().setIdTipoDocumento(tipoValido);
         documentoModel.guardar();
 
-        verify(documentoDAO).update(d);
+        verify(documentoService).update(d);
         assertEquals(Estado.NINGUNO, documentoModel.getEstado());
     }
 
@@ -103,14 +103,14 @@ public class DocumentoModelTest {
         Documento d = new Documento(UUID.randomUUID());
         documentoModel.eliminar(d);
 
-        verify(documentoDAO).delete(d);
+        verify(documentoService).delete(d);
     }
 
     @Test
     public void testGettersAndSetters() {
         documentoModel.init();
-        assertEquals(documentoDAO, documentoModel.getDAO());
-        assertEquals(documentoDAO, documentoModel.getDocumentoDAO());
+        assertEquals(documentoService, documentoModel.getDAO());
+        assertEquals(documentoService, documentoModel.getDocumentoService());
         assertNotNull(documentoModel.crearNuevoRegistro());
         assertNotNull(documentoModel.getLazyModel());
     }

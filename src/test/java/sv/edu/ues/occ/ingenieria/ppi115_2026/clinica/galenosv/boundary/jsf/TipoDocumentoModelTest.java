@@ -1,6 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,7 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoDocumentoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoDocumentoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoDocumento;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,14 +20,14 @@ import static org.mockito.Mockito.*;
 public class TipoDocumentoModelTest {
 
     @Mock
-    private TipoDocumentoDAO tipoDocumentoDAO;
+    private TipoDocumentoService tipoDocumentoService;
 
     @InjectMocks
     private TipoDocumentoModel tipoDocumentoModel;
 
     @BeforeEach
     public void setUp() {
-        tipoDocumentoModel.setTipoDocumentoDAO(tipoDocumentoDAO);
+        tipoDocumentoModel.setTipoDocumentoService(tipoDocumentoService);
     }
 
     @Test
@@ -36,7 +35,6 @@ public class TipoDocumentoModelTest {
         tipoDocumentoModel.init();
         assertNotNull(tipoDocumentoModel.getLazyModel());
         assertNull(tipoDocumentoModel.getRegistros());
-
     }
 
     @Test
@@ -70,44 +68,48 @@ public class TipoDocumentoModelTest {
 
     @Test
     public void testGuardarCrear() {
-
         tipoDocumentoModel.prepararNuevo();
-        tipoDocumentoModel.getRegistroActual().setNombre("DUI");
-
         tipoDocumentoModel.getRegistroActual().setNombre("Registro válido");
         tipoDocumentoModel.guardar();
 
-        verify(tipoDocumentoDAO).create(any(TipoDocumento.class));
+        verify(tipoDocumentoService).create(any(TipoDocumento.class));
         assertEquals(Estado.NINGUNO, tipoDocumentoModel.getEstado());
         assertNull(tipoDocumentoModel.getRegistroActual());
     }
 
     @Test
     public void testGuardarModificar() {
-
         TipoDocumento td = new TipoDocumento(UUID.randomUUID());
         tipoDocumentoModel.seleccionar(td);
 
         tipoDocumentoModel.getRegistroActual().setNombre("Registro válido");
         tipoDocumentoModel.guardar();
 
-        verify(tipoDocumentoDAO).update(td);
+        verify(tipoDocumentoService).update(td);
         assertEquals(Estado.NINGUNO, tipoDocumentoModel.getEstado());
     }
 
     @Test
     public void testEliminar() {
-
         TipoDocumento td = new TipoDocumento(UUID.randomUUID());
         tipoDocumentoModel.eliminar(td);
 
-        verify(tipoDocumentoDAO).delete(td);
+        verify(tipoDocumentoService).delete(td);
+    }
+
+    @Test
+    public void testGetActivos() {
+        List<TipoDocumento> lista = List.of(new TipoDocumento(UUID.randomUUID()));
+        when(tipoDocumentoService.getActivos()).thenReturn(lista);
+
+        assertSame(lista, tipoDocumentoModel.getActivos());
+        verify(tipoDocumentoService).getActivos();
     }
 
     @Test
     public void testGettersAndSetters() {
-        assertEquals(tipoDocumentoDAO, tipoDocumentoModel.getDAO());
-        assertEquals(tipoDocumentoDAO, tipoDocumentoModel.getTipoDocumentoDAO());
+        assertEquals(tipoDocumentoService, tipoDocumentoModel.getDAO());
+        assertEquals(tipoDocumentoService, tipoDocumentoModel.getTipoDocumentoService());
         assertNotNull(tipoDocumentoModel.crearNuevoRegistro());
     }
 }

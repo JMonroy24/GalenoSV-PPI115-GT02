@@ -10,96 +10,9 @@ import static org.mockito.Mockito.*;
 
 class ModelValidacionesTest {
 
-    @Test
-    void validaNombreUnicoDeClinica() {
-        var model = new ClinicaModel();
-        var dao = mock(ClinicaDAO.class);
-        model.setClinicaDAO(dao);
-        var registro = new Clinica(UUID.randomUUID());
-        registro.setNombre("   ");
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-        registro.setNombre("  Nombre  ");
-        registro.setTipo("GENERAL");
-        assertDoesNotThrow(() -> model.validarNegocio(registro));
-        assertEquals("Nombre", registro.getNombre());
-        when(dao.existePorCampo("nombre", "Nombre", registro.getIdClinica())).thenReturn(true);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-    }
 
-    @Test
-    void validaNombreUnicoDeRol() {
-        var model = new RolModel();
-        var dao = mock(RolDAO.class);
-        model.setRolDAO(dao);
-        var registro = new Rol(UUID.randomUUID());
-        registro.setNombre("   ");
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-        registro.setNombre("  Nombre  ");
-        assertDoesNotThrow(() -> model.validarNegocio(registro));
-        assertEquals("Nombre", registro.getNombre());
-        when(dao.existePorCampo("nombre", "Nombre", registro.getIdRol())).thenReturn(true);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-    }
 
-    @Test
-    void validaNombreUnicoDeExamen() {
-        var model = new ExamenModel();
-        var dao = mock(ExamenDAO.class);
-        model.setExamenDAO(dao);
-        var registro = new Examen(UUID.randomUUID());
-        registro.setNombre("   ");
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-        registro.setNombre("  Nombre  ");
-        assertDoesNotThrow(() -> model.validarNegocio(registro));
-        assertEquals("Nombre", registro.getNombre());
-        when(dao.existePorCampo("nombre", "Nombre", registro.getIdExamen())).thenReturn(true);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-    }
 
-    @Test
-    void validaNombreUnicoDeTipoExamen() {
-        var model = new TipoExamenModel();
-        var dao = mock(TipoExamenDAO.class);
-        model.setTipoExamenDAO(dao);
-        var registro = new TipoExamen(UUID.randomUUID());
-        registro.setNombre("   ");
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-        registro.setNombre("  Nombre  ");
-        assertDoesNotThrow(() -> model.validarNegocio(registro));
-        assertEquals("Nombre", registro.getNombre());
-        when(dao.existePorCampo("nombre", "Nombre", registro.getIdTipoExamen())).thenReturn(true);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-    }
-
-    @Test
-    void validaNombreUnicoDeTipoDocumento() {
-        var model = new TipoDocumentoModel();
-        var dao = mock(TipoDocumentoDAO.class);
-        model.setTipoDocumentoDAO(dao);
-        var registro = new TipoDocumento(UUID.randomUUID());
-        registro.setNombre("   ");
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-        registro.setNombre("  Nombre  ");
-        assertDoesNotThrow(() -> model.validarNegocio(registro));
-        assertEquals("Nombre", registro.getNombre());
-        when(dao.existePorCampo("nombre", "Nombre", registro.getIdTipoDocumento())).thenReturn(true);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-    }
-
-    @Test
-    void validaNombreUnicoDeTipoMedioContacto() {
-        var model = new TipoMedioContactoModel();
-        var dao = mock(TipoMedioContactoDAO.class);
-        model.setTipoMedioContactoDAO(dao);
-        var registro = new TipoMedioContacto(UUID.randomUUID());
-        registro.setNombre("   ");
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-        registro.setNombre("  Nombre  ");
-        assertDoesNotThrow(() -> model.validarNegocio(registro));
-        assertEquals("Nombre", registro.getNombre());
-        when(dao.existePorCampo("nombre", "Nombre", registro.getIdTipoMedioContacto())).thenReturn(true);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-    }
 
     @Test
     void personaRechazaVaciosYFechaFutura() {
@@ -117,7 +30,7 @@ class ModelValidacionesTest {
 
     @Test
     void documentoValidaFormatoActividadYDuplicado() {
-        var model = new DocumentoModel(); var dao = mock(DocumentoDAO.class); model.setDocumentoDAO(dao);
+        var model = new DocumentoModel(); var dao = mock(DocumentoService.class); model.setDocumentoService(dao);
         var registro = new Documento(UUID.randomUUID());
         registro.setIdPersona(new Persona(UUID.randomUUID()));
         var tipo = new TipoDocumento(UUID.randomUUID());
@@ -138,7 +51,7 @@ class ModelValidacionesTest {
 
     @Test
     void contactoValidaFormatoActividadYDuplicadoPorPersona() {
-        var model = new MedioContactoModel(); var dao = mock(MedioContactoDAO.class); model.setMedioContactoDAO(dao);
+        var model = new MedioContactoModel(); var dao = mock(MedioContactoService.class); model.setMedioContactoService(dao);
         var registro = new MedioContacto(UUID.randomUUID());
         var persona = new Persona(UUID.randomUUID()); registro.setIdPersona(persona);
         var tipo = new TipoMedioContacto(UUID.randomUUID()); tipo.setActivo(true);
@@ -159,7 +72,7 @@ class ModelValidacionesTest {
 
     @Test
     void personaRolExigeClinicaYRechazaDuplicadoEInactivos() {
-        var model = new PersonaRolModel(); var dao = mock(PersonaRolDAO.class); model.setPersonaRolDAO(dao);
+        var model = new PersonaRolModel(); var dao = mock(PersonaRolService.class); model.setPersonaRolService(dao);
         var registro = new PersonaRol(UUID.randomUUID());
         var persona = new Persona(UUID.randomUUID()); registro.setIdPersona(persona);
         var rol = new Rol(UUID.randomUUID()); rol.setActivo(true); registro.setIdRol(rol);
@@ -226,11 +139,4 @@ class ModelValidacionesTest {
         assertEquals("Normal", resultado.getResultado());
     }
 
-    @Test
-    void catalogosDeFormatoRechazanRegexInvalida() {
-        var documento = new TipoDocumento(UUID.randomUUID()); documento.setNombre("DUI"); documento.setExpresionRegular("[");
-        assertThrows(ValidacionNegocioException.class, () -> new TipoDocumentoModel().validarNegocio(documento));
-        var contacto = new TipoMedioContacto(UUID.randomUUID()); contacto.setNombre("Correo"); contacto.setExpresionRegular("(");
-        assertThrows(ValidacionNegocioException.class, () -> new TipoMedioContactoModel().validarNegocio(contacto));
-    }
 }

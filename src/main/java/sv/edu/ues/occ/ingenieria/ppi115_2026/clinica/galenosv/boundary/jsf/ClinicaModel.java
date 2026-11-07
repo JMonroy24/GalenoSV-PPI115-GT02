@@ -1,14 +1,12 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.UUID;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ClinicaDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ClinicaService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica;
 
@@ -22,7 +20,7 @@ public class ClinicaModel extends ModelTransaccional<Clinica, UUID> implements S
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected ClinicaDAO clinicaDAO;
+    protected ClinicaService clinicaService;
 
     @PostConstruct
     public void init() {
@@ -31,7 +29,7 @@ public class ClinicaModel extends ModelTransaccional<Clinica, UUID> implements S
 
     @Override
     protected DAOInterface<Clinica, UUID> getDAO() {
-        return clinicaDAO;
+        return clinicaService;
     }
 
     @Override
@@ -41,25 +39,15 @@ public class ClinicaModel extends ModelTransaccional<Clinica, UUID> implements S
         return registro;
     }
 
-    public ClinicaDAO getClinicaDAO() {
-        return clinicaDAO;
+    public ClinicaService getClinicaService() {
+        return clinicaService;
     }
 
-    public void setClinicaDAO(ClinicaDAO clinicaDAO) {
-        this.clinicaDAO = clinicaDAO;
-    }
-
-    @Override
-    protected void validarNegocio(Clinica registro) {
-        registro.setNombre(ValidadorComun.textoObligatorio(registro.getNombre(), "El nombre"));
-        registro.setTipo(ValidadorComun.textoObligatorio(registro.getTipo(), "El tipo de clínica"));
-        if (clinicaDAO.existePorCampo("nombre", registro.getNombre(), registro.getIdClinica())) {
-            throw new ValidacionNegocioException("Ya existe un registro con este nombre.");
-        }
+    public void setClinicaService(ClinicaService clinicaService) {
+        this.clinicaService = clinicaService;
     }
 
     public java.util.List<Clinica> getActivos() {
-        return clinicaDAO.findAllActivos();
+        return clinicaService.getActivos();
     }
-
 }
