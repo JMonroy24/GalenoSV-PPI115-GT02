@@ -37,6 +37,7 @@
             databaseName="${env.GALENOSV_DB_NAME}"
             user="${env.GALENOSV_DB_USER}"
             password="${env.GALENOSV_DB_PASSWORD}"/>
+
     </dataSource>
 
     <library id="PostgreSQLLib">
