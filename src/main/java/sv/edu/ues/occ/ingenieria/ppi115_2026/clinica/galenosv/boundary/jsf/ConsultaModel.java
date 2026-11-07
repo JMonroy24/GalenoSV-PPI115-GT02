@@ -2,7 +2,7 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -14,12 +14,12 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DocumentoDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoPasoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DocumentoService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoPasoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimiento;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimientoPaso;
@@ -38,21 +38,21 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected ConsultaDAO consultaDAO;
+    protected ConsultaService consultaService;
     @Inject protected SesionBean sesionBean;
-    @Inject protected ProcedimientoPasoDAO procedimientoPasoDAO;
+    @Inject protected ProcedimientoPasoService procedimientoPasoService;
     @Inject protected AsignacionService asignacionService;
     private Date fechaDesde;
     private Date fechaHasta;
     private GenericLazyDataModel<Consulta> consultasFiltradas;
     @Inject
-    protected PersonaRolDAO personaRolDAO;
+    protected PersonaRolService personaRolService;
     @Inject
-    protected ConsultaProcedimientoDAO consultaProcedimientoDAO;
+    protected ConsultaProcedimientoService consultaProcedimientoService;
     @Inject
-    protected ConsultaProcedimientoPasoDAO consultaProcedimientoPasoDAO;
+    protected ConsultaProcedimientoPasoService consultaProcedimientoPasoService;
     @Inject
-    protected DocumentoDAO documentoDAO;
+    protected DocumentoService documentoService;
 
     private List<ConsultaProcedimiento> procedimientos = Collections.emptyList();
     private ConsultaProcedimiento procedimientoNuevo;
@@ -70,7 +70,7 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
 
     @Override
     protected DAOInterface<Consulta, UUID> getDAO() {
-        return consultaDAO;
+        return consultaService;
     }
 
     @Override
@@ -84,7 +84,7 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
     public List<PersonaRol> completePersonaRol(String query) {
         if (query == null || query.trim().length() < 2) return java.util.List.of();
         if (idClinicaActual() == null) return List.of();
-        return personaRolDAO.buscarPacientes(query, idClinicaActual(), 20);
+        return personaRolService.buscarPacientes(query, idClinicaActual(), 20);
     }
 
 
@@ -94,7 +94,7 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
         pasoSeleccionado = null;
 
         super.seleccionar(consulta);
-        procedimientos = consultaProcedimientoDAO.findByConsulta(consulta.getIdConsulta());
+        procedimientos = consultaProcedimientoService.findByConsulta(consulta.getIdConsulta());
         cerrarPasos();
         limpiarBorradores();
     }
@@ -142,12 +142,12 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
     }
 
     private void recargarProcedimientos() {
-        procedimientos = consultaProcedimientoDAO.findByConsulta(
+        procedimientos = consultaProcedimientoService.findByConsulta(
                 getRegistroActual().getIdConsulta());
     }
 
     private void recargarPasos() {
-        pasos = consultaProcedimientoPasoDAO.findByConsultaProcedimiento(
+        pasos = consultaProcedimientoPasoService.findByConsultaProcedimiento(
                 procedimientoActivo.getIdConsultaProcedimiento());
     }
 
@@ -177,11 +177,11 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
             ValidadorComun.activo(procedimientoNuevo.getIdProcedimiento().getActivo(), "El procedimiento");
             ValidadorComun.dentroDelPeriodo(procedimientoNuevo.getFechaInicio(), procedimientoNuevo.getFechaFin(),
                     getRegistroActual().getFechaInicio(), getRegistroActual().getFechaFin());
-            var inicio = ValidadorComun.requerido(procedimientoPasoDAO.findPasoInicial(
+            var inicio = ValidadorComun.requerido(procedimientoPasoService.findPasoInicial(
                     procedimientoNuevo.getIdProcedimiento().getIdProcedimiento()), "El procedimiento no tiene pasos definidos.");
             var rol = ValidadorComun.requerido(inicio.getIdRol(), "El paso inicial debe tener un rol responsable.");
             ValidadorComun.activo(rol.getActivo(), "El rol del paso inicial");
-            responsable = ValidadorComun.requerido(personaRolDAO.findResponsable(idClinicaActual(), rol.getIdRol()),
+            responsable = ValidadorComun.requerido(personaRolService.findResponsable(idClinicaActual(), rol.getIdRol()),
                     "No hay una persona con el rol requerido en la clínica actual.");
         } catch (ValidacionNegocioException e) {
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Procedimiento", e.getMessage());
@@ -216,14 +216,14 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
                     "Seleccione un procedimiento válido de la consulta.");
             return;
         }
-        if (!consultaProcedimientoPasoDAO
+        if (!consultaProcedimientoPasoService
                 .findByConsultaProcedimiento(cp.getIdConsultaProcedimiento()).isEmpty()) {
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Procedimiento",
                     "Este procedimiento tiene pasos registrados. Quite primero sus pasos.");
             return;
         }
         ejecutarRelacion("Procedimiento", () -> {
-            consultaProcedimientoDAO.delete(cp);
+            consultaProcedimientoService.delete(cp);
             if (cp.equals(procedimientoActivo)) {
                 cerrarPasos();
             }
@@ -270,7 +270,7 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
         pasoNuevo.setEstado(EstadoPaso.PENDIENTE.name());
         pasoNuevo.setIdConsultaProcedimiento(procedimientoActivo);
         ejecutarRelacion("Paso", () -> {
-            consultaProcedimientoPasoDAO.create(pasoNuevo);
+            consultaProcedimientoPasoService.create(pasoNuevo);
             recargarPasos();
             limpiarPasoNuevo();
         }, "Paso agregado correctamente.");
@@ -287,7 +287,7 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
             return;
         }
         ejecutarRelacion("Paso", () -> {
-            consultaProcedimientoPasoDAO.delete(paso);
+            consultaProcedimientoPasoService.delete(paso);
             recargarPasos();
         }, "Paso quitado correctamente.");
     }
@@ -299,12 +299,12 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
     public List<ConsultaProcedimientoPaso> getPasos() { return pasos; }
     public ConsultaProcedimientoPaso getPasoNuevo() { return pasoNuevo; }
 
-    public ConsultaDAO getConsultaDAO() {
-        return consultaDAO;
+    public ConsultaService getConsultaService() {
+        return consultaService;
     }
 
-    public void setConsultaDAO(ConsultaDAO consultaDAO) {
-        this.consultaDAO = consultaDAO;
+    public void setConsultaService(ConsultaService consultaService) {
+        this.consultaService = consultaService;
     }
 
     @Override
@@ -326,19 +326,19 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
         if (personaRol == null || personaRol.getIdClinica() == null
                 || !clinica.equals(personaRol.getIdClinica().getIdClinica())
                 || rol == null || !Boolean.TRUE.equals(rol.getActivo()) || rol.getNombre() == null
-                || !rol.getNombre().toLowerCase(java.util.Locale.ROOT).contains(PersonaRolDAO.ROL_PACIENTE)) {
+                || !rol.getNombre().toLowerCase(java.util.Locale.ROOT).contains(PersonaRolService.ROL_PACIENTE)) {
             throw new ValidacionNegocioException("La persona debe ser paciente de la clínica de trabajo.");
         }
     }
 
     @Override
     protected void inicializarLazyModel() {
-        consultasFiltradas = new GenericLazyDataModel<>(consultaDAO) {
+        consultasFiltradas = new GenericLazyDataModel<>(consultaService) {
             private static final long serialVersionUID = 1L;
             @Override
             public int count(java.util.Map<String, org.primefaces.model.FilterMeta> filtros) {
                 if (!rangoFiltroValido()) return 0;
-                return Math.toIntExact(consultaDAO.countFiltrado(idClinicaActual(), inicioDia(fechaDesde),
+                return Math.toIntExact(consultaService.countFiltrado(idClinicaActual(), inicioDia(fechaDesde),
                         finDia(fechaHasta), getFiltroGlobal()));
             }
             @Override
@@ -346,7 +346,7 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
                     java.util.Map<String, org.primefaces.model.SortMeta> orden,
                     java.util.Map<String, org.primefaces.model.FilterMeta> filtros) {
                 if (!rangoFiltroValido()) return List.of();
-                return consultaDAO.findRangeFiltrado(first, max, idClinicaActual(), inicioDia(fechaDesde),
+                return consultaService.findRangeFiltrado(first, max, idClinicaActual(), inicioDia(fechaDesde),
                         finDia(fechaHasta), getFiltroGlobal());
             }
         };
@@ -396,13 +396,13 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
     private final java.util.Map<UUID, String> documentosCache = new java.util.HashMap<>();
     public String getDocumentosPersona(UUID idPersona) {
         if (idPersona == null) return "";
-        return documentosCache.computeIfAbsent(idPersona, id -> documentoDAO.findByPersona(id).stream()
+        return documentosCache.computeIfAbsent(idPersona, id -> documentoService.findByPersona(id).stream()
                 .map(d -> (d.getIdTipoDocumento() == null ? "Documento" : d.getIdTipoDocumento().getNombre())
                         + ": " + d.getValor()).collect(java.util.stream.Collectors.joining(", ")));
     }
     public String getEstadoPasoActual(ConsultaProcedimiento procedimiento) {
         if (procedimiento == null) return "";
-        return consultaProcedimientoPasoDAO.findByConsultaProcedimiento(procedimiento.getIdConsultaProcedimiento())
+        return consultaProcedimientoPasoService.findByConsultaProcedimiento(procedimiento.getIdConsultaProcedimiento())
                 .stream().filter(p -> p.getFechaFin() == null)
                 .map(p -> p.getEstado() == null ? "Sin estado" : p.getEstado()).findFirst().orElse("Finalizado");
     }
@@ -435,16 +435,16 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
         pasoInicialPrevisto = null;
         responsableInicialPrevisto = null;
         if (procedimientoNuevo == null || procedimientoNuevo.getIdProcedimiento() == null) return;
-        pasoInicialPrevisto = procedimientoPasoDAO.findPasoInicial(procedimientoNuevo.getIdProcedimiento().getIdProcedimiento());
+        pasoInicialPrevisto = procedimientoPasoService.findPasoInicial(procedimientoNuevo.getIdProcedimiento().getIdProcedimiento());
         if (pasoInicialPrevisto != null && pasoInicialPrevisto.getIdRol() != null && idClinicaActual() != null) {
-            responsableInicialPrevisto = personaRolDAO.findResponsable(idClinicaActual(), pasoInicialPrevisto.getIdRol().getIdRol());
+            responsableInicialPrevisto = personaRolService.findResponsable(idClinicaActual(), pasoInicialPrevisto.getIdRol().getIdRol());
         }
     }
 
     public String getDetallePrimerPaso(ConsultaProcedimiento procedimiento) {
         if (procedimiento == null || procedimiento.getIdProcedimiento() == null) return "Sin paso inicial";
-        var definicion = procedimientoPasoDAO.findPasoInicial(procedimiento.getIdProcedimiento().getIdProcedimiento());
-        var inicial = consultaProcedimientoPasoDAO.findByConsultaProcedimiento(procedimiento.getIdConsultaProcedimiento())
+        var definicion = procedimientoPasoService.findPasoInicial(procedimiento.getIdProcedimiento().getIdProcedimiento());
+        var inicial = consultaProcedimientoPasoService.findByConsultaProcedimiento(procedimiento.getIdConsultaProcedimiento())
                 .stream().min(java.util.Comparator.comparing(ConsultaProcedimientoPaso::getFechaInicio,
                         java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()))).orElse(null);
         return (definicion == null ? "Sin paso inicial definido" : definicion.getNombre())

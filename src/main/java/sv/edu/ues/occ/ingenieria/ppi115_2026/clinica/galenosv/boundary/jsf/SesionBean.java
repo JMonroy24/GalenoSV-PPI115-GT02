@@ -7,9 +7,9 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.List;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ClinicaDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.RolDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ClinicaService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.RolService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona;
@@ -22,9 +22,9 @@ import java.util.Collections;
 public class SesionBean implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @Inject protected ClinicaDAO clinicaDAO;
-    @Inject protected RolDAO rolDAO;
-    @Inject protected PersonaRolDAO personaRolDAO;
+    @Inject protected ClinicaService clinicaService;
+    @Inject protected RolService rolService;
+    @Inject protected PersonaRolService personaRolService;
 
     private Clinica clinicaActual;
     private Rol rolActual;
@@ -66,12 +66,12 @@ public class SesionBean implements Serializable {
     public Persona getPersonaTemp() { return personaTemp; }
     public void setPersonaTemp(Persona personaTemp) { this.personaTemp = personaTemp; }
 
-    public List<Clinica> getClinicasActivas() { return clinicaDAO.findAllActivos(); }
-    public List<Rol> getRolesActivos() { return rolDAO.findAllActivos(); }
+    public List<Clinica> getClinicasActivas() { return clinicaService.findAllActivos(); }
+    public List<Rol> getRolesActivos() { return rolService.findAllActivos(); }
 
     public List<Persona> getPersonasDisponibles() {
         if (clinicaTemp == null || rolTemp == null) return Collections.emptyList();
-        return personaRolDAO.findByClinicaAndRol(clinicaTemp.getIdClinica(), rolTemp.getIdRol())
+        return personaRolService.findByClinicaAndRol(clinicaTemp.getIdClinica(), rolTemp.getIdRol())
             .stream().map(PersonaRol::getIdPersona).collect(Collectors.toList());
     }
 
@@ -80,7 +80,7 @@ public class SesionBean implements Serializable {
     }
 
     public void aplicarClinica() {
-        Clinica clinica = clinicaTemp == null ? null : clinicaDAO.findById(clinicaTemp.getIdClinica());
+        Clinica clinica = clinicaTemp == null ? null : clinicaService.findById(clinicaTemp.getIdClinica());
         if (clinica == null || !Boolean.TRUE.equals(clinica.getActivo())) {
             mensaje(FacesMessage.SEVERITY_ERROR, "Seleccione una clínica activa.");
             return;
@@ -100,14 +100,14 @@ public class SesionBean implements Serializable {
             mensaje(FacesMessage.SEVERITY_ERROR, "Debe seleccionar clínica, rol y persona.");
             return;
         }
-        Clinica clinica = clinicaDAO.findById(clinicaTemp.getIdClinica());
-        Rol rol = rolDAO.findById(rolTemp.getIdRol());
+        Clinica clinica = clinicaService.findById(clinicaTemp.getIdClinica());
+        Rol rol = rolService.findById(rolTemp.getIdRol());
         if (clinica == null || !Boolean.TRUE.equals(clinica.getActivo())
                 || rol == null || !Boolean.TRUE.equals(rol.getActivo())) {
             mensaje(FacesMessage.SEVERITY_ERROR, "Seleccione una clínica y un rol activos.");
             return;
         }
-        Persona persona = personaRolDAO.findByClinicaAndRol(clinica.getIdClinica(), rol.getIdRol())
+        Persona persona = personaRolService.findByClinicaAndRol(clinica.getIdClinica(), rol.getIdRol())
                 .stream().map(PersonaRol::getIdPersona)
                 .filter(p -> p != null && p.equals(personaTemp)).findFirst().orElse(null);
         if (persona == null) {

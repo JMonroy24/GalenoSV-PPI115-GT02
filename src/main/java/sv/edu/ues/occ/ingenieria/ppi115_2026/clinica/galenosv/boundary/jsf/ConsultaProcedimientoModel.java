@@ -11,8 +11,8 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimiento;
@@ -27,10 +27,10 @@ public class ConsultaProcedimientoModel extends ModelTransaccional<ConsultaProce
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected ConsultaProcedimientoDAO consultaProcedimientoDAO;
+    protected ConsultaProcedimientoService consultaProcedimientoService;
 
     @Inject
-    protected ConsultaDAO consultaDAO;
+    protected ConsultaService consultaService;
 
     /**
      * Consulta recibida por URL (drill-down desde consulta.xhtml, parámetro
@@ -51,7 +51,7 @@ public class ConsultaProcedimientoModel extends ModelTransaccional<ConsultaProce
         String parametro = fc.getExternalContext().getRequestParameterMap().get("idConsulta");
         if (parametro == null || parametro.isBlank()) return;
         try {
-            consultaPreseleccionada = consultaDAO.findById(UUID.fromString(parametro.trim()));
+            consultaPreseleccionada = consultaService.findById(UUID.fromString(parametro.trim()));
         } catch (IllegalArgumentException ex) {
             consultaPreseleccionada = null;
         }
@@ -59,7 +59,7 @@ public class ConsultaProcedimientoModel extends ModelTransaccional<ConsultaProce
 
     @Override
     protected DAOInterface<ConsultaProcedimiento, UUID> getDAO() {
-        return consultaProcedimientoDAO;
+        return consultaProcedimientoService;
     }
 
     @Override
@@ -75,15 +75,15 @@ public class ConsultaProcedimientoModel extends ModelTransaccional<ConsultaProce
     /** Método para p:autoComplete. Busca consultas por persona o referencia. */
     public List<Consulta> completeConsulta(String query) {
         if (query == null || query.trim().length() < 2) return java.util.List.of();
-        return consultaDAO.buscarParaAutocompletar(query, 20);
+        return consultaService.buscarParaAutocompletar(query, 20);
     }
 
-    public ConsultaProcedimientoDAO getConsultaProcedimientoDAO() {
-        return consultaProcedimientoDAO;
+    public ConsultaProcedimientoService getConsultaProcedimientoService() {
+        return consultaProcedimientoService;
     }
 
-    public void setConsultaProcedimientoDAO(ConsultaProcedimientoDAO consultaProcedimientoDAO) {
-        this.consultaProcedimientoDAO = consultaProcedimientoDAO;
+    public void setConsultaProcedimientoService(ConsultaProcedimientoService consultaProcedimientoService) {
+        this.consultaProcedimientoService = consultaProcedimientoService;
     }
 
     public Consulta getConsultaPreseleccionada() {

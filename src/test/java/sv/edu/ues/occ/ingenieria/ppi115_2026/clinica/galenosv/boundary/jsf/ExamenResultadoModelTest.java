@@ -7,7 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenResultadoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenResultadoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ExamenResultado;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,14 +19,14 @@ import static org.mockito.Mockito.*;
 public class ExamenResultadoModelTest {
 
     @Mock
-    private ExamenResultadoDAO examenResultadoDAO;
+    private ExamenResultadoService examenResultadoService;
 
     @InjectMocks
     private ExamenResultadoModel examenResultadoModel;
 
     @BeforeEach
     public void setUp() {
-        examenResultadoModel.setExamenResultadoDAO(examenResultadoDAO);
+        examenResultadoModel.setExamenResultadoService(examenResultadoService);
     }
 
     @Test
@@ -76,7 +76,7 @@ public class ExamenResultadoModelTest {
         examenResultadoModel.getRegistroActual().setIdOrdenExamen(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExamen(UUID.randomUUID()));
         examenResultadoModel.guardar();
 
-        verify(examenResultadoDAO).create(any(ExamenResultado.class));
+        verify(examenResultadoService).create(any(ExamenResultado.class));
         assertEquals(Estado.NINGUNO, examenResultadoModel.getEstado());
         assertNull(examenResultadoModel.getRegistroActual());
     }
@@ -91,7 +91,7 @@ public class ExamenResultadoModelTest {
         examenResultadoModel.getRegistroActual().setIdOrdenExamen(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExamen(UUID.randomUUID()));
         examenResultadoModel.guardar();
 
-        verify(examenResultadoDAO).update(er);
+        verify(examenResultadoService).update(er);
         assertEquals(Estado.NINGUNO, examenResultadoModel.getEstado());
     }
 
@@ -100,14 +100,14 @@ public class ExamenResultadoModelTest {
         ExamenResultado er = new ExamenResultado(UUID.randomUUID());
         examenResultadoModel.eliminar(er);
 
-        verify(examenResultadoDAO).delete(er);
+        verify(examenResultadoService).delete(er);
     }
 
     @Test
     public void testGettersAndSetters() {
         examenResultadoModel.init();
-        assertEquals(examenResultadoDAO, examenResultadoModel.getDAO());
-        assertEquals(examenResultadoDAO, examenResultadoModel.getExamenResultadoDAO());
+        assertEquals(examenResultadoService, examenResultadoModel.getDAO());
+        assertEquals(examenResultadoService, examenResultadoModel.getExamenResultadoService());
         assertNotNull(examenResultadoModel.crearNuevoRegistro());
         assertNotNull(examenResultadoModel.getLazyModel());
     }

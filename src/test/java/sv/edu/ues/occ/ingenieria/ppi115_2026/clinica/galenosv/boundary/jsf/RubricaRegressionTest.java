@@ -30,10 +30,10 @@ class RubricaRegressionTest {
     }
 
     private ConsultaModel consultaModel() {
-        ConsultaModel m = new ConsultaModel(); m.consultaDAO = mock(ConsultaDAO.class);
-        m.personaRolDAO = mock(PersonaRolDAO.class); m.procedimientoPasoDAO = mock(ProcedimientoPasoDAO.class);
-        m.consultaProcedimientoDAO = mock(ConsultaProcedimientoDAO.class);
-        m.consultaProcedimientoPasoDAO = mock(ConsultaProcedimientoPasoDAO.class);
+        ConsultaModel m = new ConsultaModel(); m.consultaService = mock(ConsultaService.class);
+        m.personaRolService = mock(PersonaRolService.class); m.procedimientoPasoService = mock(ProcedimientoPasoService.class);
+        m.consultaProcedimientoService = mock(ConsultaProcedimientoService.class);
+        m.consultaProcedimientoPasoService = mock(ConsultaProcedimientoPasoService.class);
         m.asignacionService = mock(AsignacionService.class); m.sesionBean = new SesionBean();
         m.sesionBean.setClinicaActual(clinica()); m.init(); m.prepararNuevo();
         m.getRegistroActual().setIdPersonaRol(personaRol(m.sesionBean.getClinicaActual(), rol("Paciente")));
@@ -41,12 +41,12 @@ class RubricaRegressionTest {
     }
 
     private PersonaModel personaModel() {
-        PersonaModel m = new PersonaModel(); m.personaDAO = mock(PersonaDAO.class);
-        m.documentoDAO = mock(DocumentoDAO.class); m.medioContactoDAO = mock(MedioContactoDAO.class);
-        m.personaRolDAO = mock(PersonaRolDAO.class); m.tipoDocumentoDAO = mock(TipoDocumentoDAO.class);
-        m.tipoMedioContactoDAO = mock(TipoMedioContactoDAO.class); m.rolDAO = mock(RolDAO.class);
-        m.clinicaDAO = mock(ClinicaDAO.class); m.init(); m.seleccionar(new Persona(UUID.randomUUID()));
-        clearInvocations(m.personaRolDAO); return m;
+        PersonaModel m = new PersonaModel(); m.personaService = mock(PersonaService.class);
+        m.documentoService = mock(DocumentoService.class); m.medioContactoService = mock(MedioContactoService.class);
+        m.personaRolService = mock(PersonaRolService.class); m.tipoDocumentoService = mock(TipoDocumentoService.class);
+        m.tipoMedioContactoService = mock(TipoMedioContactoService.class); m.rolService = mock(RolService.class);
+        m.clinicaService = mock(ClinicaService.class); m.init(); m.seleccionar(new Persona(UUID.randomUUID()));
+        clearInvocations(m.personaRolService); return m;
     }
 
     @Test
@@ -64,8 +64,8 @@ class RubricaRegressionTest {
     @Test
     void clinicaDeTrabajoEsPorSesionYSoloAceptaActivas() {
         SesionBean primera = new SesionBean(), segunda = new SesionBean();
-        primera.clinicaDAO = mock(ClinicaDAO.class); Clinica c = clinica();
-        when(primera.clinicaDAO.findAllActivos()).thenReturn(List.of(c));
+        primera.clinicaService = mock(ClinicaService.class); Clinica c = clinica();
+        when(primera.clinicaService.findAllActivos()).thenReturn(List.of(c));
         assertFalse(primera.isClinicaSeleccionada()); assertEquals("Sin clínica seleccionada", primera.getNombreClinica());
         assertEquals(List.of(c), primera.getClinicasActivas()); primera.setClinicaActual(c);
         assertTrue(primera.isClinicaSeleccionada()); assertEquals("Central", primera.getNombreClinica());
@@ -81,10 +81,10 @@ class RubricaRegressionTest {
         tipo.setActivo(!caso.equals("inactivo")); tipo.setExpresionRegular(caso.equals("[") ? "[" : "[0-9]{8}-[0-9]");
         tipo.setIndicaciones("Use el formato DUI."); m.getDocumentoNuevo().setIdTipoDocumento(tipo);
         m.getDocumentoNuevo().setValor(caso.equals("incorrecto") ? "ABC" : "12345678-9");
-        m.agregarDocumento(); verify(m.documentoDAO, never()).create(any()); assertNotNull(m.getDocumentoNuevo().getIdTipoDocumento());
+        m.agregarDocumento(); verify(m.documentoService, never()).create(any()); assertNotNull(m.getDocumentoNuevo().getIdTipoDocumento());
         tipo.setActivo(true); tipo.setExpresionRegular("[0-9]{8}-[0-9]"); m.getDocumentoNuevo().setValor(" 12345678-9 ");
         ArgumentCaptor<Documento> captor = ArgumentCaptor.forClass(Documento.class); m.agregarDocumento();
-        verify(m.documentoDAO).create(captor.capture()); assertEquals("12345678-9", captor.getValue().getValor());
+        verify(m.documentoService).create(captor.capture()); assertEquals("12345678-9", captor.getValue().getValor());
         assertSame(m.getRegistroActual(), captor.getValue().getIdPersona()); assertNull(m.getDocumentoNuevo().getIdTipoDocumento());
     }
 
@@ -94,49 +94,49 @@ class RubricaRegressionTest {
         PersonaModel m = personaModel(); TipoMedioContacto tipo = new TipoMedioContacto(UUID.randomUUID());
         tipo.setActivo(!caso.equals("inactivo")); tipo.setExpresionRegular(caso.equals("[") ? "[" : "[0-9]{8}");
         m.getMedioNuevo().setIdTipoMedioContacto(tipo); m.getMedioNuevo().setValor(caso.equals("incorrecto") ? "ABC" : "12345678");
-        m.agregarMedioContacto(); verify(m.medioContactoDAO, never()).create(any());
+        m.agregarMedioContacto(); verify(m.medioContactoService, never()).create(any());
         tipo.setActivo(true); tipo.setExpresionRegular("[0-9]{8}"); m.getMedioNuevo().setValor(" 12345678 "); m.agregarMedioContacto();
         ArgumentCaptor<MedioContacto> captor = ArgumentCaptor.forClass(MedioContacto.class);
-        verify(m.medioContactoDAO).create(captor.capture()); assertEquals("12345678", captor.getValue().getValor());
+        verify(m.medioContactoService).create(captor.capture()); assertEquals("12345678", captor.getValue().getValor());
         assertNotNull(captor.getValue().getFechaCreacion());
     }
 
     @Test
     void rolesIntegradosRequierenRolYClinicaActivos() {
-        PersonaModel m = personaModel(); m.agregarRol(); verifyNoInteractions(m.personaRolDAO);
+        PersonaModel m = personaModel(); m.agregarRol(); verifyNoInteractions(m.personaRolService);
         Rol r = rol("Doctor"); r.setActivo(false); m.getRolNuevo().setIdRol(r); m.agregarRol();
-        verifyNoInteractions(m.personaRolDAO); r.setActivo(true); m.agregarRol(); verifyNoInteractions(m.personaRolDAO);
-        Clinica c = clinica(); c.setActivo(false); m.getRolNuevo().setIdClinica(c); m.agregarRol(); verifyNoInteractions(m.personaRolDAO);
-        c.setActivo(true); m.agregarRol(); verify(m.personaRolDAO).create(any(PersonaRol.class));
+        verifyNoInteractions(m.personaRolService); r.setActivo(true); m.agregarRol(); verifyNoInteractions(m.personaRolService);
+        Clinica c = clinica(); c.setActivo(false); m.getRolNuevo().setIdClinica(c); m.agregarRol(); verifyNoInteractions(m.personaRolService);
+        c.setActivo(true); m.agregarRol(); verify(m.personaRolService).create(any(PersonaRol.class));
     }
 
     @Test
     void personaSinRolesSeGuardaYCatalogosSoloDevuelvenActivos() {
         PersonaModel m = personaModel(); m.prepararNuevo(); m.getRegistroActual().setNombres("Ana"); m.getRegistroActual().setApellidos("Pérez");
-        m.guardar(); verify(m.personaDAO).create(any()); verify(m.personaRolDAO, never()).create(any());
+        m.guardar(); verify(m.personaService).create(any()); verify(m.personaRolService, never()).create(any());
         m.getTiposDocumento(); m.getTiposMedioContacto(); m.getRolesActivos(); m.getClinicas();
-        verify(m.tipoDocumentoDAO).findAllActivos(); verify(m.tipoMedioContactoDAO).findAllActivos();
-        verify(m.rolDAO).findAllActivos(); verify(m.clinicaDAO).findAllActivos();
+        verify(m.tipoDocumentoService).findAllActivos(); verify(m.tipoMedioContactoService).findAllActivos();
+        verify(m.rolService).findAllActivos(); verify(m.clinicaService).findAllActivos();
     }
 
     @Test
     void consultaRechazaAusenciaDeClinicaRolIncorrectoYOtraClinica() {
         ConsultaModel m = consultaModel(); Consulta c = m.getRegistroActual();
-        m.sesionBean.setClinicaActual(null); m.guardar(); verify(m.consultaDAO, never()).create(any());
-        assertTrue(m.isEstadoCrear()); assertTrue(m.completePersonaRol("Ana").isEmpty()); verifyNoInteractions(m.personaRolDAO);
+        m.sesionBean.setClinicaActual(null); m.guardar(); verify(m.consultaService, never()).create(any());
+        assertTrue(m.isEstadoCrear()); assertTrue(m.completePersonaRol("Ana").isEmpty()); verifyNoInteractions(m.personaRolService);
         m.sesionBean.setClinicaActual(c.getIdPersonaRol().getIdClinica()); c.getIdPersonaRol().setIdRol(rol("Doctor"));
-        m.guardar(); verify(m.consultaDAO, never()).create(any()); c.getIdPersonaRol().setIdRol(rol("Paciente"));
-        m.sesionBean.setClinicaActual(clinica()); m.guardar(); verify(m.consultaDAO, never()).create(any());
+        m.guardar(); verify(m.consultaService, never()).create(any()); c.getIdPersonaRol().setIdRol(rol("Paciente"));
+        m.sesionBean.setClinicaActual(clinica()); m.guardar(); verify(m.consultaService, never()).create(any());
         m.sesionBean.setClinicaActual(c.getIdPersonaRol().getIdClinica()); c.getIdPersonaRol().getIdRol().setActivo(false);
-        m.guardar(); verify(m.consultaDAO, never()).create(any()); c.getIdPersonaRol().getIdRol().setActivo(true);
-        m.guardar(); verify(m.consultaDAO).create(c); assertTrue(m.isEstadoNinguno());
+        m.guardar(); verify(m.consultaService, never()).create(any()); c.getIdPersonaRol().getIdRol().setActivo(true);
+        m.guardar(); verify(m.consultaService).create(c); assertTrue(m.isEstadoNinguno());
     }
 
     @Test
     void autocompletadoUsaLaClinicaActualYLimitaResultados() {
         ConsultaModel m = consultaModel(); assertTrue(m.completePersonaRol("a").isEmpty());
-        assertTrue(m.completePersonaRol(null).isEmpty()); verifyNoInteractions(m.personaRolDAO);
-        m.completePersonaRol("Ana"); verify(m.personaRolDAO).buscarPacientes("Ana", m.sesionBean.getClinicaActual().getIdClinica(), 20);
+        assertTrue(m.completePersonaRol(null).isEmpty()); verifyNoInteractions(m.personaRolService);
+        m.completePersonaRol("Ana"); verify(m.personaRolService).buscarPacientes("Ana", m.sesionBean.getClinicaActual().getIdClinica(), 20);
     }
 
     @Test
@@ -145,19 +145,19 @@ class RubricaRegressionTest {
         Procedimiento p = new Procedimiento(UUID.randomUUID()); p.setActivo(false); m.getProcedimientoNuevo().setIdProcedimiento(p);
         m.getProcedimientoNuevo().setFechaInicio(m.getRegistroActual().getFechaInicio()); m.agregarProcedimiento();
         verifyNoInteractions(m.asignacionService); p.setActivo(true); m.agregarProcedimiento(); verifyNoInteractions(m.asignacionService);
-        ProcedimientoPaso inicio = new ProcedimientoPaso(UUID.randomUUID()); when(m.procedimientoPasoDAO.findPasoInicial(p.getIdProcedimiento())).thenReturn(inicio);
+        ProcedimientoPaso inicio = new ProcedimientoPaso(UUID.randomUUID()); when(m.procedimientoPasoService.findPasoInicial(p.getIdProcedimiento())).thenReturn(inicio);
         m.agregarProcedimiento(); verifyNoInteractions(m.asignacionService); Rol r = rol("Doctor"); inicio.setIdRol(r);
         r.setActivo(false); m.agregarProcedimiento(); verifyNoInteractions(m.asignacionService); r.setActivo(true);
         m.agregarProcedimiento(); verifyNoInteractions(m.asignacionService);
         PersonaRol responsable = personaRol(m.sesionBean.getClinicaActual(), r);
-        when(m.personaRolDAO.findResponsable(m.sesionBean.getClinicaActual().getIdClinica(), r.getIdRol())).thenReturn(responsable);
+        when(m.personaRolService.findResponsable(m.sesionBean.getClinicaActual().getIdClinica(), r.getIdRol())).thenReturn(responsable);
         ConsultaProcedimiento borrador = m.getProcedimientoNuevo(); m.agregarProcedimiento();
         ArgumentCaptor<ConsultaProcedimientoPaso> captor = ArgumentCaptor.forClass(ConsultaProcedimientoPaso.class);
         verify(m.asignacionService).crearProcedimientoConPaso(eq(borrador), captor.capture());
         assertEquals("PENDIENTE", captor.getValue().getEstado()); assertSame(responsable, captor.getValue().getIdPersonaRol());
         assertEquals(borrador.getFechaInicio(), captor.getValue().getFechaInicio()); assertSame(borrador, m.getProcedimientoActivo());
-        verify(m.consultaProcedimientoDAO, never()).create(any()); verify(m.consultaProcedimientoPasoDAO, never()).create(any());
-        verify(m.consultaProcedimientoPasoDAO).findByConsultaProcedimiento(borrador.getIdConsultaProcedimiento());
+        verify(m.consultaProcedimientoService, never()).create(any()); verify(m.consultaProcedimientoPasoService, never()).create(any());
+        verify(m.consultaProcedimientoPasoService).findByConsultaProcedimiento(borrador.getIdConsultaProcedimiento());
     }
 
     @Test
@@ -167,11 +167,11 @@ class RubricaRegressionTest {
         m.getLazyModel().setFiltroGlobal("Referencia"); m.filtrar(); m.getLazyModel().count(Map.of());
         m.getLazyModel().load(0, 15, Map.of(), Map.of());
         Date inicio = Date.from(Instant.parse("2026-10-02T06:00:00Z")), fin = Date.from(Instant.parse("2026-10-03T05:59:59.999Z"));
-        verify(m.consultaDAO).countFiltrado(c, inicio, fin, "Referencia");
-        verify(m.consultaDAO).findRangeFiltrado(0, 15, c, inicio, fin, "Referencia"); clearInvocations(m.consultaDAO);
+        verify(m.consultaService).countFiltrado(c, inicio, fin, "Referencia");
+        verify(m.consultaService).findRangeFiltrado(0, 15, c, inicio, fin, "Referencia"); clearInvocations(m.consultaService);
         m.setFechaHasta(Date.from(Instant.parse("2026-10-01T12:00:00Z"))); m.filtrar();
         assertEquals(0, m.getLazyModel().count(Map.of())); assertTrue(m.getLazyModel().load(0, 15, Map.of(), Map.of()).isEmpty());
-        verifyNoInteractions(m.consultaDAO); m.limpiarFiltro(); assertNull(m.getFechaDesde()); assertNull(m.getFechaHasta());
+        verifyNoInteractions(m.consultaService); m.limpiarFiltro(); assertNull(m.getFechaDesde()); assertNull(m.getFechaHasta());
     }
 
     @Test

@@ -10,10 +10,10 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoPasoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoPasoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimiento;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimientoPaso;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRol;
@@ -28,13 +28,13 @@ public class ConsultaProcedimientoPasoModel extends ModelTransaccional<ConsultaP
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected ConsultaProcedimientoPasoDAO consultaProcedimientoPasoDAO;
+    protected ConsultaProcedimientoPasoService consultaProcedimientoPasoService;
 
     @Inject
-    protected ConsultaProcedimientoDAO consultaProcedimientoDAO;
+    protected ConsultaProcedimientoService consultaProcedimientoService;
 
     @Inject
-    protected PersonaRolDAO personaRolDAO;
+    protected PersonaRolService personaRolService;
 
     @PostConstruct
     public void init() {
@@ -43,7 +43,7 @@ public class ConsultaProcedimientoPasoModel extends ModelTransaccional<ConsultaP
 
     @Override
     protected DAOInterface<ConsultaProcedimientoPaso, UUID> getDAO() {
-        return consultaProcedimientoPasoDAO;
+        return consultaProcedimientoPasoService;
     }
 
     @Override
@@ -56,21 +56,21 @@ public class ConsultaProcedimientoPasoModel extends ModelTransaccional<ConsultaP
     /** Método para p:autoComplete. Busca procedimientos de consulta. */
     public List<ConsultaProcedimiento> completeConsultaProcedimiento(String query) {
         if (query == null || query.trim().length() < 2) return java.util.List.of();
-        return consultaProcedimientoDAO.buscarParaAutocompletar(query, 20);
+        return consultaProcedimientoService.buscarParaAutocompletar(query, 20);
     }
 
     /** Método para p:autoComplete. Busca asignaciones Persona/Rol. */
     public List<PersonaRol> completePersonaRol(String query) {
         if (query == null || query.trim().length() < 2) return java.util.List.of();
-        return personaRolDAO.buscarParaAutocompletar(query, 20);
+        return personaRolService.buscarParaAutocompletar(query, 20);
     }
 
-    public ConsultaProcedimientoPasoDAO getConsultaProcedimientoPasoDAO() {
-        return consultaProcedimientoPasoDAO;
+    public ConsultaProcedimientoPasoService getConsultaProcedimientoPasoService() {
+        return consultaProcedimientoPasoService;
     }
 
-    public void setConsultaProcedimientoPasoDAO(ConsultaProcedimientoPasoDAO consultaProcedimientoPasoDAO) {
-        this.consultaProcedimientoPasoDAO = consultaProcedimientoPasoDAO;
+    public void setConsultaProcedimientoPasoService(ConsultaProcedimientoPasoService consultaProcedimientoPasoService) {
+        this.consultaProcedimientoPasoService = consultaProcedimientoPasoService;
     }
 
     @Override

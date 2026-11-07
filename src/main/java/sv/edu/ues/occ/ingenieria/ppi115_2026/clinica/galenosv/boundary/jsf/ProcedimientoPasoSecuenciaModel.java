@@ -1,6 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -8,7 +7,7 @@ import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoSecuenciaDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoSecuenciaService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPasoSecuencia;
 
 /**
@@ -32,7 +31,7 @@ public class ProcedimientoPasoSecuenciaModel
      * DAO utilizado para consultar y modificar las relaciones de secuencia.
      */
     @Inject
-    protected ProcedimientoPasoSecuenciaDAO procedimientoPasoSecuenciaDAO;
+    protected ProcedimientoPasoSecuenciaService procedimientoPasoSecuenciaService;
 
     /**
      * Carga las relaciones existentes cuando JSF construye el modelo.
@@ -49,7 +48,7 @@ public class ProcedimientoPasoSecuenciaModel
      */
     @Override
     protected DAOInterface<ProcedimientoPasoSecuencia, UUID> getDAO() {
-        return procedimientoPasoSecuenciaDAO;
+        return procedimientoPasoSecuenciaService;
     }
 
     /**
@@ -67,9 +66,9 @@ public class ProcedimientoPasoSecuenciaModel
      *
      * @return DAO utilizado por el modelo
      */
-    public ProcedimientoPasoSecuenciaDAO
-            getProcedimientoPasoSecuenciaDAO() {
-        return procedimientoPasoSecuenciaDAO;
+    public ProcedimientoPasoSecuenciaService
+            getProcedimientoPasoSecuenciaService() {
+        return procedimientoPasoSecuenciaService;
     }
 
     /**
@@ -78,25 +77,22 @@ public class ProcedimientoPasoSecuenciaModel
      * Este método también permite inyectar un DAO simulado durante las pruebas
      * unitarias.
      *
-     * @param procedimientoPasoSecuenciaDAO DAO que utilizará el modelo
+     * @param procedimientoPasoSecuenciaService DAO que utilizará el modelo
      */
-    public void setProcedimientoPasoSecuenciaDAO(
-            ProcedimientoPasoSecuenciaDAO procedimientoPasoSecuenciaDAO) {
-        this.procedimientoPasoSecuenciaDAO =
-                procedimientoPasoSecuenciaDAO;
+    public void setProcedimientoPasoSecuenciaService(
+            ProcedimientoPasoSecuenciaService procedimientoPasoSecuenciaService) {
+        this.procedimientoPasoSecuenciaService =
+                procedimientoPasoSecuenciaService;
     }
-
-    @Inject
-    protected AsignacionService asignacionService;
 
     @Override
     protected void persistirNuevo(ProcedimientoPasoSecuencia registro) {
-        asignacionService.guardarSecuencia(registro, true);
+        procedimientoPasoSecuenciaService.crear(registro);
     }
 
     @Override
     protected void persistirCambios(ProcedimientoPasoSecuencia registro) {
-        asignacionService.guardarSecuencia(registro, false);
+        procedimientoPasoSecuenciaService.actualizar(registro);
     }
 
 }

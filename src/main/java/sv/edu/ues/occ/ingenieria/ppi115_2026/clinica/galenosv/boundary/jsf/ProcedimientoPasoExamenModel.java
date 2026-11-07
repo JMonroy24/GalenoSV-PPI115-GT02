@@ -1,6 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.AsignacionService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -8,7 +7,7 @@ import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoExamenDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoExamenService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPasoExamen;
 
 /**
@@ -29,7 +28,7 @@ public class ProcedimientoPasoExamenModel
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected ProcedimientoPasoExamenDAO procedimientoPasoExamenDAO;
+    protected ProcedimientoPasoExamenService procedimientoPasoExamenService;
 
     @PostConstruct
     public void init() {
@@ -38,7 +37,7 @@ public class ProcedimientoPasoExamenModel
 
     @Override
     protected DAOInterface<ProcedimientoPasoExamen, UUID> getDAO() {
-        return procedimientoPasoExamenDAO;
+        return procedimientoPasoExamenService;
     }
 
     @Override
@@ -46,26 +45,23 @@ public class ProcedimientoPasoExamenModel
         return new ProcedimientoPasoExamen(UUID.randomUUID());
     }
 
-    public ProcedimientoPasoExamenDAO getProcedimientoPasoExamenDAO() {
-        return procedimientoPasoExamenDAO;
+    public ProcedimientoPasoExamenService getProcedimientoPasoExamenService() {
+        return procedimientoPasoExamenService;
     }
 
-    public void setProcedimientoPasoExamenDAO(
-            ProcedimientoPasoExamenDAO procedimientoPasoExamenDAO) {
-        this.procedimientoPasoExamenDAO = procedimientoPasoExamenDAO;
+    public void setProcedimientoPasoExamenService(
+            ProcedimientoPasoExamenService procedimientoPasoExamenService) {
+        this.procedimientoPasoExamenService = procedimientoPasoExamenService;
     }
-
-    @Inject
-    protected AsignacionService asignacionService;
 
     @Override
     protected void persistirNuevo(ProcedimientoPasoExamen registro) {
-        asignacionService.guardarExamen(registro, true);
+        procedimientoPasoExamenService.crear(registro);
     }
 
     @Override
     protected void persistirCambios(ProcedimientoPasoExamen registro) {
-        asignacionService.guardarExamen(registro, false);
+        procedimientoPasoExamenService.actualizar(registro);
     }
 
 }

@@ -9,7 +9,8 @@ import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DocumentoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DocumentoService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Documento;
 
 /**
@@ -22,10 +23,10 @@ public class DocumentoModel extends ModelTransaccional<Documento, UUID> implemen
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected DocumentoDAO documentoDAO;
+    protected DocumentoService documentoService;
 
     @Inject
-    protected sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaDAO personaDAO;
+    protected PersonaService personaService;
 
     @PostConstruct
     public void init() {
@@ -34,7 +35,7 @@ public class DocumentoModel extends ModelTransaccional<Documento, UUID> implemen
 
     @Override
     protected DAOInterface<Documento, UUID> getDAO() {
-        return documentoDAO;
+        return documentoService;
     }
 
     @Override
@@ -47,15 +48,15 @@ public class DocumentoModel extends ModelTransaccional<Documento, UUID> implemen
      */
     public java.util.List<sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona> completePersona(String query) {
         if (query == null || query.trim().length() < 2) return java.util.List.of();
-        return personaDAO.findRange(0, 20, query);
+        return personaService.findRange(0, 20, query);
     }
 
-    public DocumentoDAO getDocumentoDAO() {
-        return documentoDAO;
+    public DocumentoService getDocumentoService() {
+        return documentoService;
     }
 
-    public void setDocumentoDAO(DocumentoDAO documentoDAO) {
-        this.documentoDAO = documentoDAO;
+    public void setDocumentoService(DocumentoService documentoService) {
+        this.documentoService = documentoService;
     }
 
     @Override
@@ -66,7 +67,7 @@ public class DocumentoModel extends ModelTransaccional<Documento, UUID> implemen
         ValidadorComun.requerido(tipo.getIdTipoDocumento(), "Seleccione un tipo de documento válido.");
         ValidadorComun.activo(tipo.getActivo(), "El tipo de documento");
         ValidadorComun.formato(registro.getValor(), tipo.getExpresionRegular(), tipo.getIndicaciones());
-        if (documentoDAO.existePersonaTipoValor(persona.getIdPersona(), tipo.getIdTipoDocumento(), registro.getValor(), registro.getIdDocumento())) {
+        if (documentoService.existePersonaTipoValor(persona.getIdPersona(), tipo.getIdTipoDocumento(), registro.getValor(), registro.getIdDocumento())) {
             throw new ValidacionNegocioException("La persona ya tiene un documento de este tipo con el mismo valor.");
         }
     }

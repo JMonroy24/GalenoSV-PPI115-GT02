@@ -7,7 +7,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRol;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,14 +19,14 @@ import static org.mockito.Mockito.*;
 public class PersonaRolModelTest {
 
     @Mock
-    private PersonaRolDAO personaRolDAO;
+    private PersonaRolService personaRolService;
 
     @InjectMocks
     private PersonaRolModel personaRolModel;
 
     @BeforeEach
     public void setUp() {
-        personaRolModel.setPersonaRolDAO(personaRolDAO);
+        personaRolModel.setPersonaRolService(personaRolService);
     }
 
     @Test
@@ -78,7 +78,7 @@ public class PersonaRolModelTest {
         clinica.setActivo(true); personaRolModel.getRegistroActual().setIdClinica(clinica);
         personaRolModel.guardar();
 
-        verify(personaRolDAO).create(any(PersonaRol.class));
+        verify(personaRolService).create(any(PersonaRol.class));
         assertEquals(Estado.NINGUNO, personaRolModel.getEstado());
         assertNull(personaRolModel.getRegistroActual());
     }
@@ -96,7 +96,7 @@ public class PersonaRolModelTest {
         clinica.setActivo(true); personaRolModel.getRegistroActual().setIdClinica(clinica);
         personaRolModel.guardar();
 
-        verify(personaRolDAO).update(pr);
+        verify(personaRolService).update(pr);
         assertEquals(Estado.NINGUNO, personaRolModel.getEstado());
     }
 
@@ -105,14 +105,14 @@ public class PersonaRolModelTest {
         PersonaRol pr = new PersonaRol(UUID.randomUUID());
         personaRolModel.eliminar(pr);
 
-        verify(personaRolDAO).delete(pr);
+        verify(personaRolService).delete(pr);
     }
 
     @Test
     public void testGettersAndSetters() {
         personaRolModel.init();
-        assertEquals(personaRolDAO, personaRolModel.getDAO());
-        assertEquals(personaRolDAO, personaRolModel.getPersonaRolDAO());
+        assertEquals(personaRolService, personaRolModel.getDAO());
+        assertEquals(personaRolService, personaRolModel.getPersonaRolService());
         assertNotNull(personaRolModel.crearNuevoRegistro());
         assertNotNull(personaRolModel.getLazyModel());
     }

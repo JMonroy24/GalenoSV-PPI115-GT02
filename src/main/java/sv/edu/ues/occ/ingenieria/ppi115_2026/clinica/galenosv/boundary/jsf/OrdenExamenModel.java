@@ -12,10 +12,10 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoPasoDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoPasoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenResultadoDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.OrdenExamenDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenResultadoService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.OrdenExamenService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimientoPaso;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ExamenResultado;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExamen;
@@ -30,11 +30,11 @@ public class OrdenExamenModel extends ModelTransaccional<OrdenExamen, UUID> impl
     private static final long serialVersionUID = 1L;
 
     @Inject
-    protected OrdenExamenDAO ordenExamenDAO;
+    protected OrdenExamenService ordenExamenService;
     @Inject
-    protected ConsultaProcedimientoPasoDAO consultaProcedimientoPasoDAO;
+    protected ConsultaProcedimientoPasoService consultaProcedimientoPasoService;
     @Inject
-    protected ExamenResultadoDAO examenResultadoDAO;
+    protected ExamenResultadoService examenResultadoService;
 
     private List<ExamenResultado> resultados = Collections.emptyList();
     private ExamenResultado resultadoNuevo;
@@ -47,7 +47,7 @@ public class OrdenExamenModel extends ModelTransaccional<OrdenExamen, UUID> impl
 
     @Override
     protected DAOInterface<OrdenExamen, UUID> getDAO() {
-        return ordenExamenDAO;
+        return ordenExamenService;
     }
 
     @Override
@@ -60,7 +60,7 @@ public class OrdenExamenModel extends ModelTransaccional<OrdenExamen, UUID> impl
     /** Método para p:autoComplete. Busca pasos de procedimiento de consulta. */
     public List<ConsultaProcedimientoPaso> completeConsultaProcedimientoPaso(String query) {
         if (query == null || query.trim().length() < 2) return java.util.List.of();
-        return consultaProcedimientoPasoDAO.buscarParaAutocompletar(query, 20);
+        return consultaProcedimientoPasoService.buscarParaAutocompletar(query, 20);
     }
 
     private ExamenResultado nuevoResultado() {
@@ -71,7 +71,7 @@ public class OrdenExamenModel extends ModelTransaccional<OrdenExamen, UUID> impl
     @Override
     public void seleccionar(OrdenExamen orden) {
         super.seleccionar(orden);
-        resultados = (List<ExamenResultado>) examenResultadoDAO.findByOrdenExamen(orden.getIdOrdenExamen());
+        resultados = (List<ExamenResultado>) examenResultadoService.findByOrdenExamen(orden.getIdOrdenExamen());
         resultadoNuevo = nuevoResultado();
     }
 
@@ -104,8 +104,8 @@ public class OrdenExamenModel extends ModelTransaccional<OrdenExamen, UUID> impl
         resultadoNuevo.setIdOrdenExamen(getRegistroActual());
         resultadoNuevo.setFechaCreacion(new Date());
         ejecutarRelacion("Resultado", () -> {
-            examenResultadoDAO.create(resultadoNuevo);
-            resultados = (List<ExamenResultado>) examenResultadoDAO.findByOrdenExamen(
+            examenResultadoService.create(resultadoNuevo);
+            resultados = (List<ExamenResultado>) examenResultadoService.findByOrdenExamen(
                     getRegistroActual().getIdOrdenExamen());
             resultadoNuevo = nuevoResultado();
         }, "Resultado agregado correctamente.");
@@ -121,8 +121,8 @@ public class OrdenExamenModel extends ModelTransaccional<OrdenExamen, UUID> impl
             return;
         }
         ejecutarRelacion("Resultado", () -> {
-            examenResultadoDAO.delete(resultado);
-            resultados = (List<ExamenResultado>) examenResultadoDAO.findByOrdenExamen(
+            examenResultadoService.delete(resultado);
+            resultados = (List<ExamenResultado>) examenResultadoService.findByOrdenExamen(
                     getRegistroActual().getIdOrdenExamen());
         }, "Resultado quitado correctamente.");
     }
@@ -130,12 +130,12 @@ public class OrdenExamenModel extends ModelTransaccional<OrdenExamen, UUID> impl
     public List<ExamenResultado> getResultados() { return resultados; }
     public ExamenResultado getResultadoNuevo() { return resultadoNuevo; }
 
-    public OrdenExamenDAO getOrdenExamenDAO() {
-        return ordenExamenDAO;
+    public OrdenExamenService getOrdenExamenService() {
+        return ordenExamenService;
     }
 
-    public void setOrdenExamenDAO(OrdenExamenDAO ordenExamenDAO) {
-        this.ordenExamenDAO = ordenExamenDAO;
+    public void setOrdenExamenService(OrdenExamenService ordenExamenService) {
+        this.ordenExamenService = ordenExamenService;
     }
     @Override
     protected void validarNegocio(OrdenExamen registro) {

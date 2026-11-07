@@ -7,8 +7,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenResultadoDAO;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.OrdenExamenDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenResultadoService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.OrdenExamenService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExamen;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,17 +20,17 @@ import static org.mockito.Mockito.*;
 public class OrdenExamenModelTest {
 
     @Mock
-    private OrdenExamenDAO ordenExamenDAO;
+    private OrdenExamenService ordenExamenService;
 
     @Mock
-    private ExamenResultadoDAO examenResultadoDAO;
+    private ExamenResultadoService examenResultadoService;
 
     @InjectMocks
     private OrdenExamenModel ordenExamenModel;
 
     @BeforeEach
     public void setUp() {
-        ordenExamenModel.setOrdenExamenDAO(ordenExamenDAO);
+        ordenExamenModel.setOrdenExamenService(ordenExamenService);
     }
 
     @Test
@@ -79,7 +79,7 @@ public class OrdenExamenModelTest {
         ordenExamenModel.getRegistroActual().setIdConsultaProcedimientoPaso(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimientoPaso(UUID.randomUUID()));
         ordenExamenModel.guardar();
 
-        verify(ordenExamenDAO).create(any(OrdenExamen.class));
+        verify(ordenExamenService).create(any(OrdenExamen.class));
         assertEquals(Estado.NINGUNO, ordenExamenModel.getEstado());
         assertNull(ordenExamenModel.getRegistroActual());
     }
@@ -93,7 +93,7 @@ public class OrdenExamenModelTest {
         ordenExamenModel.getRegistroActual().setIdConsultaProcedimientoPaso(new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimientoPaso(UUID.randomUUID()));
         ordenExamenModel.guardar();
 
-        verify(ordenExamenDAO).update(oe);
+        verify(ordenExamenService).update(oe);
         assertEquals(Estado.NINGUNO, ordenExamenModel.getEstado());
     }
 
@@ -102,14 +102,14 @@ public class OrdenExamenModelTest {
         OrdenExamen oe = new OrdenExamen(UUID.randomUUID());
         ordenExamenModel.eliminar(oe);
 
-        verify(ordenExamenDAO).delete(oe);
+        verify(ordenExamenService).delete(oe);
     }
 
     @Test
     public void testGettersAndSetters() {
         ordenExamenModel.init();
-        assertEquals(ordenExamenDAO, ordenExamenModel.getDAO());
-        assertEquals(ordenExamenDAO, ordenExamenModel.getOrdenExamenDAO());
+        assertEquals(ordenExamenService, ordenExamenModel.getDAO());
+        assertEquals(ordenExamenService, ordenExamenModel.getOrdenExamenService());
         assertNotNull(ordenExamenModel.crearNuevoRegistro());
         assertNotNull(ordenExamenModel.getLazyModel());
     }

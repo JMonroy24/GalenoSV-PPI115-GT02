@@ -30,7 +30,7 @@ class ModelValidacionesTest {
 
     @Test
     void documentoValidaFormatoActividadYDuplicado() {
-        var model = new DocumentoModel(); var dao = mock(DocumentoDAO.class); model.setDocumentoDAO(dao);
+        var model = new DocumentoModel(); var dao = mock(DocumentoService.class); model.setDocumentoService(dao);
         var registro = new Documento(UUID.randomUUID());
         registro.setIdPersona(new Persona(UUID.randomUUID()));
         var tipo = new TipoDocumento(UUID.randomUUID());
@@ -51,7 +51,7 @@ class ModelValidacionesTest {
 
     @Test
     void contactoValidaFormatoActividadYDuplicadoPorPersona() {
-        var model = new MedioContactoModel(); var dao = mock(MedioContactoDAO.class); model.setMedioContactoDAO(dao);
+        var model = new MedioContactoModel(); var dao = mock(MedioContactoService.class); model.setMedioContactoService(dao);
         var registro = new MedioContacto(UUID.randomUUID());
         var persona = new Persona(UUID.randomUUID()); registro.setIdPersona(persona);
         var tipo = new TipoMedioContacto(UUID.randomUUID()); tipo.setActivo(true);
@@ -72,7 +72,7 @@ class ModelValidacionesTest {
 
     @Test
     void personaRolExigeClinicaYRechazaDuplicadoEInactivos() {
-        var model = new PersonaRolModel(); var dao = mock(PersonaRolDAO.class); model.setPersonaRolDAO(dao);
+        var model = new PersonaRolModel(); var dao = mock(PersonaRolService.class); model.setPersonaRolService(dao);
         var registro = new PersonaRol(UUID.randomUUID());
         var persona = new Persona(UUID.randomUUID()); registro.setIdPersona(persona);
         var rol = new Rol(UUID.randomUUID()); rol.setActivo(true); registro.setIdRol(rol);
