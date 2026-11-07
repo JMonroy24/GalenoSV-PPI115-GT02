@@ -45,6 +45,71 @@ no es necesario modificar sus usuarios, tablas o datos.
 Puede usar opcionalmente `src/main/liberty/config/server.env`, excluido de Git.
 `compose.yaml` es una alternativa opcional para una base propia de desarrollo.
 
+## API REST
+
+La API se publica bajo la base `https://localhost:9443/galenoSV/api/v1` y requiere
+autenticación BASIC. Los usuarios de demostración son `admin` (rol
+`ADMINISTRADOR`) y `clinico` (rol `PERSONAL_CLINICO`). Las lecturas (`GET`) están
+disponibles para ambos roles; las escrituras (`POST`, `PUT`, `DELETE`) requieren
+`ADMINISTRADOR`. El transporte debe ser HTTPS.
+
+Los errores usan este formato JSON:
+
+```json
+{
+  "timestamp": "2026-11-07T12:00:00Z",
+  "status_code": 404,
+  "error_code": "NOT_FOUND",
+  "message": "No existe el recurso solicitado.",
+  "details": {}
+}
+```
+
+La paginación se controla con `first` (desplazamiento, por defecto `0`), `max`
+(tamaño de página, por defecto `20`, máximo `100`) y el filtro opcional `q`. La
+respuesta tiene la forma:
+
+```json
+{
+  "items": [],
+  "total": 0,
+  "first": 0,
+  "max": 20
+}
+```
+
+Ejemplos con `/clinicas`:
+
+```bash
+# GET: listado paginado
+curl -u admin:admin \
+  'https://localhost:9443/galenoSV/api/v1/clinicas?first=0&max=20'
+
+# GET: un recurso por id (la respuesta incluye el encabezado ETag)
+curl -i -u admin:admin \
+  'https://localhost:9443/galenoSV/api/v1/clinicas/00000000-0000-0000-0000-000000000000'
+
+# POST: crear un recurso
+curl -u admin:admin -X POST \
+  -H 'Content-Type: application/json' \
+  -d '{"nombre":"Clínica Central","activo":true,"tipo":"PRIVADA","comentarios":"Sede principal"}' \
+  'https://localhost:9443/galenoSV/api/v1/clinicas'
+
+# PUT: actualizar usando el ETag obtenido con GET
+curl -u admin:admin -X PUT \
+  -H 'Content-Type: application/json' \
+  -H 'If-Match: W/"<etag-obtenido-en-el-GET>"' \
+  -d '{"nombre":"Clínica Central Actualizada","activo":true,"tipo":"PRIVADA","comentarios":"Sede principal"}' \
+  'https://localhost:9443/galenoSV/api/v1/clinicas/00000000-0000-0000-0000-000000000000'
+
+# DELETE: elimina el recurso (borrado lógico en clínicas)
+curl -i -u admin:admin -X DELETE \
+  'https://localhost:9443/galenoSV/api/v1/clinicas/00000000-0000-0000-0000-000000000000'
+```
+
+`PUT` exige el encabezado `If-Match`; si falta responde `428` y si no coincide
+con el ETag actual responde `412`.
+
 ## Pruebas
 
 ```bash
