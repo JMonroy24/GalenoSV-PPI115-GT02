@@ -3,6 +3,7 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExamen;
@@ -29,6 +30,9 @@ public class OrdenExamenService extends DefaultService<OrdenExamen, UUID> implem
 
     @Override
     protected void validar(OrdenExamen r, boolean nuevo) {
+        if (nuevo && r.getFechaCreacion() == null) {
+            r.setFechaCreacion(new Date());
+        }
         r.setIndicaciones(ValidadorComun.textoObligatorio(r.getIndicaciones(), "Las indicaciones"));
         ValidadorComun.requerido(r.getIdConsultaProcedimientoPaso(), "Seleccione un paso de la consulta.");
     }

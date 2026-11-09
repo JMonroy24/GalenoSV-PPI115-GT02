@@ -3,6 +3,7 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRol;
@@ -31,6 +32,9 @@ public class PersonaRolService extends DefaultService<PersonaRol, UUID> implemen
 
     @Override
     protected void validar(PersonaRol r, boolean nuevo) {
+        if (nuevo && r.getFechaCreacion() == null) {
+            r.setFechaCreacion(new Date());
+        }
         var persona = ValidadorComun.requerido(r.getIdPersona(), "Seleccione una persona.");
         var rol = ValidadorComun.requerido(r.getIdRol(), "Seleccione un rol.");
         ValidadorComun.requerido(persona.getIdPersona(), "Seleccione una persona válida.");

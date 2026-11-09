@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPasoExamen;
@@ -35,14 +36,23 @@ public class ProcedimientoPasoExamenService extends DefaultService<Procedimiento
     }
 
     @Override
+    protected void validar(ProcedimientoPasoExamen r, boolean nuevo) {
+        if (nuevo && r.getFechaCreacion() == null) {
+            r.setFechaCreacion(new Date());
+        }
+    }
+
+    @Override
     @Transactional
     public void crear(ProcedimientoPasoExamen e) {
+        validar(e, true);
         asignacionService.guardarExamen(e, true);
     }
 
     @Override
     @Transactional
     public void actualizar(ProcedimientoPasoExamen e) {
+        validar(e, false);
         asignacionService.guardarExamen(e, false);
     }
 

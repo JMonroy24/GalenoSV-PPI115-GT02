@@ -1,5 +1,6 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 
+import jakarta.ws.rs.NotFoundException;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionFailedException;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -85,6 +87,45 @@ class DefaultServiceTest {
         assertTrue(service.validarInvocado);
         assertFalse(service.nuevoParametro);
         verify(clinicaDAO).update(c);
+    }
+
+    @Test
+    void actualizarSiAplicaCambiosValidaYActualiza() {
+        UUID id = UUID.randomUUID();
+        Clinica c = new Clinica(id);
+        when(clinicaDAO.findById(id)).thenReturn(c);
+
+        Clinica resultado = service.actualizarSi(id, e -> true, e -> e.setNombre("Nuevo"));
+
+        assertSame(c, resultado);
+        assertEquals("Nuevo", c.getNombre());
+        assertTrue(service.validarInvocado);
+        assertFalse(service.nuevoParametro);
+        verify(clinicaDAO).update(c);
+    }
+
+    @Test
+    void actualizarSiInexistenteLanzaNotFound() {
+        UUID id = UUID.randomUUID();
+        when(clinicaDAO.findById(id)).thenReturn(null);
+
+        assertThrows(NotFoundException.class,
+                () -> service.actualizarSi(id, e -> true, e -> e.setNombre("Nuevo")));
+        verify(clinicaDAO, never()).update(any());
+    }
+
+    @Test
+    void actualizarSiConPrecondicionFallaNoAplicaCambiosNiActualiza() {
+        UUID id = UUID.randomUUID();
+        Clinica c = new Clinica(id);
+        c.setNombre("Original");
+        when(clinicaDAO.findById(id)).thenReturn(c);
+
+        assertThrows(PreconditionFailedException.class,
+                () -> service.actualizarSi(id, e -> false, e -> e.setNombre("Nuevo")));
+        assertEquals("Original", c.getNombre());
+        assertFalse(service.validarInvocado);
+        verify(clinicaDAO, never()).update(any());
     }
 
     @Test
