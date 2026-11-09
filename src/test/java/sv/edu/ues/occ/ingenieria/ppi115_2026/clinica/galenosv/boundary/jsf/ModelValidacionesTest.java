@@ -29,45 +29,25 @@ class ModelValidacionesTest {
     }
 
     @Test
-    void documentoValidaFormatoActividadYDuplicado() {
-        var model = new DocumentoModel(); var dao = mock(DocumentoService.class); model.setDocumentoService(dao);
-        var registro = new Documento(UUID.randomUUID());
-        registro.setIdPersona(new Persona(UUID.randomUUID()));
-        var tipo = new TipoDocumento(UUID.randomUUID());
-        tipo.setActivo(true); tipo.setExpresionRegular("[0-9]{8}-[0-9]"); tipo.setIndicaciones("Use ocho dígitos, guion y un dígito.");
-        registro.setIdTipoDocumento(tipo); registro.setValor("incorrecto");
-        var error = assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-        assertTrue(error.getMessage().contains(tipo.getIndicaciones()));
-        registro.setValor(" 12345678-9 ");
-        assertDoesNotThrow(() -> model.validarNegocio(registro));
-        assertEquals("12345678-9", registro.getValor());
-        tipo.setActivo(false);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-        tipo.setActivo(true);
-        when(dao.existePersonaTipoValor(registro.getIdPersona().getIdPersona(), tipo.getIdTipoDocumento(), "12345678-9", registro.getIdDocumento())).thenReturn(true);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-        assertTrue(model.completePersona(" a ").isEmpty());
+    void documentoDelegaValidacionAlServicio() {
+        var model = new DocumentoModel(); var service = mock(DocumentoService.class); model.setDocumentoService(service);
+        model.prepararNuevo();
+        doThrow(new ValidacionNegocioException("regla de servicio")).when(service).create(any(Documento.class));
+        model.guardar();
+        verify(service).create(any(Documento.class));
+        assertEquals(Estado.CREAR, model.getEstado());
+        assertNotNull(model.getRegistroActual());
     }
 
     @Test
-    void contactoValidaFormatoActividadYDuplicadoPorPersona() {
-        var model = new MedioContactoModel(); var dao = mock(MedioContactoService.class); model.setMedioContactoService(dao);
-        var registro = new MedioContacto(UUID.randomUUID());
-        var persona = new Persona(UUID.randomUUID()); registro.setIdPersona(persona);
-        var tipo = new TipoMedioContacto(UUID.randomUUID()); tipo.setActivo(true);
-        tipo.setExpresionRegular("[^@ ]+@[^@ ]+[.][^@ ]+"); registro.setIdTipoMedioContacto(tipo);
-        registro.setValor("correo inválido");
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-        registro.setValor(" ana@example.org ");
-        assertDoesNotThrow(() -> model.validarNegocio(registro));
-        assertEquals("ana@example.org", registro.getValor());
-        tipo.setActivo(false);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-        tipo.setActivo(true);
-        when(dao.existePersonaTipoValor(persona.getIdPersona(), tipo.getIdTipoMedioContacto(),
-                "ana@example.org", registro.getIdMedioContacto())).thenReturn(true);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
-        assertTrue(model.completePersona(null).isEmpty());
+    void medioContactoDelegaValidacionAlServicio() {
+        var model = new MedioContactoModel(); var service = mock(MedioContactoService.class); model.setMedioContactoService(service);
+        model.prepararNuevo();
+        doThrow(new ValidacionNegocioException("regla de servicio")).when(service).create(any(MedioContacto.class));
+        model.guardar();
+        verify(service).create(any(MedioContacto.class));
+        assertEquals(Estado.CREAR, model.getEstado());
+        assertNotNull(model.getRegistroActual());
     }
 
     @Test
