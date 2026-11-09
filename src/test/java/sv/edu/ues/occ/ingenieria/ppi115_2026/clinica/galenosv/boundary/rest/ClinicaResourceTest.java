@@ -76,7 +76,7 @@ class ClinicaResourceTest {
     @Test
     void putInexistenteLanzaNotFound() {
         UUID id = UUID.randomUUID();
-        when(clinicaService.findById(id)).thenReturn(null);
+        when(clinicaService.actualizarSi(any(), any(), any())).thenThrow(new NotFoundException("No existe el recurso solicitado."));
 
         assertThrows(NotFoundException.class,
                 () -> clinicaResource.actualizar(id.toString(), null, new ClinicaDTO(null, "x", null, "y", null)));
@@ -88,14 +88,23 @@ class ClinicaResourceTest {
         Clinica entidad = new Clinica(id);
         ClinicaDTO dto = new ClinicaDTO(null, "Actualizada", Boolean.TRUE, "GENERAL", null);
         ClinicaDTO esperada = new ClinicaDTO(id, "Actualizada", Boolean.TRUE, "GENERAL", null);
-        when(clinicaService.findById(id)).thenReturn(entidad);
         when(clinicaMapper.toDTO(entidad)).thenReturn(esperada);
+        when(clinicaService.actualizarSi(any(), any(), any())).thenAnswer(inv -> {
+            java.util.function.Predicate<Object> precondicion = inv.getArgument(1);
+            java.util.function.Consumer<Object> cambios = inv.getArgument(2);
+            if (!precondicion.test(entidad)) {
+                throw new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionFailedException("El ETag no coincide.");
+            }
+            cambios.accept(entidad);
+            return entidad;
+        });
 
-        ClinicaDTO respuesta = clinicaResource.actualizar(id.toString(), sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcular(esperada), dto);
+        Response respuesta = clinicaResource.actualizar(id.toString(), sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcularFuerte(esperada), dto);
 
-        assertEquals(esperada, respuesta);
+        assertEquals(esperada, respuesta.getEntity());
+        assertEquals(sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcularFuerte(esperada), respuesta.getHeaderString("ETag"));
         verify(clinicaMapper).copiar(dto, entidad);
-        verify(clinicaService).actualizar(entidad);
+        verify(clinicaService).actualizarSi(any(), any(), any());
     }
 
     @Test

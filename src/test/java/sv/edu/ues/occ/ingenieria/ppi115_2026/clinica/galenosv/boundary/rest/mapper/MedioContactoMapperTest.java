@@ -55,7 +55,7 @@ class MedioContactoMapperTest {
 
         assertEquals(id, vuelta.getIdMedioContacto());
         assertEquals(dto.valor(), vuelta.getValor());
-        assertEquals(dto.fechaCreacion(), vuelta.getFechaCreacion());
+        assertNull(vuelta.getFechaCreacion());
         assertSame(persona, vuelta.getIdPersona());
         assertSame(tipo, vuelta.getIdTipoMedioContacto());
     }
@@ -64,9 +64,11 @@ class MedioContactoMapperTest {
     void copiarNoCambiaElIdDelDestino() {
         UUID idDestino = UUID.randomUUID();
         MedioContacto destino = new MedioContacto(idDestino);
+        Date fechaOriginal = new Date(1600000000000L);
+        destino.setFechaCreacion(fechaOriginal);
         Persona persona = new Persona(UUID.randomUUID());
         TipoMedioContacto tipo = new TipoMedioContacto(UUID.randomUUID());
-        MedioContactoDTO dto = new MedioContactoDTO(UUID.randomUUID(), "7777-7777", null,
+        MedioContactoDTO dto = new MedioContactoDTO(UUID.randomUUID(), "7777-7777", new Date(1800000000000L),
                 persona.getIdPersona(), tipo.getIdTipoMedioContacto());
         when(personaService.findById(persona.getIdPersona())).thenReturn(persona);
         when(tipoMedioContactoService.findById(tipo.getIdTipoMedioContacto())).thenReturn(tipo);
@@ -74,6 +76,7 @@ class MedioContactoMapperTest {
         mapper.copiar(dto, destino);
 
         assertEquals(idDestino, destino.getIdMedioContacto());
+        assertEquals(fechaOriginal, destino.getFechaCreacion());
         assertEquals("7777-7777", destino.getValor());
         assertSame(persona, destino.getIdPersona());
         assertSame(tipo, destino.getIdTipoMedioContacto());

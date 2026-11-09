@@ -50,7 +50,6 @@ public class ExamenTipoExamenMapper implements EntityMapper<ExamenTipoExamen, Ex
         if (dto == null || destino == null) {
             return;
         }
-        destino.setFechaCreacion(dto.fechaCreacion());
         destino.setObservaciones(dto.observaciones());
         destino.setIdExamen(resolverExamen(dto.idExamen()));
         destino.setIdTipoExamen(resolverTipoExamen(dto.idTipoExamen()));

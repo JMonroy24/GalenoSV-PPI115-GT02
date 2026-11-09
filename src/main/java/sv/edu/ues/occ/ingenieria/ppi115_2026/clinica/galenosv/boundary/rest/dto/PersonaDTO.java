@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.Date;
 import java.util.UUID;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 public record PersonaDTO(
         UUID id,
@@ -14,5 +15,6 @@ public record PersonaDTO(
         @Size(max = 255)
         String apellidos,
         Date fechaNacimiento,
+        @Schema(readOnly = true)
         Date fechaCreacion) {
 }

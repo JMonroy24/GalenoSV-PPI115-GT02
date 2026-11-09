@@ -23,7 +23,6 @@ import java.util.List;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionFailedException;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionRequiredException;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DefaultService;
 
@@ -126,7 +125,7 @@ public abstract class GenericResource<E, D, ID extends Serializable> {
     @RolesAllowed("ADMINISTRADOR")
     @Operation(summary = "Actualiza un recurso existente usando If-Match")
     @APIResponses({
-        @APIResponse(responseCode = "200", description = "Recurso actualizado correctamente."),
+        @APIResponse(responseCode = "200", description = "Recurso actualizado correctamente; incluye el encabezado ETag."),
         @APIResponse(responseCode = "400", description = "Solicitud inválida o cuerpo mal formado."),
         @APIResponse(responseCode = "404", description = "El recurso no existe."),
         @APIResponse(responseCode = "409", description = "Conflicto con el estado actual del recurso."),
@@ -135,27 +134,26 @@ public abstract class GenericResource<E, D, ID extends Serializable> {
         @APIResponse(responseCode = "428", description = "Falta el encabezado If-Match."),
         @APIResponse(responseCode = "500", description = "Error interno del servidor.")
     })
-    public D actualizar(@PathParam("id") String id,
+    public Response actualizar(@PathParam("id") String id,
             @HeaderParam("If-Match") String ifMatch,
             @Valid D dto) {
         ID clave = parseId(id);
-        E entidad = getService().findById(clave);
-        if (entidad == null) {
-            throw new NotFoundException("No existe el recurso solicitado.");
-        }
-        if (ifMatch == null || ifMatch.isBlank()) {
-            throw new PreconditionRequiredException(
-                    "Debe enviar el encabezado If-Match con el ETag actual del recurso.");
-        }
-        String etagActual = ETagUtils.calcular(getMapper().toDTO(entidad));
-        if (!ETagUtils.coincide(ifMatch, etagActual)) {
-            throw new PreconditionFailedException(
-                    "El ETag enviado no coincide con el estado actual del recurso.");
-        }
-        getMapper().copiar(dto, entidad);
-        setId(entidad, clave);
-        getService().actualizar(entidad);
-        return getMapper().toDTO(entidad);
+        E entidad = getService().actualizarSi(clave,
+                e -> {
+                    if (ifMatch == null || ifMatch.isBlank()) {
+                        throw new PreconditionRequiredException(
+                                "Debe enviar el encabezado If-Match con el ETag actual del recurso.");
+                    }
+                    return ETagUtils.coincide(ifMatch, ETagUtils.calcular(getMapper().toDTO(e)));
+                },
+                e -> {
+                    getMapper().copiar(dto, e);
+                    setId(e, clave);
+                });
+        D actualizada = getMapper().toDTO(entidad);
+        return Response.ok(actualizada)
+                .header("ETag", ETagUtils.calcularFuerte(actualizada))
+                .build();
     }
 
     @DELETE

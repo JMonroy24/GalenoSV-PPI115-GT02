@@ -37,20 +37,29 @@ class ETagUtilsTest {
     }
 
     @Test
-    void coincideAceptaEtagDebilFuerteListaYComodin() {
-        String etag = ETagUtils.calcular(new DTO(ID, "Consulta", Boolean.TRUE));
-        String fuerte = etag.substring(2);
+    void etagFuerteNoTienePrefijoDebil() {
+        String etag = ETagUtils.calcularFuerte(new DTO(ID, "Consulta", Boolean.TRUE));
 
-        assertTrue(ETagUtils.coincide(etag, etag));
+        assertTrue(etag.startsWith("\""));
+        assertTrue(etag.endsWith("\""));
+        assertFalse(etag.startsWith("W/"));
+    }
+
+    @Test
+    void coincideAceptaEtagFuerteListaYComodin() {
+        String etag = ETagUtils.calcular(new DTO(ID, "Consulta", Boolean.TRUE));
+        String fuerte = ETagUtils.calcularFuerte(new DTO(ID, "Consulta", Boolean.TRUE));
+
         assertTrue(ETagUtils.coincide(fuerte, etag));
-        assertTrue(ETagUtils.coincide("W/\"otro\", " + etag, etag));
+        assertTrue(ETagUtils.coincide("W/\"otro\", " + fuerte, etag));
         assertTrue(ETagUtils.coincide("*", etag));
     }
 
     @Test
-    void noCoincideConEtagDiferenteONulo() {
+    void noCoincideConEtagDebilDiferenteONulo() {
         String etag = ETagUtils.calcular(new DTO(ID, "Consulta", Boolean.TRUE));
 
+        assertFalse(ETagUtils.coincide(etag, etag));
         assertFalse(ETagUtils.coincide("W/\"distinto\"", etag));
         assertFalse(ETagUtils.coincide(null, etag));
         assertFalse(ETagUtils.coincide(etag, null));

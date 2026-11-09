@@ -54,7 +54,6 @@ public class ProcedimientoPasoExamenMapper
         if (dto == null || destino == null) {
             return;
         }
-        destino.setFechaCreacion(dto.fechaCreacion());
         destino.setActivo(dto.activo());
         destino.setObservaciones(dto.observaciones());
         destino.setIdExamen(resolverExamen(dto.idExamen()));

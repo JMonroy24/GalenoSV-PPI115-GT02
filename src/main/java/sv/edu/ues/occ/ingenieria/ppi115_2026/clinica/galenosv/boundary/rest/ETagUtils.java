@@ -11,7 +11,8 @@ import java.util.HexFormat;
 import java.util.UUID;
 
 /**
- * Calcula ETags débiles a partir de una serialización JSON canónica del DTO.
+ * Calcula ETags a partir de una serialización JSON canónica del DTO.
+ * Los ETags débiles se usan en GET y los fuertes en actualizaciones.
  */
 public final class ETagUtils {
 
@@ -19,11 +20,15 @@ public final class ETagUtils {
     }
 
     public static String calcular(Object dto) {
+        return "W/" + calcularFuerte(dto);
+    }
+
+    public static String calcularFuerte(Object dto) {
         String json = serializar(dto);
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(json.getBytes(StandardCharsets.UTF_8));
-            return "W/\"" + HexFormat.of().formatHex(hash) + "\"";
+            return "\"" + HexFormat.of().formatHex(hash) + "\"";
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("No se pudo calcular el ETag.", e);
         }
@@ -42,7 +47,10 @@ public final class ETagUtils {
             if ("*".equals(valor)) {
                 return true;
             }
-            if (actual.equals(sinDebilidad(valor))) {
+            if (valor.startsWith("W/")) {
+                continue;
+            }
+            if (actual.equals(valor)) {
                 return true;
             }
         }

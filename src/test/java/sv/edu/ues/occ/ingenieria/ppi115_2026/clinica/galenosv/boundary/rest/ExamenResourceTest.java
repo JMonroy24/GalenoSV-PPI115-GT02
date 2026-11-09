@@ -76,14 +76,23 @@ class ExamenResourceTest {
         Examen entidad = new Examen(id);
         ExamenDTO dto = new ExamenDTO(null, "Actualizado", Boolean.TRUE, null);
         ExamenDTO esperada = new ExamenDTO(id, "Actualizado", Boolean.TRUE, null);
-        when(examenService.findById(id)).thenReturn(entidad);
         when(examenMapper.toDTO(entidad)).thenReturn(esperada);
+        when(examenService.actualizarSi(any(), any(), any())).thenAnswer(inv -> {
+            java.util.function.Predicate<Object> precondicion = inv.getArgument(1);
+            java.util.function.Consumer<Object> cambios = inv.getArgument(2);
+            if (!precondicion.test(entidad)) {
+                throw new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionFailedException("El ETag no coincide.");
+            }
+            cambios.accept(entidad);
+            return entidad;
+        });
 
-        ExamenDTO respuesta = examenResource.actualizar(id.toString(), sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcular(esperada), dto);
+        Response respuesta = examenResource.actualizar(id.toString(), sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcularFuerte(esperada), dto);
 
-        assertEquals(esperada, respuesta);
+        assertEquals(esperada, respuesta.getEntity());
+        assertEquals(sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcularFuerte(esperada), respuesta.getHeaderString("ETag"));
         verify(examenMapper).copiar(dto, entidad);
-        verify(examenService).actualizar(entidad);
+        verify(examenService).actualizarSi(any(), any(), any());
     }
 
     @Test

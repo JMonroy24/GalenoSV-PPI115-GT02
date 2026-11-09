@@ -54,7 +54,7 @@ class ExamenTipoExamenMapperTest {
         ExamenTipoExamen vuelta = mapper.toEntity(dto);
 
         assertEquals(id, vuelta.getIdExamenTipoExamen());
-        assertEquals(dto.fechaCreacion(), vuelta.getFechaCreacion());
+        assertNull(vuelta.getFechaCreacion());
         assertEquals(dto.observaciones(), vuelta.getObservaciones());
         assertSame(examen, vuelta.getIdExamen());
         assertSame(tipoExamen, vuelta.getIdTipoExamen());
@@ -64,9 +64,11 @@ class ExamenTipoExamenMapperTest {
     void copiarNoCambiaElIdDelDestino() {
         UUID idDestino = UUID.randomUUID();
         ExamenTipoExamen destino = new ExamenTipoExamen(idDestino);
+        Date fechaOriginal = new Date(1600000000000L);
+        destino.setFechaCreacion(fechaOriginal);
         Examen examen = new Examen(UUID.randomUUID());
         TipoExamen tipoExamen = new TipoExamen(UUID.randomUUID());
-        ExamenTipoExamenDTO dto = new ExamenTipoExamenDTO(UUID.randomUUID(), null,
+        ExamenTipoExamenDTO dto = new ExamenTipoExamenDTO(UUID.randomUUID(), new Date(1800000000000L),
                 "Nuevas observaciones", examen.getIdExamen(), tipoExamen.getIdTipoExamen());
         when(examenService.findById(examen.getIdExamen())).thenReturn(examen);
         when(tipoExamenService.findById(tipoExamen.getIdTipoExamen())).thenReturn(tipoExamen);
@@ -74,6 +76,7 @@ class ExamenTipoExamenMapperTest {
         mapper.copiar(dto, destino);
 
         assertEquals(idDestino, destino.getIdExamenTipoExamen());
+        assertEquals(fechaOriginal, destino.getFechaCreacion());
         assertSame(examen, destino.getIdExamen());
         assertSame(tipoExamen, destino.getIdTipoExamen());
     }

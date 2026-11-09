@@ -4,12 +4,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.Date;
 import java.util.UUID;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 public record MedioContactoDTO(
         UUID id,
         @NotBlank
         @Size(max = 2147483647)
         String valor,
+        @Schema(readOnly = true)
         Date fechaCreacion,
         UUID idPersona,
         UUID idTipoMedioContacto) {

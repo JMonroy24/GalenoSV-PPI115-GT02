@@ -78,14 +78,23 @@ class MedioContactoResourceTest {
         MedioContactoDTO dto = new MedioContactoDTO(null, "7777-7777", null, UUID.randomUUID(), UUID.randomUUID());
         MedioContactoDTO esperada = new MedioContactoDTO(id, "7777-7777", null,
                 dto.idPersona(), dto.idTipoMedioContacto());
-        when(medioContactoService.findById(id)).thenReturn(entidad);
         when(medioContactoMapper.toDTO(entidad)).thenReturn(esperada);
+        when(medioContactoService.actualizarSi(any(), any(), any())).thenAnswer(inv -> {
+            java.util.function.Predicate<Object> precondicion = inv.getArgument(1);
+            java.util.function.Consumer<Object> cambios = inv.getArgument(2);
+            if (!precondicion.test(entidad)) {
+                throw new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionFailedException("El ETag no coincide.");
+            }
+            cambios.accept(entidad);
+            return entidad;
+        });
 
-        MedioContactoDTO respuesta = medioContactoResource.actualizar(id.toString(), sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcular(esperada), dto);
+        Response respuesta = medioContactoResource.actualizar(id.toString(), sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcularFuerte(esperada), dto);
 
-        assertEquals(esperada, respuesta);
+        assertEquals(esperada, respuesta.getEntity());
+        assertEquals(sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcularFuerte(esperada), respuesta.getHeaderString("ETag"));
         verify(medioContactoMapper).copiar(dto, entidad);
-        verify(medioContactoService).actualizar(entidad);
+        verify(medioContactoService).actualizarSi(any(), any(), any());
     }
 
     @Test

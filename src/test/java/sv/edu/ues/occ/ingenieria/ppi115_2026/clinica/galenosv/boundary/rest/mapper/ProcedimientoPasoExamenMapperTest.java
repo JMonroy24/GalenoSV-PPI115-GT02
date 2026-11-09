@@ -56,7 +56,7 @@ class ProcedimientoPasoExamenMapperTest {
         ProcedimientoPasoExamen vuelta = mapper.toEntity(dto);
 
         assertEquals(id, vuelta.getIdProcedimientoPasoExamen());
-        assertEquals(dto.fechaCreacion(), vuelta.getFechaCreacion());
+        assertNull(vuelta.getFechaCreacion());
         assertEquals(dto.activo(), vuelta.getActivo());
         assertEquals(dto.observaciones(), vuelta.getObservaciones());
         assertSame(examen, vuelta.getIdExamen());
@@ -67,9 +67,11 @@ class ProcedimientoPasoExamenMapperTest {
     void copiarNoCambiaElIdDelDestino() {
         UUID idDestino = UUID.randomUUID();
         ProcedimientoPasoExamen destino = new ProcedimientoPasoExamen(idDestino);
+        Date fechaOriginal = new Date(1600000000000L);
+        destino.setFechaCreacion(fechaOriginal);
         Examen examen = new Examen(UUID.randomUUID());
         ProcedimientoPaso paso = new ProcedimientoPaso(UUID.randomUUID());
-        ProcedimientoPasoExamenDTO dto = new ProcedimientoPasoExamenDTO(UUID.randomUUID(), null,
+        ProcedimientoPasoExamenDTO dto = new ProcedimientoPasoExamenDTO(UUID.randomUUID(), new Date(1800000000000L),
                 Boolean.FALSE, "Nuevas observaciones", examen.getIdExamen(), paso.getIdProcedimientoPaso());
         when(examenService.findById(examen.getIdExamen())).thenReturn(examen);
         when(procedimientoPasoService.findById(paso.getIdProcedimientoPaso())).thenReturn(paso);
@@ -77,6 +79,7 @@ class ProcedimientoPasoExamenMapperTest {
         mapper.copiar(dto, destino);
 
         assertEquals(idDestino, destino.getIdProcedimientoPasoExamen());
+        assertEquals(fechaOriginal, destino.getFechaCreacion());
         assertEquals(Boolean.FALSE, destino.getActivo());
         assertEquals("Nuevas observaciones", destino.getObservaciones());
         assertSame(examen, destino.getIdExamen());
