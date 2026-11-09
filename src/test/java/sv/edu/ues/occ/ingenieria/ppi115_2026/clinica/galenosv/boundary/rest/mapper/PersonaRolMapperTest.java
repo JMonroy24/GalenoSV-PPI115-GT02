@@ -61,7 +61,7 @@ class PersonaRolMapperTest {
         PersonaRol vuelta = mapper.toEntity(dto);
 
         assertEquals(id, vuelta.getIdPersonaRol());
-        assertEquals(dto.fechaCreacion(), vuelta.getFechaCreacion());
+        assertNull(vuelta.getFechaCreacion());
         assertSame(clinica, vuelta.getIdClinica());
         assertSame(persona, vuelta.getIdPersona());
         assertSame(rol, vuelta.getIdRol());
@@ -71,10 +71,12 @@ class PersonaRolMapperTest {
     void copiarNoCambiaElIdDelDestino() {
         UUID idDestino = UUID.randomUUID();
         PersonaRol destino = new PersonaRol(idDestino);
+        Date fechaOriginal = new Date(1600000000000L);
+        destino.setFechaCreacion(fechaOriginal);
         Clinica clinica = new Clinica(UUID.randomUUID());
         Persona persona = new Persona(UUID.randomUUID());
         Rol rol = new Rol(UUID.randomUUID());
-        PersonaRolDTO dto = new PersonaRolDTO(UUID.randomUUID(), null,
+        PersonaRolDTO dto = new PersonaRolDTO(UUID.randomUUID(), new Date(1800000000000L),
                 clinica.getIdClinica(), persona.getIdPersona(), rol.getIdRol());
         when(clinicaService.findById(clinica.getIdClinica())).thenReturn(clinica);
         when(personaService.findById(persona.getIdPersona())).thenReturn(persona);
@@ -83,6 +85,7 @@ class PersonaRolMapperTest {
         mapper.copiar(dto, destino);
 
         assertEquals(idDestino, destino.getIdPersonaRol());
+        assertEquals(fechaOriginal, destino.getFechaCreacion());
         assertSame(clinica, destino.getIdClinica());
         assertSame(persona, destino.getIdPersona());
         assertSame(rol, destino.getIdRol());

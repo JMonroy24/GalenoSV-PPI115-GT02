@@ -55,7 +55,6 @@ public class PersonaRolMapper implements EntityMapper<PersonaRol, PersonaRolDTO>
         if (dto == null || destino == null) {
             return;
         }
-        destino.setFechaCreacion(dto.fechaCreacion());
         destino.setIdClinica(resolverClinica(dto.idClinica()));
         destino.setIdPersona(resolverPersona(dto.idPersona()));
         destino.setIdRol(resolverRol(dto.idRol()));

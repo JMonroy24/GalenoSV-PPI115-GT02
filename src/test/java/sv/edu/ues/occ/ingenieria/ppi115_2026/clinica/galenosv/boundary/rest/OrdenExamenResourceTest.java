@@ -79,14 +79,23 @@ class OrdenExamenResourceTest {
         OrdenExamenDTO dto = new OrdenExamenDTO(null, null, "Indicaciones", UUID.randomUUID());
         OrdenExamenDTO esperada = new OrdenExamenDTO(id,
                 dto.fechaCreacion(), dto.indicaciones(), dto.idConsultaProcedimientoPaso());
-        when(ordenExamenService.findById(id)).thenReturn(entidad);
         when(ordenExamenMapper.toDTO(entidad)).thenReturn(esperada);
+        when(ordenExamenService.actualizarSi(any(), any(), any())).thenAnswer(inv -> {
+            java.util.function.Predicate<Object> precondicion = inv.getArgument(1);
+            java.util.function.Consumer<Object> cambios = inv.getArgument(2);
+            if (!precondicion.test(entidad)) {
+                throw new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionFailedException("El ETag no coincide.");
+            }
+            cambios.accept(entidad);
+            return entidad;
+        });
 
-        OrdenExamenDTO respuesta = ordenExamenResource.actualizar(id.toString(), sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcular(esperada), dto);
+        Response respuesta = ordenExamenResource.actualizar(id.toString(), sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcularFuerte(esperada), dto);
 
-        assertEquals(esperada, respuesta);
+        assertEquals(esperada, respuesta.getEntity());
+        assertEquals(sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcularFuerte(esperada), respuesta.getHeaderString("ETag"));
         verify(ordenExamenMapper).copiar(dto, entidad);
-        verify(ordenExamenService).actualizar(entidad);
+        verify(ordenExamenService).actualizarSi(any(), any(), any());
     }
 
     @Test

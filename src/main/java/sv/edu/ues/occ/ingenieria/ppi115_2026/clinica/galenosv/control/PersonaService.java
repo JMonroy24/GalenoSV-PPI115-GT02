@@ -30,6 +30,9 @@ public class PersonaService extends DefaultService<Persona, UUID> implements Ser
 
     @Override
     protected void validar(Persona r, boolean nuevo) {
+        if (nuevo && r.getFechaCreacion() == null) {
+            r.setFechaCreacion(new Date());
+        }
         r.setNombres(ValidadorComun.textoObligatorio(r.getNombres(), "El campo Nombres"));
         r.setApellidos(ValidadorComun.textoObligatorio(r.getApellidos(), "El campo Apellidos"));
         if (r.getFechaNacimiento() != null && !r.getFechaNacimiento().before(getHoy())) {

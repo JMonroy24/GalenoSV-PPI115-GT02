@@ -78,14 +78,23 @@ class PersonaRolResourceTest {
         PersonaRolDTO dto = new PersonaRolDTO(null, null, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
         PersonaRolDTO esperada = new PersonaRolDTO(id, null,
                 dto.idClinica(), dto.idPersona(), dto.idRol());
-        when(personaRolService.findById(id)).thenReturn(entidad);
         when(personaRolMapper.toDTO(entidad)).thenReturn(esperada);
+        when(personaRolService.actualizarSi(any(), any(), any())).thenAnswer(inv -> {
+            java.util.function.Predicate<Object> precondicion = inv.getArgument(1);
+            java.util.function.Consumer<Object> cambios = inv.getArgument(2);
+            if (!precondicion.test(entidad)) {
+                throw new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionFailedException("El ETag no coincide.");
+            }
+            cambios.accept(entidad);
+            return entidad;
+        });
 
-        PersonaRolDTO respuesta = personaRolResource.actualizar(id.toString(), sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcular(esperada), dto);
+        Response respuesta = personaRolResource.actualizar(id.toString(), sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcularFuerte(esperada), dto);
 
-        assertEquals(esperada, respuesta);
+        assertEquals(esperada, respuesta.getEntity());
+        assertEquals(sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcularFuerte(esperada), respuesta.getHeaderString("ETag"));
         verify(personaRolMapper).copiar(dto, entidad);
-        verify(personaRolService).actualizar(entidad);
+        verify(personaRolService).actualizarSi(any(), any(), any());
     }
 
     @Test

@@ -40,6 +40,5 @@ public class PersonaMapper implements EntityMapper<Persona, PersonaDTO> {
         destino.setNombres(dto.nombres());
         destino.setApellidos(dto.apellidos());
         destino.setFechaNacimiento(dto.fechaNacimiento());
-        destino.setFechaCreacion(dto.fechaCreacion());
     }
 }

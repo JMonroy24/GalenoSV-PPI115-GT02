@@ -46,7 +46,6 @@ public class ExamenResultadoMapper implements EntityMapper<ExamenResultado, Exam
         if (dto == null || destino == null) {
             return;
         }
-        destino.setFechaCreacion(dto.fechaCreacion());
         destino.setResultado(dto.resultado());
         destino.setInterpretacion(dto.interpretacion());
         destino.setRutaAtestado(dto.rutaAtestado());

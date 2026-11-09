@@ -51,7 +51,6 @@ public class MedioContactoMapper implements EntityMapper<MedioContacto, MedioCon
             return;
         }
         destino.setValor(dto.valor());
-        destino.setFechaCreacion(dto.fechaCreacion());
         destino.setIdPersona(resolverPersona(dto.idPersona()));
         destino.setIdTipoMedioContacto(resolverTipoMedioContacto(dto.idTipoMedioContacto()));
     }

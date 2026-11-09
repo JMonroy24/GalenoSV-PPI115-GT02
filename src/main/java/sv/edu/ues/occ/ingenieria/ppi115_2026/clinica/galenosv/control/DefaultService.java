@@ -1,8 +1,12 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 
 import jakarta.transaction.Transactional;
+import jakarta.ws.rs.NotFoundException;
 import java.io.Serializable;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionFailedException;
 
 /**
  * Base genérica para servicios de la capa de control.
@@ -34,6 +38,22 @@ public abstract class DefaultService<T, ID extends Serializable> implements DAOI
     public void actualizar(T e) {
         validar(e, false);
         getDAO().update(e);
+    }
+
+    @Transactional
+    public T actualizarSi(ID id, Predicate<T> precondicion, Consumer<T> cambios) {
+        T entidad = findById(id);
+        if (entidad == null) {
+            throw new NotFoundException("No existe el recurso solicitado.");
+        }
+        if (!precondicion.test(entidad)) {
+            throw new PreconditionFailedException(
+                    "El ETag enviado no coincide con el estado actual del recurso.");
+        }
+        cambios.accept(entidad);
+        validar(entidad, false);
+        getDAO().update(entidad);
+        return entidad;
     }
 
     @Transactional

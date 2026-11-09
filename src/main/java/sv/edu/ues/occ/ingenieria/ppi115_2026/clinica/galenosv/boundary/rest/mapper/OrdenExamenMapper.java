@@ -46,7 +46,6 @@ public class OrdenExamenMapper implements EntityMapper<OrdenExamen, OrdenExamenD
         if (dto == null || destino == null) {
             return;
         }
-        destino.setFechaCreacion(dto.fechaCreacion());
         destino.setIndicaciones(dto.indicaciones());
         destino.setIdConsultaProcedimientoPaso(resolverPaso(dto.idConsultaProcedimientoPaso()));
     }

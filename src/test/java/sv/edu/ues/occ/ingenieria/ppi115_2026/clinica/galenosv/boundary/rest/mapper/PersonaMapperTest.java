@@ -35,18 +35,21 @@ class PersonaMapperTest {
         assertEquals(dto.nombres(), vuelta.getNombres());
         assertEquals(dto.apellidos(), vuelta.getApellidos());
         assertEquals(dto.fechaNacimiento(), vuelta.getFechaNacimiento());
-        assertEquals(dto.fechaCreacion(), vuelta.getFechaCreacion());
+        assertNull(vuelta.getFechaCreacion());
     }
 
     @Test
     void copiarNoCambiaElIdDelDestino() {
         UUID idDestino = UUID.randomUUID();
         Persona destino = new Persona(idDestino);
-        PersonaDTO dto = new PersonaDTO(UUID.randomUUID(), "Luis", "Gómez", null, null);
+        Date fechaOriginal = new Date(1600000000000L);
+        destino.setFechaCreacion(fechaOriginal);
+        PersonaDTO dto = new PersonaDTO(UUID.randomUUID(), "Luis", "Gómez", null, new Date(1800000000000L));
 
         mapper.copiar(dto, destino);
 
         assertEquals(idDestino, destino.getIdPersona());
+        assertEquals(fechaOriginal, destino.getFechaCreacion());
         assertEquals("Luis", destino.getNombres());
         assertEquals("Gómez", destino.getApellidos());
     }

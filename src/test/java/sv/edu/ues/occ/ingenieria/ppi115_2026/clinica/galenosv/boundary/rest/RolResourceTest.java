@@ -76,14 +76,23 @@ class RolResourceTest {
         Rol entidad = new Rol(id);
         RolDTO dto = new RolDTO(null, "Actualizado", Boolean.TRUE, null);
         RolDTO esperada = new RolDTO(id, "Actualizado", Boolean.TRUE, null);
-        when(rolService.findById(id)).thenReturn(entidad);
         when(rolMapper.toDTO(entidad)).thenReturn(esperada);
+        when(rolService.actualizarSi(any(), any(), any())).thenAnswer(inv -> {
+            java.util.function.Predicate<Object> precondicion = inv.getArgument(1);
+            java.util.function.Consumer<Object> cambios = inv.getArgument(2);
+            if (!precondicion.test(entidad)) {
+                throw new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionFailedException("El ETag no coincide.");
+            }
+            cambios.accept(entidad);
+            return entidad;
+        });
 
-        RolDTO respuesta = rolResource.actualizar(id.toString(), sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcular(esperada), dto);
+        Response respuesta = rolResource.actualizar(id.toString(), sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcularFuerte(esperada), dto);
 
-        assertEquals(esperada, respuesta);
+        assertEquals(esperada, respuesta.getEntity());
+        assertEquals(sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcularFuerte(esperada), respuesta.getHeaderString("ETag"));
         verify(rolMapper).copiar(dto, entidad);
-        verify(rolService).actualizar(entidad);
+        verify(rolService).actualizarSi(any(), any(), any());
     }
 
     @Test

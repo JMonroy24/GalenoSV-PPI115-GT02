@@ -1,7 +1,5 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -57,19 +55,6 @@ public class DocumentoModel extends ModelTransaccional<Documento, UUID> implemen
 
     public void setDocumentoService(DocumentoService documentoService) {
         this.documentoService = documentoService;
-    }
-
-    @Override
-    protected void validarNegocio(Documento registro) {
-        registro.setValor(ValidadorComun.textoObligatorio(registro.getValor(), "El documento"));
-        var persona = ValidadorComun.requerido(registro.getIdPersona(), "Seleccione una persona.");
-        var tipo = ValidadorComun.requerido(registro.getIdTipoDocumento(), "Seleccione un tipo de documento.");
-        ValidadorComun.requerido(tipo.getIdTipoDocumento(), "Seleccione un tipo de documento válido.");
-        ValidadorComun.activo(tipo.getActivo(), "El tipo de documento");
-        ValidadorComun.formato(registro.getValor(), tipo.getExpresionRegular(), tipo.getIndicaciones());
-        if (documentoService.existePersonaTipoValor(persona.getIdPersona(), tipo.getIdTipoDocumento(), registro.getValor(), registro.getIdDocumento())) {
-            throw new ValidacionNegocioException("La persona ya tiene un documento de este tipo con el mismo valor.");
-        }
     }
 
 }

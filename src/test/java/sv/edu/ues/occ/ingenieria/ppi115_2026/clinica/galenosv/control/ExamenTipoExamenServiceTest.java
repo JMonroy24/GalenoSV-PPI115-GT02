@@ -1,5 +1,6 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +52,28 @@ class ExamenTipoExamenServiceTest {
         ExamenTipoExamen ete = new ExamenTipoExamen(UUID.randomUUID());
         examenTipoExamenService.actualizar(ete);
 
+        verify(asignacionService).guardarTipo(ete, false);
+    }
+
+    @Test
+    void crearAsignaFechaDeCreacionCuandoNoViene() {
+        ExamenTipoExamen ete = new ExamenTipoExamen(UUID.randomUUID());
+
+        examenTipoExamenService.crear(ete);
+
+        assertNotNull(ete.getFechaCreacion());
+        verify(asignacionService).guardarTipo(ete, true);
+    }
+
+    @Test
+    void actualizarNoModificaFechaDeCreacion() {
+        Date fechaOriginal = new Date(1600000000000L);
+        ExamenTipoExamen ete = new ExamenTipoExamen(UUID.randomUUID());
+        ete.setFechaCreacion(fechaOriginal);
+
+        examenTipoExamenService.actualizar(ete);
+
+        assertEquals(fechaOriginal, ete.getFechaCreacion());
         verify(asignacionService).guardarTipo(ete, false);
     }
 

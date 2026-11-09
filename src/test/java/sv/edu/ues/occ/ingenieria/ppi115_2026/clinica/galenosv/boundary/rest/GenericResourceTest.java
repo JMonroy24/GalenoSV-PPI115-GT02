@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionFailedException;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionRequiredException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DefaultDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DefaultService;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -69,10 +70,30 @@ class GenericResourceTest {
         }
     }
 
+    static class TestService extends DefaultService<Entidad, UUID> {
+
+        private final DefaultDAO<Entidad, UUID> dao;
+
+        TestService(DefaultDAO<Entidad, UUID> dao) {
+            this.dao = dao;
+        }
+
+        @Override
+        protected DefaultDAO<Entidad, UUID> getDAO() {
+            return dao;
+        }
+    }
+
     private DefaultService<Entidad, UUID> serviceMock() {
         @SuppressWarnings("unchecked")
         DefaultService<Entidad, UUID> service = mock(DefaultService.class);
         return service;
+    }
+
+    private DefaultDAO<Entidad, UUID> daoMock() {
+        @SuppressWarnings("unchecked")
+        DefaultDAO<Entidad, UUID> dao = mock(DefaultDAO.class);
+        return dao;
     }
 
     @SuppressWarnings("unchecked")
@@ -99,52 +120,58 @@ class GenericResourceTest {
 
     @Test
     void putSinIfMatchLanzaPreconditionRequired() {
-        DefaultService<Entidad, UUID> service = serviceMock();
+        DefaultDAO<Entidad, UUID> dao = daoMock();
+        DefaultService<Entidad, UUID> service = new TestService(dao);
         EntityMapper<Entidad, DTO> mapper = mapperMock();
         Entidad entidad = new Entidad(ID, "Original");
-        when(service.findById(ID)).thenReturn(entidad);
+        when(dao.findById(ID)).thenReturn(entidad);
 
         TestResource resource = new TestResource(service, mapper);
 
         assertThrows(PreconditionRequiredException.class,
                 () -> resource.actualizar(ID.toString(), null, new DTO(null, "Nuevo")));
         verify(mapper, never()).copiar(any(), any());
-        verify(service, never()).actualizar(any());
+        verify(dao, never()).update(any());
     }
 
     @Test
     void putConIfMatchIncorrectoLanzaPreconditionFailed() {
-        DefaultService<Entidad, UUID> service = serviceMock();
+        DefaultDAO<Entidad, UUID> dao = daoMock();
+        DefaultService<Entidad, UUID> service = new TestService(dao);
         EntityMapper<Entidad, DTO> mapper = mapperMock();
         Entidad entidad = new Entidad(ID, "Original");
         DTO actual = new DTO(ID, "Original");
-        when(service.findById(ID)).thenReturn(entidad);
+        when(dao.findById(ID)).thenReturn(entidad);
         when(mapper.toDTO(entidad)).thenReturn(actual);
 
         TestResource resource = new TestResource(service, mapper);
-        String etagAjeno = ETagUtils.calcular(new DTO(ID, "Otro estado"));
+        String etagAjeno = ETagUtils.calcularFuerte(new DTO(ID, "Otro estado"));
 
         assertThrows(PreconditionFailedException.class,
                 () -> resource.actualizar(ID.toString(), etagAjeno, new DTO(null, "Nuevo")));
         verify(mapper, never()).copiar(any(), any());
-        verify(service, never()).actualizar(any());
+        verify(dao, never()).update(any());
     }
 
     @Test
     void putConIfMatchCorrectoActualiza() {
-        DefaultService<Entidad, UUID> service = serviceMock();
+        DefaultDAO<Entidad, UUID> dao = daoMock();
+        DefaultService<Entidad, UUID> service = new TestService(dao);
         EntityMapper<Entidad, DTO> mapper = mapperMock();
         Entidad entidad = new Entidad(ID, "Original");
         DTO actual = new DTO(ID, "Original");
         DTO cambios = new DTO(null, "Nuevo");
-        when(service.findById(ID)).thenReturn(entidad);
+        when(dao.findById(ID)).thenReturn(entidad);
         when(mapper.toDTO(entidad)).thenReturn(actual);
 
         TestResource resource = new TestResource(service, mapper);
-        DTO respuesta = resource.actualizar(ID.toString(), ETagUtils.calcular(actual), cambios);
+        Response respuesta = resource.actualizar(ID.toString(), ETagUtils.calcularFuerte(actual), cambios);
 
-        assertSame(actual, respuesta);
+        assertEquals(200, respuesta.getStatus());
+        assertSame(actual, respuesta.getEntity());
+        assertEquals(ETagUtils.calcularFuerte(actual), respuesta.getHeaderString("ETag"));
+        assertFalse(respuesta.getHeaderString("ETag").startsWith("W/"));
         verify(mapper).copiar(cambios, entidad);
-        verify(service).actualizar(entidad);
+        verify(dao).update(entidad);
     }
 }

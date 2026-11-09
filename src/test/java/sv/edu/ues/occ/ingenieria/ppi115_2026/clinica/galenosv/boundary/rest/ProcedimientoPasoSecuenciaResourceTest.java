@@ -81,14 +81,23 @@ class ProcedimientoPasoSecuenciaResourceTest {
                 UUID.randomUUID(), "SIGUIENTE", UUID.randomUUID());
         ProcedimientoPasoSecuenciaDTO esperada = new ProcedimientoPasoSecuenciaDTO(id,
                 dto.idProcedimientoPasoReferencia(), dto.tipoSecuencia(), dto.idProcedimientoPaso());
-        when(procedimientoPasoSecuenciaService.findById(id)).thenReturn(entidad);
         when(procedimientoPasoSecuenciaMapper.toDTO(entidad)).thenReturn(esperada);
+        when(procedimientoPasoSecuenciaService.actualizarSi(any(), any(), any())).thenAnswer(inv -> {
+            java.util.function.Predicate<Object> precondicion = inv.getArgument(1);
+            java.util.function.Consumer<Object> cambios = inv.getArgument(2);
+            if (!precondicion.test(entidad)) {
+                throw new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionFailedException("El ETag no coincide.");
+            }
+            cambios.accept(entidad);
+            return entidad;
+        });
 
-        ProcedimientoPasoSecuenciaDTO respuesta = procedimientoPasoSecuenciaResource.actualizar(id.toString(), sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcular(esperada), dto);
+        Response respuesta = procedimientoPasoSecuenciaResource.actualizar(id.toString(), sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcularFuerte(esperada), dto);
 
-        assertEquals(esperada, respuesta);
+        assertEquals(esperada, respuesta.getEntity());
+        assertEquals(sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcularFuerte(esperada), respuesta.getHeaderString("ETag"));
         verify(procedimientoPasoSecuenciaMapper).copiar(dto, entidad);
-        verify(procedimientoPasoSecuenciaService).actualizar(entidad);
+        verify(procedimientoPasoSecuenciaService).actualizarSi(any(), any(), any());
     }
 
     @Test
