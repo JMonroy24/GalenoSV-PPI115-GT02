@@ -1,8 +1,6 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 
-import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.LockModeType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
@@ -64,12 +62,6 @@ public abstract class DefaultDAO<T, ID extends Serializable> implements DAOInter
     @Override
     public T findById(ID id) {
         return getEntityManager().find(entityClass, Objects.requireNonNull(id, "id"));
-    }
-
-    /** Lee el estado de la fila con un bloqueo de escritura hasta cerrar la transacción. */
-    public T findByIdParaActualizar(ID id) {
-        return getEntityManager().find(entityClass, Objects.requireNonNull(id, "id"),
-                LockModeType.PESSIMISTIC_WRITE, Map.of("jakarta.persistence.cache.storeMode", CacheStoreMode.REFRESH));
     }
 
     @Override

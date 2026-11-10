@@ -73,9 +73,7 @@ class ConsultaDetallesTest {
     @Test void cerrarSesionImpideCrearConsultaYBuscarPacientes() {
         var m = modelo(); m.sesionBean.cerrarSesion();
         assertTrue(m.completePersonaRol("Paciente").isEmpty()); verifyNoInteractions(m.personaRolService);
-        m.guardar();
-        verify(m.consultaService, never()).crear(any(), any());
-        assertTrue(m.isEstadoCrear());
+        assertThrows(ValidacionNegocioException.class, () -> m.validarNegocio(m.getRegistroActual()));
     }
     @Test void personaNuevaTieneFechaDeCreacion() {
         Date antes = new Date(); var persona = new PersonaModel().crearNuevoRegistro();

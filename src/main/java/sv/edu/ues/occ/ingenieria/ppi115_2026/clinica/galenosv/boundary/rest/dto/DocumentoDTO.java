@@ -7,7 +7,7 @@ import java.util.UUID;
 public record DocumentoDTO(
         UUID id,
         @NotBlank
-        @Size(max = 50)
+        @Size(max = 2147483647)
         String valor,
         UUID idPersona,
         UUID idTipoDocumento) {

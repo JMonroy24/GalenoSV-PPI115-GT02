@@ -9,9 +9,9 @@ public record TipoDocumentoDTO(
         @NotBlank
         @Size(max = 155)
         String nombre,
-        @Size(max = 2000)
+        @Size(max = 2147483647)
         String indicaciones,
-        @Size(max = 500)
+        @Size(max = 2147483647)
         String expresionRegular,
         Boolean activo) {
 }

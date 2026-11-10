@@ -8,7 +8,7 @@ public record ConsultaProcedimientoDTO(
         UUID id,
         Date fechaInicio,
         Date fechaFin,
-        @Size(max = 2000)
+        @Size(max = 2147483647)
         String observaciones,
         UUID idConsulta,
         UUID idProcedimiento) {

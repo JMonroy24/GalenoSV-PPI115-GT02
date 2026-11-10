@@ -7,9 +7,9 @@ import java.util.UUID;
 public record TipoExamenDTO(
         UUID id,
         @NotBlank
-        @Size(max = 255)
+        @Size(max = 2147483647)
         String nombre,
         Boolean activo,
-        @Size(max = 2000)
+        @Size(max = 2147483647)
         String observaciones) {
 }

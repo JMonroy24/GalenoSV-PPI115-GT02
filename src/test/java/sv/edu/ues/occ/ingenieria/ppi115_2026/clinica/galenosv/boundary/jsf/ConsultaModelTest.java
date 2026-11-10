@@ -86,7 +86,7 @@ public class ConsultaModelTest {
         consultaModel.getRegistroActual().setIdPersonaRol(paciente);
         consultaModel.guardar();
 
-        verify(consultaService).crear(any(Consulta.class), eq(consultaModel.sesionBean.getClinicaActual().getIdClinica()));
+        verify(consultaService).create(any(Consulta.class));
         assertEquals(Estado.NINGUNO, consultaModel.getEstado());
         assertNull(consultaModel.getRegistroActual());
     }
@@ -103,7 +103,7 @@ public class ConsultaModelTest {
         consultaModel.getRegistroActual().setIdPersonaRol(paciente);
         consultaModel.guardar();
 
-        verify(consultaService).actualizar(c, consultaModel.sesionBean.getClinicaActual().getIdClinica());
+        verify(consultaService).update(c);
         assertEquals(Estado.NINGUNO, consultaModel.getEstado());
     }
 

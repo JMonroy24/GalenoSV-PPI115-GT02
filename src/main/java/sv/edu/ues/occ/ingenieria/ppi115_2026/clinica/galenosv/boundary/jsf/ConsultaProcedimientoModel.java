@@ -1,6 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.context.FacesContext;
 import jakarta.faces.view.ViewScoped;
@@ -87,6 +88,19 @@ public class ConsultaProcedimientoModel extends ModelTransaccional<ConsultaProce
 
     public Consulta getConsultaPreseleccionada() {
         return consultaPreseleccionada;
+    }
+
+    @Override
+    protected void validarNegocio(ConsultaProcedimiento registro) {
+        ValidadorComun.rangoFechas(registro.getFechaInicio(), registro.getFechaFin());
+        if (registro.getIdConsulta() != null) {
+            var consulta = registro.getIdConsulta();
+            ValidadorComun.dentroDelPeriodo(registro.getFechaInicio(), registro.getFechaFin(),
+                    consulta.getFechaInicio(), consulta.getFechaFin());
+        }
+        if (registro.getIdProcedimiento() != null) {
+            ValidadorComun.activo(registro.getIdProcedimiento().getActivo(), "El procedimiento");
+        }
     }
 
 }

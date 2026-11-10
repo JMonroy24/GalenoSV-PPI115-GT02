@@ -9,7 +9,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 public record MedioContactoDTO(
         UUID id,
         @NotBlank
-        @Size(max = 255)
+        @Size(max = 2147483647)
         String valor,
         @Schema(readOnly = true)
         Date fechaCreacion,

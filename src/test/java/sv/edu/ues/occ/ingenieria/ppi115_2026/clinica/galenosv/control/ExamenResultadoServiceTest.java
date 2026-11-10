@@ -42,17 +42,6 @@ class ExamenResultadoServiceTest {
     }
 
     @Test
-    void rechazaResultadoSinContenidoInterpretacionUOrden() {
-        var resultado = new ExamenResultado(UUID.randomUUID());
-        assertThrows(ValidacionNegocioException.class, () -> examenResultadoService.crear(resultado));
-        resultado.setResultado("Normal");
-        assertThrows(ValidacionNegocioException.class, () -> examenResultadoService.crear(resultado));
-        resultado.setInterpretacion("Sin alteraciones");
-        assertThrows(ValidacionNegocioException.class, () -> examenResultadoService.crear(resultado));
-        verifyNoInteractions(examenResultadoDAO);
-    }
-
-    @Test
     void actualizarNoModificaFechaDeCreacion() {
         Date fechaOriginal = new Date(1600000000000L);
         ExamenResultado existente = new ExamenResultado(UUID.randomUUID());

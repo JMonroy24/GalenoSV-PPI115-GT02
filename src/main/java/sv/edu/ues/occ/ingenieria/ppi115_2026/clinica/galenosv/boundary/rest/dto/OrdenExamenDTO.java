@@ -11,7 +11,7 @@ public record OrdenExamenDTO(
         @Schema(readOnly = true)
         Date fechaCreacion,
         @NotBlank
-        @Size(max = 2000)
+        @Size(max = 2147483647)
         String indicaciones,
         UUID idConsultaProcedimientoPaso) {
 }

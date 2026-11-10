@@ -27,6 +27,8 @@ public class AsignacionService {
     @PersistenceContext(unitName = "GalenoSV_PU")
     protected EntityManager em;
     @Inject protected ExamenTipoExamenDAO examenTipoExamenDAO;
+    @Inject protected ProcedimientoPasoExamenDAO procedimientoPasoExamenDAO;
+    @Inject protected ProcedimientoPasoSecuenciaDAO procedimientoPasoSecuenciaDAO;
 
     @Transactional
     public void guardarTipo(ExamenTipoExamen registro, boolean nuevo) {
@@ -57,14 +59,14 @@ public class AsignacionService {
         paso = bloquear(ProcedimientoPaso.class, paso.getIdProcedimientoPaso(), "El paso ya no existe.");
         examen = existente(Examen.class, examen.getIdExamen(), "El examen ya no existe.");
         ValidadorComun.activo(examen.getActivo(), "El examen");
-        if (examenDAO.existePasoExamen(paso.getIdProcedimientoPaso(), examen.getIdExamen(),
+        if (procedimientoPasoExamenDAO.existePasoExamen(paso.getIdProcedimientoPaso(), examen.getIdExamen(),
                 nuevo ? null : registro.getIdProcedimientoPasoExamen())) {
             throw new ValidacionNegocioException("Este examen ya está asignado al paso.");
         }
         registro.setIdProcedimientoPaso(paso);
         registro.setIdExamen(examen);
-        if (nuevo) examenDAO.create(registro);
-        else examenDAO.update(registro);
+        if (nuevo) procedimientoPasoExamenDAO.create(registro);
+        else procedimientoPasoExamenDAO.update(registro);
         em.flush();
     }
 
@@ -89,14 +91,14 @@ public class AsignacionService {
         UUID idOrigen = origen.getIdProcedimientoPaso();
         UUID idDestino = destino.getIdProcedimientoPaso();
         UUID excluir = nuevo ? null : registro.getIdProcedimientoPasoSecuencia();
-        if (secuenciaDAO.existeSecuencia(idOrigen, idDestino, registro.getTipoSecuencia(), excluir)) {
+        if (procedimientoPasoSecuenciaDAO.existeSecuencia(idOrigen, idDestino, registro.getTipoSecuencia(), excluir)) {
             throw new ValidacionNegocioException("Esta relación de secuencia ya existe.");
         }
         validarSinCiclo(idOrigen, idDestino, excluir,
-                secuenciaDAO.findByProcedimiento(procedimiento.getIdProcedimiento()));
+                procedimientoPasoSecuenciaDAO.findByProcedimiento(procedimiento.getIdProcedimiento()));
         registro.setIdProcedimientoPaso(origen);
-        if (nuevo) secuenciaDAO.create(registro);
-        else secuenciaDAO.update(registro);
+        if (nuevo) procedimientoPasoSecuenciaDAO.create(registro);
+        else procedimientoPasoSecuenciaDAO.update(registro);
         em.flush();
     }
 
@@ -153,17 +155,17 @@ public class AsignacionService {
     }
 
     @Transactional
-    public void guardarPaso(ProcedimientoPaso paso, boolean nuevo, ProcedimientoPaso padre) {
-        ValidadorComun.requerido(paso, "Seleccione un paso.");
-        paso.setNombre(ValidadorComun.textoObligatorio(paso.getNombre(), "El nombre del paso"));
-        persistirPaso(paso, nuevo, padre);
-        em.flush();
-    }
-
-    @Transactional
     public void guardarPaso(ProcedimientoPaso paso, boolean nuevo, ProcedimientoPaso padre,
                             List<ProcedimientoPasoExamen> examenes) {
-        persistirPaso(paso, nuevo, padre);
+        if (nuevo) pasoDAO.create(paso);
+        else pasoDAO.update(paso);
+        if (nuevo && padre != null) {
+            ProcedimientoPasoSecuencia relacion = new ProcedimientoPasoSecuencia(UUID.randomUUID());
+            relacion.setIdProcedimientoPaso(padre);
+            relacion.setIdProcedimientoPasoReferencia(paso.getIdProcedimientoPaso());
+            relacion.setTipoSecuencia("SIGUIENTE");
+            secuenciaDAO.create(relacion);
+        }
         Set<UUID> retenidos = examenes.stream().map(ProcedimientoPasoExamen::getIdProcedimientoPasoExamen)
                 .collect(Collectors.toSet());
         if (!nuevo) {
@@ -175,21 +177,6 @@ public class AsignacionService {
         em.flush();
     }
 
-    private void persistirPaso(ProcedimientoPaso paso, boolean nuevo, ProcedimientoPaso padre) {
-        if (!nuevo) {
-            pasoDAO.update(paso);
-            return;
-        }
-        pasoDAO.create(paso);
-        if (padre != null) {
-            ProcedimientoPasoSecuencia relacion = new ProcedimientoPasoSecuencia(UUID.randomUUID());
-            relacion.setIdProcedimientoPaso(padre);
-            relacion.setIdProcedimientoPasoReferencia(paso.getIdProcedimientoPaso());
-            relacion.setTipoSecuencia("SIGUIENTE");
-            secuenciaDAO.create(relacion);
-        }
-    }
-
     @Transactional
     public void guardarExamen(ProcedimientoPasoExamen examen) {
         examenDAO.update(examen);
@@ -197,13 +184,11 @@ public class AsignacionService {
 
     @Transactional
     public void eliminarPaso(ProcedimientoPaso paso) {
-        ValidadorComun.requerido(paso, "Seleccione un paso.");
-        var procedimiento = ValidadorComun.requerido(paso.getIdProcedimiento(),
-                "El paso no pertenece a un procedimiento.");
-        List<ProcedimientoPasoSecuencia> relaciones = secuenciaDAO.findByProcedimiento(procedimiento.getIdProcedimiento());
+        List<ProcedimientoPasoSecuencia> relaciones = secuenciaDAO.findByProcedimiento(
+                paso.getIdProcedimiento().getIdProcedimiento());
         if (relaciones.stream().anyMatch(s -> "SIGUIENTE".equals(s.getTipoSecuencia())
                 && paso.equals(s.getIdProcedimientoPaso()))) {
-            throw new ValidacionNegocioException("No se puede eliminar un paso con hijos.");
+            throw new IllegalArgumentException("No se puede eliminar un paso con hijos.");
         }
         for (ProcedimientoPasoSecuencia relacion : relaciones) {
             if (paso.getIdProcedimientoPaso().equals(relacion.getIdProcedimientoPasoReferencia())

@@ -2,7 +2,6 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
@@ -16,15 +15,11 @@ public class ProcedimientoPasoService extends DefaultService<ProcedimientoPaso, 
     @Inject
     protected ProcedimientoPasoDAO procedimientoPasoDAO;
 
-    @Inject
-    protected AsignacionService asignacionService;
-
     public ProcedimientoPasoService() {
     }
 
-    public ProcedimientoPasoService(ProcedimientoPasoDAO procedimientoPasoDAO, AsignacionService asignacionService) {
+    public ProcedimientoPasoService(ProcedimientoPasoDAO procedimientoPasoDAO) {
         this.procedimientoPasoDAO = procedimientoPasoDAO;
-        this.asignacionService = asignacionService;
     }
 
     @Override
@@ -33,21 +28,8 @@ public class ProcedimientoPasoService extends DefaultService<ProcedimientoPaso, 
     }
 
     @Override
-    @Transactional
-    public void crear(ProcedimientoPaso paso) {
-        asignacionService.guardarPaso(paso, true, null);
-    }
-
-    @Override
-    @Transactional
-    public void actualizar(ProcedimientoPaso paso) {
-        asignacionService.guardarPaso(paso, false, null);
-    }
-
-    @Override
-    @Transactional
-    public void eliminar(ProcedimientoPaso paso) {
-        asignacionService.eliminarPaso(paso);
+    protected void validar(ProcedimientoPaso r, boolean nuevo) {
+        r.setNombre(ValidadorComun.textoObligatorio(r.getNombre(), "El nombre del paso"));
     }
 
     public List<ProcedimientoPaso> findByProcedimiento(UUID idProcedimiento) {

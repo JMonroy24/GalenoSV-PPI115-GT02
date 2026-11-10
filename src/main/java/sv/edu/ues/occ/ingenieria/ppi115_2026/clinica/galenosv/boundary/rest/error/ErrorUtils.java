@@ -1,10 +1,6 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error;
 
-import jakarta.persistence.LockTimeoutException;
-import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
-import jakarta.persistence.PessimisticLockException;
-import jakarta.persistence.QueryTimeoutException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
@@ -22,8 +18,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class ErrorUtils {
-
-    private static final Logger LOG = Logger.getLogger(ErrorUtils.class.getName());
 
     private ErrorUtils() {
     }
@@ -82,68 +76,32 @@ public final class ErrorUtils {
         Map<String, Object> detalles = new LinkedHashMap<>();
         if (exception != null && exception.getConstraintViolations() != null) {
             for (ConstraintViolation<?> violacion : exception.getConstraintViolations()) {
-                String campo = ultimoNodo(violacion.getPropertyPath());
-                String motivo = mensajeDeViolacion(violacion);
-                detalles.merge(campo, motivo, (anterior, siguiente) -> anterior + ". " + siguiente);
+                detalles.put(ultimoNodo(violacion.getPropertyPath()), violacion.getMessage());
             }
         }
         return respuesta(ApiErrorCode.VALIDATION_ERROR, null, detalles);
     }
 
-    private static String mensajeDeViolacion(ConstraintViolation<?> violacion) {
-        String mensaje = violacion.getMessage();
-        return mensaje == null || mensaje.isBlank() ? "Valor inválido" : mensaje;
-    }
-
     public static Response respuestaPersistencia(PersistenceException exception) {
-        var validacion = buscarCausa(exception, ConstraintViolationException.class);
-        if (validacion.isPresent()) {
-            return respuestaValidacion(validacion.get());
+        Optional<SQLException> sqlException = buscarCausa(exception, SQLException.class);
+        if (sqlException.isPresent()) {
+            String sqlState = sqlException.get().getSQLState();
+            if ("23505".equals(sqlState) || "23503".equals(sqlState)) {
+                return respuesta(ApiErrorCode.CONFLICT, null, Map.of());
+            }
+            if (sqlState != null && sqlState.startsWith("08")) {
+                return respuesta(ApiErrorCode.SERVICE_UNAVAILABLE, null, Map.of());
+            }
         }
-        if (buscarCausa(exception, OptimisticLockException.class).isPresent()
-                || buscarCausa(exception, PessimisticLockException.class).isPresent()
-                || buscarCausa(exception, LockTimeoutException.class).isPresent()) {
-            return respuesta(ApiErrorCode.CONFLICT,
-                    "Otra operación modificó o bloqueó el registro. Vuelva a intentarlo.", Map.of());
-        }
-        if (buscarCausa(exception, QueryTimeoutException.class).isPresent()) {
-            return respuesta(ApiErrorCode.SERVICE_UNAVAILABLE,
-                    "La base de datos tardó demasiado en responder.", Map.of());
-        }
-        String estado = buscarCausa(exception, SQLException.class).map(SQLException::getSQLState).orElse("");
-        if (estado.startsWith("08")) {
-            return respuesta(ApiErrorCode.SERVICE_UNAVAILABLE,
-                    "No se pudo establecer o mantener la conexión con la base de datos.", Map.of());
-        }
-        return switch (estado) {
-            case "23505" -> respuesta(ApiErrorCode.CONFLICT,
-                    "Ya existe un registro con los mismos datos únicos.", Map.of());
-            case "23503" -> respuesta(ApiErrorCode.CONFLICT,
-                    "Una referencia no existe o hay registros relacionados que impiden la operación.", Map.of());
-            case "23502" -> respuesta(ApiErrorCode.UNPROCESSABLE_ENTITY,
-                    "Falta un dato obligatorio para guardar el registro.", Map.of());
-            case "23514", "22001" -> respuesta(ApiErrorCode.UNPROCESSABLE_ENTITY,
-                    "Un valor incumple una restricción de los datos.", Map.of());
-            case "40001", "40P01", "55P03" -> respuesta(ApiErrorCode.CONFLICT,
-                    "Una transacción concurrente impidió completar la operación. Vuelva a intentarlo.", Map.of());
-            default -> respuestaInterna(exception, LOG, "No se pudo completar la operación en la base de datos.");
-        };
+        return respuesta(ApiErrorCode.CONFLICT, null, Map.of());
     }
 
     public static Response respuestaInterna(Throwable exception, Logger logger) {
-        return respuestaInterna(exception, logger, null);
-    }
-
-    private static Response respuestaInterna(Throwable exception, Logger logger, String mensaje) {
-        return respuesta(ApiErrorCode.INTERNAL_ERROR, mensaje, registrarErrorInterno(exception, logger));
-    }
-
-    static Map<String, Object> registrarErrorInterno(Throwable exception, Logger logger) {
         String correlationId = UUID.randomUUID().toString();
         if (logger != null) {
             logger.log(Level.SEVERE, "Error interno. correlationId=" + correlationId, exception);
         }
-        return Map.of("correlationId", correlationId);
+        return respuesta(ApiErrorCode.INTERNAL_ERROR, null, Map.of("correlationId", correlationId));
     }
 
     private static String ultimoNodo(Path ruta) {

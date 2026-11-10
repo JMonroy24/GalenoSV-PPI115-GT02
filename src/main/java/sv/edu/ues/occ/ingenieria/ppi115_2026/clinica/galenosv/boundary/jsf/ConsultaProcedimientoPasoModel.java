@@ -1,5 +1,6 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -69,6 +70,12 @@ public class ConsultaProcedimientoPasoModel extends ModelTransaccional<ConsultaP
 
     public void setConsultaProcedimientoPasoService(ConsultaProcedimientoPasoService consultaProcedimientoPasoService) {
         this.consultaProcedimientoPasoService = consultaProcedimientoPasoService;
+    }
+
+    @Override
+    protected void validarNegocio(ConsultaProcedimientoPaso registro) {
+        ValidadorComun.rangoFechas(registro.getFechaInicio(), registro.getFechaFin());
+        registro.setEstado(ValidadorComun.textoObligatorio(registro.getEstado(), "El estado"));
     }
 
 }

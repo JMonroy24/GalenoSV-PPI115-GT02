@@ -2,7 +2,6 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest;
 
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -110,7 +109,7 @@ public abstract class GenericResource<E, D, ID extends Serializable> {
         @APIResponse(responseCode = "422", description = "Datos de entrada que no cumplen las validaciones."),
         @APIResponse(responseCode = "500", description = "Error interno del servidor.")
     })
-    public Response crear(@NotNull(message = "Debe enviar el cuerpo de la solicitud.") @Valid D dto) {
+    public Response crear(@Valid D dto) {
         E entidad = getMapper().toEntity(dto);
         asignarNuevoId(entidad);
         getService().crear(entidad);
@@ -137,14 +136,16 @@ public abstract class GenericResource<E, D, ID extends Serializable> {
     })
     public Response actualizar(@PathParam("id") String id,
             @HeaderParam("If-Match") String ifMatch,
-            @NotNull(message = "Debe enviar el cuerpo de la solicitud.") @Valid D dto) {
-        if (ifMatch == null || ifMatch.isBlank()) {
-            throw new PreconditionRequiredException(
-                    "Debe enviar el encabezado If-Match con el ETag actual del recurso.");
-        }
+            @Valid D dto) {
         ID clave = parseId(id);
         E entidad = getService().actualizarSi(clave,
-                e -> ETagUtils.coincide(ifMatch, ETagUtils.calcularFuerte(getMapper().toDTO(e))),
+                e -> {
+                    if (ifMatch == null || ifMatch.isBlank()) {
+                        throw new PreconditionRequiredException(
+                                "Debe enviar el encabezado If-Match con el ETag actual del recurso.");
+                    }
+                    return ETagUtils.coincide(ifMatch, ETagUtils.calcular(getMapper().toDTO(e)));
+                },
                 e -> {
                     getMapper().copiar(dto, e);
                     setId(e, clave);

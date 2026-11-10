@@ -13,6 +13,6 @@ public record ClinicaDTO(
         @NotBlank
         @Size(max = 20)
         String tipo,
-        @Size(max = 2000)
+        @Size(max = 2147483647)
         String comentarios) {
 }

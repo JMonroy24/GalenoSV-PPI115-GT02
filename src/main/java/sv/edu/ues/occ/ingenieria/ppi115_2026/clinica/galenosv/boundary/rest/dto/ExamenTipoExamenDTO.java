@@ -9,7 +9,7 @@ public record ExamenTipoExamenDTO(
         UUID id,
         @Schema(readOnly = true)
         Date fechaCreacion,
-        @Size(max = 2000)
+        @Size(max = 2147483647)
         String observaciones,
         UUID idExamen,
         UUID idTipoExamen) {

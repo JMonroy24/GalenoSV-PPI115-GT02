@@ -42,7 +42,7 @@ public abstract class DefaultService<T, ID extends Serializable> implements DAOI
 
     @Transactional
     public T actualizarSi(ID id, Predicate<T> precondicion, Consumer<T> cambios) {
-        T entidad = getDAO().findByIdParaActualizar(id);
+        T entidad = findById(id);
         if (entidad == null) {
             throw new NotFoundException("No existe el recurso solicitado.");
         }
@@ -51,7 +51,8 @@ public abstract class DefaultService<T, ID extends Serializable> implements DAOI
                     "El ETag enviado no coincide con el estado actual del recurso.");
         }
         cambios.accept(entidad);
-        actualizar(entidad);
+        validar(entidad, false);
+        getDAO().update(entidad);
         return entidad;
     }
 

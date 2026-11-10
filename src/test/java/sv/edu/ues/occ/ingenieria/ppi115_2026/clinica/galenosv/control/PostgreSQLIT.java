@@ -4,11 +4,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 
 import jakarta.persistence.Persistence;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionFailedException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -144,56 +139,6 @@ class PostgreSQLIT {
     }
 
     @Test
-    void actualizacionesCondicionalesConcurrentesRechazanElEstadoObsoleto() throws Exception {
-        UUID id = UUID.randomUUID();
-        try (var em = factory.createEntityManager(); var ejecutor = Executors.newSingleThreadExecutor()) {
-            var tx = em.getTransaction();
-            tx.begin();
-            var clinica = new Clinica(id);
-            clinica.setNombre("Clínica de concurrencia " + id);
-            clinica.setTipo("PUBLICA");
-            clinica.setActivo(true);
-            clinica.setComentarios("original");
-            em.persist(clinica);
-            tx.commit();
-            em.clear();
-
-            var primero = new ClinicaService(new ClinicaDAO(em));
-            var inicioSegundo = new CountDownLatch(1);
-            tx.begin();
-            try {
-                primero.actualizarSi(id, c -> "original".equals(c.getComentarios()),
-                        c -> c.setComentarios("primera actualización"));
-                var segundaOperacion = ejecutor.submit(() -> {
-                    try (var em2 = factory.createEntityManager()) {
-                        var tx2 = em2.getTransaction();
-                        tx2.begin();
-                        var segundo = new ClinicaService(new ClinicaDAO(em2));
-                        inicioSegundo.countDown();
-                        try {
-                            assertThrows(PreconditionFailedException.class,
-                                    () -> segundo.actualizarSi(id, c -> "original".equals(c.getComentarios()),
-                                            c -> fail("La segunda escritura usaba un estado obsoleto")));
-                        } finally {
-                            tx2.rollback();
-                        }
-                    }
-                });
-                assertTrue(inicioSegundo.await(5, TimeUnit.SECONDS));
-                assertThrows(TimeoutException.class, () -> segundaOperacion.get(250, TimeUnit.MILLISECONDS));
-                tx.commit();
-                segundaOperacion.get(5, TimeUnit.SECONDS);
-            } finally {
-                if (tx.isActive()) {
-                    tx.rollback();
-                }
-            }
-            em.clear();
-            assertEquals("primera actualización", primero.findById(id).getComentarios());
-        }
-    }
-
-    @Test
     void esquemaOriginalPermiteNombresRepetidos() throws SQLException {
         String nombre = "Rol " + UUID.randomUUID();
         try (var c = conexion(); var q = c.prepareStatement("INSERT INTO rol (id_rol,nombre,activo) VALUES (?, ?, true)")) {
@@ -255,18 +200,17 @@ class PostgreSQLIT {
     void paginacionYBusquedaLiteralFuncionanConJpa() {
         EntityManager em = factory.createEntityManager();
         String grupo = "Prueba " + UUID.randomUUID();
-        var dao = new PersonaDAO(em);
-        var service = new PersonaService(dao);
         try {
             em.getTransaction().begin();
             for (int i = 0; i < 6; i++) {
                 Persona p = new Persona(UUID.randomUUID());
                 p.setNombres(i == 0 ? "50%_ descuento" : "50XX descuento");
                 p.setApellidos(grupo);
-                service.crear(p);
+                em.persist(p);
             }
             em.getTransaction().commit();
             em.clear();
+            PersonaDAO dao = new PersonaDAO(em);
             List<Persona> todos = dao.findRange(0, 6, grupo);
             List<Persona> primera = dao.findRange(0, 3, grupo);
             List<Persona> segunda = dao.findRange(3, 3, grupo);

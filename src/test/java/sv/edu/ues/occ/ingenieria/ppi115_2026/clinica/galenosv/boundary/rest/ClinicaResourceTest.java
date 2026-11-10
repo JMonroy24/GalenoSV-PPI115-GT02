@@ -79,7 +79,7 @@ class ClinicaResourceTest {
         when(clinicaService.actualizarSi(any(), any(), any())).thenThrow(new NotFoundException("No existe el recurso solicitado."));
 
         assertThrows(NotFoundException.class,
-                () -> clinicaResource.actualizar(id.toString(), "*", new ClinicaDTO(null, "x", null, "y", null)));
+                () -> clinicaResource.actualizar(id.toString(), null, new ClinicaDTO(null, "x", null, "y", null)));
     }
 
     @Test

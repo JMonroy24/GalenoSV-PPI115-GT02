@@ -120,20 +120,16 @@ class RubricaRegressionTest {
     }
 
     @Test
-    void consultaExigeClinicaYDelegaLaReglaDePaciente() {
+    void consultaRechazaAusenciaDeClinicaRolIncorrectoYOtraClinica() {
         ConsultaModel m = consultaModel(); Consulta c = m.getRegistroActual();
-        m.sesionBean.setClinicaActual(null); m.guardar();
-        verify(m.consultaService, never()).crear(any(), any());
-        assertTrue(m.isEstadoCrear());
-        assertTrue(m.completePersonaRol("Ana").isEmpty());
-        verifyNoInteractions(m.personaRolService);
-        var clinica = c.getIdPersonaRol().getIdClinica();
-        m.sesionBean.setClinicaActual(clinica);
-        doThrow(new ValidacionNegocioException("La persona debe ser paciente."))
-                .when(m.consultaService).crear(c, clinica.getIdClinica());
-        m.guardar();
-        verify(m.consultaService).crear(c, clinica.getIdClinica());
-        assertTrue(m.isEstadoCrear());
+        m.sesionBean.setClinicaActual(null); m.guardar(); verify(m.consultaService, never()).create(any());
+        assertTrue(m.isEstadoCrear()); assertTrue(m.completePersonaRol("Ana").isEmpty()); verifyNoInteractions(m.personaRolService);
+        m.sesionBean.setClinicaActual(c.getIdPersonaRol().getIdClinica()); c.getIdPersonaRol().setIdRol(rol("Doctor"));
+        m.guardar(); verify(m.consultaService, never()).create(any()); c.getIdPersonaRol().setIdRol(rol("Paciente"));
+        m.sesionBean.setClinicaActual(clinica()); m.guardar(); verify(m.consultaService, never()).create(any());
+        m.sesionBean.setClinicaActual(c.getIdPersonaRol().getIdClinica()); c.getIdPersonaRol().getIdRol().setActivo(false);
+        m.guardar(); verify(m.consultaService, never()).create(any()); c.getIdPersonaRol().getIdRol().setActivo(true);
+        m.guardar(); verify(m.consultaService).create(c); assertTrue(m.isEstadoNinguno());
     }
 
     @Test

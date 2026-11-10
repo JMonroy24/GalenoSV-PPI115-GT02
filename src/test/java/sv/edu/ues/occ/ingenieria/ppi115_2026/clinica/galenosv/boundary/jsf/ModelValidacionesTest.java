@@ -71,43 +71,40 @@ class ModelValidacionesTest {
     }
 
     @Test
-    void modelosClinicosDeleganAlServicioInclusoConDatosInvalidos() {
-        var procedimientos = new ConsultaProcedimientoModel();
-        var servicioProcedimientos = mock(ConsultaProcedimientoService.class);
-        procedimientos.setConsultaProcedimientoService(servicioProcedimientos);
-        procedimientos.prepararNuevo();
-        var procedimiento = procedimientos.getRegistroActual();
-        procedimiento.setFechaInicio(new Date(200));
-        procedimiento.setFechaFin(new Date(100));
-        doThrow(new ValidacionNegocioException("Fechas inválidas.")).when(servicioProcedimientos).create(procedimiento);
-        procedimientos.guardar();
-        verify(servicioProcedimientos).create(procedimiento);
-        assertTrue(procedimientos.isEstadoCrear());
-
-        var pasos = new ConsultaProcedimientoPasoModel();
-        var servicioPasos = mock(ConsultaProcedimientoPasoService.class);
-        pasos.setConsultaProcedimientoPasoService(servicioPasos);
-        pasos.prepararNuevo();
-        var paso = pasos.getRegistroActual();
-        paso.setEstado(" ");
-        doThrow(new ValidacionNegocioException("Estado obligatorio.")).when(servicioPasos).create(paso);
-        pasos.guardar();
-        verify(servicioPasos).create(paso);
-        assertTrue(pasos.isEstadoCrear());
-
-        var resultados = new ExamenResultadoModel();
-        var servicioResultados = mock(ExamenResultadoService.class);
-        resultados.setExamenResultadoService(servicioResultados);
-        resultados.prepararNuevo();
-        var resultado = resultados.getRegistroActual();
-        doThrow(new ValidacionNegocioException("Resultado obligatorio.")).when(servicioResultados).create(resultado);
-        resultados.guardar();
-        verify(servicioResultados).create(resultado);
-        assertTrue(resultados.isEstadoCrear());
+    void losTresModelosClinicosRechazanFechasInvertidas() {
+        var consulta = new Consulta(UUID.randomUUID()); consulta.setFechaInicio(new Date(100)); consulta.setFechaFin(new Date(1));
+        var modelConsulta = new ConsultaModel(); modelConsulta.sesionBean = new SesionBean();
+        var clinica = new Clinica(UUID.randomUUID()); clinica.setActivo(true); modelConsulta.sesionBean.setClinicaActual(clinica);
+        var rol = new Rol(UUID.randomUUID()); rol.setActivo(true); rol.setNombre("Paciente");
+        var paciente = new PersonaRol(UUID.randomUUID()); paciente.setIdClinica(clinica); paciente.setIdRol(rol); consulta.setIdPersonaRol(paciente);
+        var cp = new ConsultaProcedimiento(UUID.randomUUID()); cp.setFechaInicio(new Date(100)); cp.setFechaFin(new Date(1));
+        var paso = new ConsultaProcedimientoPaso(UUID.randomUUID()); paso.setFechaInicio(new Date(100)); paso.setFechaFin(new Date(1)); paso.setEstado("Registrado");
+        assertThrows(ValidacionNegocioException.class, () -> modelConsulta.validarNegocio(consulta));
+        assertThrows(ValidacionNegocioException.class, () -> new ConsultaProcedimientoModel().validarNegocio(cp));
+        assertThrows(ValidacionNegocioException.class, () -> new ConsultaProcedimientoPasoModel().validarNegocio(paso));
+        consulta.setFechaFin(new Date(100)); cp.setFechaFin(null); paso.setFechaFin(new Date(200));
+        assertDoesNotThrow(() -> modelConsulta.validarNegocio(consulta));
+        assertDoesNotThrow(() -> new ConsultaProcedimientoModel().validarNegocio(cp));
+        assertDoesNotThrow(() -> new ConsultaProcedimientoPasoModel().validarNegocio(paso));
     }
 
     @Test
-    void ordenExigeContenidoYPadre() {
+    void procedimientoDebeCaberEnConsultaYTenerCatalogoActivo() {
+        var model = new ConsultaProcedimientoModel(); var registro = new ConsultaProcedimiento(UUID.randomUUID());
+        var consulta = new Consulta(UUID.randomUUID()); consulta.setFechaInicio(new Date(100)); consulta.setFechaFin(new Date(300));
+        registro.setIdConsulta(consulta); registro.setFechaInicio(new Date(1));
+        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
+        registro.setFechaInicio(new Date(200)); registro.setFechaFin(new Date(400));
+        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
+        registro.setFechaFin(new Date(300));
+        var procedimiento = new Procedimiento(UUID.randomUUID()); procedimiento.setActivo(false); registro.setIdProcedimiento(procedimiento);
+        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
+        procedimiento.setActivo(true);
+        assertDoesNotThrow(() -> model.validarNegocio(registro));
+    }
+
+    @Test
+    void ordenYResultadoExigenContenidoYPadre() {
         var orden = new OrdenExamen(UUID.randomUUID()); var model = new OrdenExamenModel();
         assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(orden));
         orden.setIndicaciones(" Tomar muestra ");
@@ -115,6 +112,11 @@ class ModelValidacionesTest {
         orden.setIdConsultaProcedimientoPaso(new ConsultaProcedimientoPaso(UUID.randomUUID()));
         assertDoesNotThrow(() -> model.validarNegocio(orden));
         assertEquals("Tomar muestra", orden.getIndicaciones());
+        var resultado = new ExamenResultado(UUID.randomUUID()); var modeloResultado = new ExamenResultadoModel();
+        assertThrows(ValidacionNegocioException.class, () -> modeloResultado.validarNegocio(resultado));
+        resultado.setResultado(" Normal "); resultado.setInterpretacion(" Sin alteraciones "); resultado.setIdOrdenExamen(orden);
+        assertDoesNotThrow(() -> modeloResultado.validarNegocio(resultado));
+        assertEquals("Normal", resultado.getResultado());
     }
 
 }
