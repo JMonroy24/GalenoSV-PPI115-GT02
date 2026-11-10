@@ -190,13 +190,21 @@ Hay dos clínicas posibles en la cadena transaccional:
 1. **Clínica de la consulta**: se obtiene del paciente (`Consulta.idPersonaRol.idClinica`).
 2. **Clínica del responsable del paso**: se obtiene del profesional asignado (`ConsultaProcedimientoPaso.idPersonaRol.idClinica`).
 
-En el flujo actual, `ConsultaModel.validarPaciente` exige que el paciente pertenezca a la clínica de trabajo. También `agregarProcedimiento` busca el responsable con `findResponsable(idClinicaActual, rol)`. La intención del diseño es que ambas clínicas coincidan, pero el modelo no impone esa igualdad a nivel de base de datos.
+En JSF, `ConsultaModel` pasa la clínica de trabajo a `ConsultaService` al crear o actualizar. El servicio comprueba el rol activo de paciente tanto para JSF como para REST. La clínica de trabajo se comprueba cuando el llamador proporciona su UUID. REST aún requiere un vínculo con el principal para resolver ese alcance. También `agregarProcedimiento` busca el responsable con `findResponsable(idClinicaActual, rol)`. La intención del diseño es que ambas clínicas coincidan, pero el modelo no impone esa igualdad a nivel de base de datos.
 
 Antes de filtrar por clínica hay que decidir si:
 
 - se confía en la clínica de la consulta como dueña del expediente, o
 - se exige que la clínica del responsable también coincida, o
 - se permite un responsable de otra clínica y se define qué datos puede ver.
+
+### 2.4 Parche de `consulta_procedimiento_paso`
+
+El SQL compartido agrega `id_procedimiento_paso` y `valor` como columnas anulables. La referencia conecta el paso ejecutado con la definición en el catálogo `procedimiento_paso`. La clínica del expediente sigue resolviéndose a través de `consulta_procedimiento` y la consulta. El catálogo de pasos es compartido entre clínicas.
+
+La FK con `ON DELETE RESTRICT` impide borrar una definición cuando existen pasos ejecutados que la referencian. La cláusula `NOT VALID` pospone la revisión de las filas anteriores, mientras que la FK comprueba las referencias nuevas o modificadas. El parche tampoco exige que la definición pertenezca al mismo procedimiento que el registro de consulta. Si esa igualdad se requiere, debe comprobarse al asignar una definición.
+
+La entidad JPA y el DTO actuales de `ConsultaProcedimientoPaso` carecen de esos campos. Antes de exponer `valor`, hay que decidir su contenido, quién puede leerlo y cómo auditar su acceso. Si contiene datos clínicos, aplica el alcance de la consulta.
 
 ## 3. Propuesta mínima
 
@@ -216,7 +224,8 @@ La propuesta mínima para REST sería:
      - `UUID clinicaActiva`,
      - `Set<UUID> clinicasPermitidas`.
    - Es preferible a `ThreadLocal`: JAX-RS puede reutilizar hilos y el contexto de petición CDI expresa mejor el alcance.
-   - El filtro escribe el contexto y los recursos/servicios lo leen durante la misma petición.
+   - El filtro escribe el contexto y los recursos y servicios lo leen durante la misma petición.
+   - Para los recursos sujetos a clínica, un contexto ausente o una membresía vacía debe impedir el acceso. Omitir el filtro en ese caso devolvería todos los registros.
 
 3. **Filtro JAX-RS**
    - `@Provider` que implemente `ContainerRequestFilter`.
@@ -236,6 +245,7 @@ La propuesta mínima para REST sería:
    - Debe construir una lista de filtros e invocar las sobrecargas con filtros:
      - `findRange(first, max, filtroGlobal, orden, filtros)`,
      - `count(filtroGlobal, filtros)`.
+   - Para consultas, el servidor construye un `FiltroConsulta` con ruta `idPersonaRol.idClinica.idClinica`, modo `EQUALS` y el UUID validado. La misma lista de filtros se usa para los resultados y su total.
    - Cada recurso concreto declara su ruta de clínica, por ejemplo:
      - `Clinica`: `idClinica` con `IN` de clínicas permitidas.
      - `PersonaRol`: `idClinica.idClinica`.

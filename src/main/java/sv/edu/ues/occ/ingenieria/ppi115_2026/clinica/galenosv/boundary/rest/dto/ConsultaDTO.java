@@ -8,9 +8,9 @@ public record ConsultaDTO(
         UUID id,
         Date fechaInicio,
         Date fechaFin,
-        @Size(max = 2147483647)
+        @Size(max = 255)
         String referenciaExterna,
-        @Size(max = 2147483647)
+        @Size(max = 2000)
         String observaciones,
         UUID idPersonaRol) {
 }

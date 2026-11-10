@@ -55,6 +55,36 @@ class AsignacionServiceTest {
         orden.verify(secuenciaDAO).delete(relacion); orden.verify(examenDAO).delete(examen);
         orden.verify(pasoDAO).delete(hoja);
     }
+    @Test void guardarSinListaConservaExamenesYValidaNombre() {
+        var paso = new ProcedimientoPaso(UUID.randomUUID());
+        paso.setNombre("   ");
+        assertThrows(ValidacionNegocioException.class, () -> service.guardarPaso(paso, false, null));
+        verifyNoInteractions(pasoDAO, secuenciaDAO, examenDAO, em);
+
+        paso.setNombre(" Toma de muestra ");
+        service.guardarPaso(paso, false, null);
+        assertEquals("Toma de muestra", paso.getNombre());
+        verify(pasoDAO).update(paso);
+        verify(em).flush();
+        verifyNoInteractions(examenDAO, secuenciaDAO);
+    }
+
+    @Test void pasoConHijosNoSePuedeBorrar() {
+        var procedimiento = new Procedimiento(UUID.randomUUID());
+        var paso = new ProcedimientoPaso(UUID.randomUUID());
+        paso.setIdProcedimiento(procedimiento);
+        var relacion = new ProcedimientoPasoSecuencia(UUID.randomUUID());
+        relacion.setIdProcedimientoPaso(paso);
+        relacion.setIdProcedimientoPasoReferencia(UUID.randomUUID());
+        relacion.setTipoSecuencia("SIGUIENTE");
+        when(secuenciaDAO.findByProcedimiento(procedimiento.getIdProcedimiento())).thenReturn(List.of(relacion));
+
+        assertEquals("No se puede eliminar un paso con hijos.", assertThrows(ValidacionNegocioException.class,
+                () -> service.eliminarPaso(paso)).getMessage());
+        verify(secuenciaDAO, never()).delete(any());
+        verifyNoInteractions(pasoDAO, examenDAO, em);
+    }
+
     @Test void falloSePropagaParaRevertirLaTransaccion() {
         var paso = new ProcedimientoPaso(UUID.randomUUID());
         doThrow(new IllegalStateException("fallo al confirmar")).when(em).flush();

@@ -10,6 +10,6 @@ public record RolDTO(
         @Size(max = 155)
         String nombre,
         Boolean activo,
-        @Size(max = 2147483647)
+        @Size(max = 2000)
         String observaciones) {
 }

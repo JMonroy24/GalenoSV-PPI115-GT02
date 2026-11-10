@@ -34,32 +34,24 @@ public final class ETagUtils {
         }
     }
 
+    /** Compara validadores fuertes de If-Match. El comodín se admite como valor completo. */
     public static boolean coincide(String ifMatch, String etagActual) {
         if (ifMatch == null || etagActual == null) {
             return false;
         }
-        String actual = sinDebilidad(etagActual);
+        String actual = etagActual.trim();
+        if ("*".equals(ifMatch.trim())) {
+            return true;
+        }
+        if (actual.startsWith("W/")) {
+            return false;
+        }
         for (String token : ifMatch.split(",")) {
-            String valor = token.trim();
-            if (valor.isEmpty()) {
-                continue;
-            }
-            if ("*".equals(valor)) {
-                return true;
-            }
-            if (valor.startsWith("W/")) {
-                continue;
-            }
-            if (actual.equals(valor)) {
+            if (actual.equals(token.trim())) {
                 return true;
             }
         }
         return false;
-    }
-
-    private static String sinDebilidad(String etag) {
-        String valor = etag.trim();
-        return valor.startsWith("W/") ? valor.substring(2).trim() : valor;
     }
 
     private static String serializar(Object valor) {

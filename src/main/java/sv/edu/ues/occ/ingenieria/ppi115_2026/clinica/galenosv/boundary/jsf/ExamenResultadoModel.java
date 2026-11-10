@@ -1,7 +1,6 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
@@ -60,13 +59,6 @@ public class ExamenResultadoModel extends ModelTransaccional<ExamenResultado, UU
 
     public void setExamenResultadoService(ExamenResultadoService examenResultadoService) {
         this.examenResultadoService = examenResultadoService;
-    }
-
-    @Override
-    protected void validarNegocio(ExamenResultado registro) {
-        registro.setResultado(ValidadorComun.textoObligatorio(registro.getResultado(), "El resultado"));
-        registro.setInterpretacion(ValidadorComun.textoObligatorio(registro.getInterpretacion(), "La interpretación"));
-        ValidadorComun.requerido(registro.getIdOrdenExamen(), "Seleccione una orden de examen.");
     }
 
 }

@@ -173,7 +173,7 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
         }
         final PersonaRol responsable;
         try {
-            validarPaciente(getRegistroActual());
+            consultaService.validarPacienteDeClinica(getRegistroActual(), exigirClinicaActual());
             ValidadorComun.activo(procedimientoNuevo.getIdProcedimiento().getActivo(), "El procedimiento");
             ValidadorComun.dentroDelPeriodo(procedimientoNuevo.getFechaInicio(), procedimientoNuevo.getFechaFin(),
                     getRegistroActual().getFechaInicio(), getRegistroActual().getFechaFin());
@@ -308,9 +308,13 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
     }
 
     @Override
-    protected void validarNegocio(Consulta registro) {
-        validarPaciente(registro);
-        ValidadorComun.rangoFechas(registro.getFechaInicio(), registro.getFechaFin());
+    protected void persistirNuevo(Consulta registro) {
+        consultaService.crear(registro, exigirClinicaActual());
+    }
+
+    @Override
+    protected void persistirCambios(Consulta registro) {
+        consultaService.actualizar(registro, exigirClinicaActual());
     }
 
     private UUID idClinicaActual() {
@@ -318,17 +322,9 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
         return clinica == null || !Boolean.TRUE.equals(clinica.getActivo()) ? null : clinica.getIdClinica();
     }
 
-    private void validarPaciente(Consulta registro) {
-        UUID clinica = ValidadorComun.requerido(idClinicaActual(),
+    private UUID exigirClinicaActual() {
+        return ValidadorComun.requerido(idClinicaActual(),
                 "Seleccione una clínica de trabajo antes de crear consultas.");
-        var personaRol = registro.getIdPersonaRol();
-        var rol = personaRol == null ? null : personaRol.getIdRol();
-        if (personaRol == null || personaRol.getIdClinica() == null
-                || !clinica.equals(personaRol.getIdClinica().getIdClinica())
-                || rol == null || !Boolean.TRUE.equals(rol.getActivo()) || rol.getNombre() == null
-                || !rol.getNombre().toLowerCase(java.util.Locale.ROOT).contains(PersonaRolService.ROL_PACIENTE)) {
-            throw new ValidacionNegocioException("La persona debe ser paciente de la clínica de trabajo.");
-        }
     }
 
     @Override

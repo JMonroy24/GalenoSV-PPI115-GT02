@@ -10,7 +10,7 @@ public record ProcedimientoPasoExamenDTO(
         @Schema(readOnly = true)
         Date fechaCreacion,
         Boolean activo,
-        @Size(max = 2147483647)
+        @Size(max = 2000)
         String observaciones,
         UUID idExamen,
         UUID idProcedimientoPaso) {

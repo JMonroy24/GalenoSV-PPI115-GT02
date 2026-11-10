@@ -206,10 +206,10 @@ curl -u admin:admin -X POST \
   -d '{"nombre":"Clínica Central","activo":true,"tipo":"PRIVADA","comentarios":"Sede principal"}' \
   'https://localhost:9443/galenoSV/api/v1/clinicas'
 
-# PUT: actualizar usando el ETag obtenido con GET
+# PUT: usar la parte entre comillas del ETag de GET, sin el prefijo W/
 curl -u admin:admin -X PUT \
   -H 'Content-Type: application/json' \
-  -H 'If-Match: W/"<etag-obtenido-en-el-GET>"' \
+  -H 'If-Match: "<hash-obtenido-en-el-GET>"' \
   -d '{"nombre":"Clínica Central Actualizada","activo":true,"tipo":"PRIVADA","comentarios":"Sede principal"}' \
   'https://localhost:9443/galenoSV/api/v1/clinicas/00000000-0000-0000-0000-000000000000'
 
@@ -218,7 +218,7 @@ curl -i -u admin:admin -X DELETE \
   'https://localhost:9443/galenoSV/api/v1/clinicas/00000000-0000-0000-0000-000000000000'
 ```
 
-`PUT` exige el encabezado `If-Match`;
+`PUT` exige un `If-Match` fuerte y devuelve el nuevo ETag fuerte.
 ```bash
 export GALENOSV_DB_PASSWORD=<su-contraseña>
 docker compose up -d

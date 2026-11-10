@@ -1,6 +1,8 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -9,6 +11,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona;
@@ -40,6 +43,17 @@ class DefaultDAOTest {
         assertThrows(NullPointerException.class, () -> dao.delete(null));
         assertThrows(NullPointerException.class, () -> dao.findById(null));
         verifyNoInteractions(em);
+    }
+
+    @Test
+    void buscaParaActualizarConBloqueoYEstadoActualDeBD() {
+        UUID id = UUID.randomUUID();
+        Persona actual = new Persona(id);
+        var opciones = Map.<String, Object>of("jakarta.persistence.cache.storeMode", CacheStoreMode.REFRESH);
+        when(em.find(Persona.class, id, LockModeType.PESSIMISTIC_WRITE, opciones)).thenReturn(actual);
+
+        assertSame(actual, dao.findByIdParaActualizar(id));
+        verify(em).find(Persona.class, id, LockModeType.PESSIMISTIC_WRITE, opciones);
     }
 
     @Test

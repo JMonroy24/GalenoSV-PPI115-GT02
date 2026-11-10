@@ -1,6 +1,10 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest;
 
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionFailedException;
@@ -118,20 +122,18 @@ class GenericResourceTest {
         assertTrue(respuesta.getHeaderString("ETag").startsWith("W/\""));
     }
 
-    @Test
-    void putSinIfMatchLanzaPreconditionRequired() {
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   "})
+    void putSinIfMatchLanzaPreconditionRequiredSinConsultarBD(String ifMatch) {
         DefaultDAO<Entidad, UUID> dao = daoMock();
         DefaultService<Entidad, UUID> service = new TestService(dao);
         EntityMapper<Entidad, DTO> mapper = mapperMock();
-        Entidad entidad = new Entidad(ID, "Original");
-        when(dao.findById(ID)).thenReturn(entidad);
-
         TestResource resource = new TestResource(service, mapper);
 
         assertThrows(PreconditionRequiredException.class,
-                () -> resource.actualizar(ID.toString(), null, new DTO(null, "Nuevo")));
-        verify(mapper, never()).copiar(any(), any());
-        verify(dao, never()).update(any());
+                () -> resource.actualizar(ID.toString(), ifMatch, new DTO(null, "Nuevo")));
+        verifyNoInteractions(mapper, dao);
     }
 
     @Test
@@ -141,7 +143,7 @@ class GenericResourceTest {
         EntityMapper<Entidad, DTO> mapper = mapperMock();
         Entidad entidad = new Entidad(ID, "Original");
         DTO actual = new DTO(ID, "Original");
-        when(dao.findById(ID)).thenReturn(entidad);
+        when(dao.findByIdParaActualizar(ID)).thenReturn(entidad);
         when(mapper.toDTO(entidad)).thenReturn(actual);
 
         TestResource resource = new TestResource(service, mapper);
@@ -154,23 +156,46 @@ class GenericResourceTest {
     }
 
     @Test
-    void putConIfMatchCorrectoActualiza() {
+    void putConComodinSobreIdInexistenteDevuelve404() {
+        DefaultDAO<Entidad, UUID> dao = daoMock();
+        EntityMapper<Entidad, DTO> mapper = mapperMock();
+        TestResource resource = new TestResource(new TestService(dao), mapper);
+
+        assertThrows(NotFoundException.class,
+                () -> resource.actualizar(ID.toString(), "*", new DTO(null, "Nuevo")));
+        verify(dao).findByIdParaActualizar(ID);
+        verifyNoMoreInteractions(dao);
+        verifyNoInteractions(mapper);
+    }
+
+    @Test
+    void putConIfMatchCorrectoDevuelveEstadoNuevoYRechazaReusoDelEtagAnterior() {
         DefaultDAO<Entidad, UUID> dao = daoMock();
         DefaultService<Entidad, UUID> service = new TestService(dao);
         EntityMapper<Entidad, DTO> mapper = mapperMock();
         Entidad entidad = new Entidad(ID, "Original");
         DTO actual = new DTO(ID, "Original");
         DTO cambios = new DTO(null, "Nuevo");
-        when(dao.findById(ID)).thenReturn(entidad);
-        when(mapper.toDTO(entidad)).thenReturn(actual);
-
+        when(dao.findByIdParaActualizar(ID)).thenReturn(entidad);
+        when(mapper.toDTO(entidad)).thenAnswer(inv -> new DTO(entidad.id, entidad.nombre));
+        doAnswer(inv -> {
+            entidad.nombre = cambios.nombre();
+            return null;
+        }).when(mapper).copiar(cambios, entidad);
         TestResource resource = new TestResource(service, mapper);
-        Response respuesta = resource.actualizar(ID.toString(), ETagUtils.calcularFuerte(actual), cambios);
 
+        assertThrows(PreconditionFailedException.class,
+                () -> resource.actualizar(ID.toString(), ETagUtils.calcular(actual), cambios));
+        String etagAnterior = ETagUtils.calcularFuerte(actual);
+        Response respuesta = resource.actualizar(ID.toString(), etagAnterior, cambios);
+
+        DTO actualizada = new DTO(ID, "Nuevo");
         assertEquals(200, respuesta.getStatus());
-        assertSame(actual, respuesta.getEntity());
-        assertEquals(ETagUtils.calcularFuerte(actual), respuesta.getHeaderString("ETag"));
-        assertFalse(respuesta.getHeaderString("ETag").startsWith("W/"));
+        assertEquals(actualizada, respuesta.getEntity());
+        assertEquals(ETagUtils.calcularFuerte(actualizada), respuesta.getHeaderString("ETag"));
+        assertNotEquals(etagAnterior, respuesta.getHeaderString("ETag"));
+        assertThrows(PreconditionFailedException.class,
+                () -> resource.actualizar(ID.toString(), etagAnterior, new DTO(null, "Obsoleto")));
         verify(mapper).copiar(cambios, entidad);
         verify(dao).update(entidad);
     }

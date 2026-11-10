@@ -2,9 +2,11 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta;
 
@@ -31,6 +33,42 @@ public class ConsultaService extends DefaultService<Consulta, UUID> implements S
     @Override
     protected void validar(Consulta r, boolean nuevo) {
         ValidadorComun.rangoFechas(r.getFechaInicio(), r.getFechaFin());
+        validarPaciente(r);
+    }
+
+    @Transactional
+    public void crear(Consulta consulta, UUID idClinica) {
+        validarClinica(consulta, idClinica);
+        crear(consulta);
+    }
+
+    @Transactional
+    public void actualizar(Consulta consulta, UUID idClinica) {
+        validarClinica(consulta, idClinica);
+        actualizar(consulta);
+    }
+
+    public void validarPacienteDeClinica(Consulta consulta, UUID idClinica) {
+        validarClinica(consulta, idClinica);
+        validarPaciente(consulta);
+    }
+
+    private void validarPaciente(Consulta consulta) {
+        var personaRol = consulta.getIdPersonaRol();
+        var rol = personaRol == null ? null : personaRol.getIdRol();
+        if (rol == null || !Boolean.TRUE.equals(rol.getActivo()) || rol.getNombre() == null
+                || !rol.getNombre().toLowerCase(Locale.ROOT).contains(PersonaRolService.ROL_PACIENTE)) {
+            throw new ValidacionNegocioException("La persona debe ser paciente.");
+        }
+    }
+
+    private void validarClinica(Consulta consulta, UUID idClinica) {
+        ValidadorComun.requerido(idClinica, "Seleccione una clínica de trabajo antes de crear consultas.");
+        var personaRol = consulta.getIdPersonaRol();
+        var clinica = personaRol == null ? null : personaRol.getIdClinica();
+        if (clinica == null || !idClinica.equals(clinica.getIdClinica())) {
+            throw new ValidacionNegocioException("La persona debe ser paciente de la clínica de trabajo.");
+        }
     }
 
     @Override

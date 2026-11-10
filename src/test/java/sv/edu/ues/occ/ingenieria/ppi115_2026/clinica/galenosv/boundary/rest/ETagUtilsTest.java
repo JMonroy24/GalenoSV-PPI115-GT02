@@ -47,12 +47,14 @@ class ETagUtilsTest {
 
     @Test
     void coincideAceptaEtagFuerteListaYComodin() {
-        String etag = ETagUtils.calcular(new DTO(ID, "Consulta", Boolean.TRUE));
         String fuerte = ETagUtils.calcularFuerte(new DTO(ID, "Consulta", Boolean.TRUE));
 
-        assertTrue(ETagUtils.coincide(fuerte, etag));
-        assertTrue(ETagUtils.coincide("W/\"otro\", " + fuerte, etag));
-        assertTrue(ETagUtils.coincide("*", etag));
+        assertTrue(ETagUtils.coincide(fuerte, fuerte));
+        assertTrue(ETagUtils.coincide("W/\"otro\", " + fuerte, fuerte));
+        assertTrue(ETagUtils.coincide(" * ", fuerte));
+        assertFalse(ETagUtils.coincide("\"otro\", *", fuerte));
+        assertFalse(ETagUtils.coincide("W/" + fuerte, fuerte));
+        assertFalse(ETagUtils.coincide(fuerte, "W/" + fuerte));
     }
 
     @Test

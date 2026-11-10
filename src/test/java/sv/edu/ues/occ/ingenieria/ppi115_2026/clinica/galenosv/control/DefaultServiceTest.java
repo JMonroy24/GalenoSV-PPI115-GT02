@@ -93,7 +93,7 @@ class DefaultServiceTest {
     void actualizarSiAplicaCambiosValidaYActualiza() {
         UUID id = UUID.randomUUID();
         Clinica c = new Clinica(id);
-        when(clinicaDAO.findById(id)).thenReturn(c);
+        when(clinicaDAO.findByIdParaActualizar(id)).thenReturn(c);
 
         Clinica resultado = service.actualizarSi(id, e -> true, e -> e.setNombre("Nuevo"));
 
@@ -107,7 +107,7 @@ class DefaultServiceTest {
     @Test
     void actualizarSiInexistenteLanzaNotFound() {
         UUID id = UUID.randomUUID();
-        when(clinicaDAO.findById(id)).thenReturn(null);
+        when(clinicaDAO.findByIdParaActualizar(id)).thenReturn(null);
 
         assertThrows(NotFoundException.class,
                 () -> service.actualizarSi(id, e -> true, e -> e.setNombre("Nuevo")));
@@ -119,7 +119,7 @@ class DefaultServiceTest {
         UUID id = UUID.randomUUID();
         Clinica c = new Clinica(id);
         c.setNombre("Original");
-        when(clinicaDAO.findById(id)).thenReturn(c);
+        when(clinicaDAO.findByIdParaActualizar(id)).thenReturn(c);
 
         assertThrows(PreconditionFailedException.class,
                 () -> service.actualizarSi(id, e -> false, e -> e.setNombre("Nuevo")));

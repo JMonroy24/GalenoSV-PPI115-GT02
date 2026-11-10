@@ -1,11 +1,13 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error;
 
+import jakarta.persistence.LockTimeoutException;
 import jakarta.persistence.PersistenceException;
 import jakarta.transaction.RollbackException;
 import jakarta.transaction.TransactionalException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
+import jakarta.ws.rs.NotAllowedException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -84,14 +86,15 @@ class ExceptionMappersTest {
     }
 
     @Test
-    void persistenceMapperDevuelve409SinFiltrarDetallesTecnicos() {
+    void persistenciaDesconocidaDevuelve500ConIdentificadorSinFiltrarDetallesTecnicos() {
         PersistenceException excepcion = new PersistenceException(
                 "SELECT * FROM clinica WHERE password = 'secreto'");
         Response respuesta = new PersistenceMapper().toResponse(excepcion);
 
-        assertEquals(409, respuesta.getStatus());
+        assertEquals(500, respuesta.getStatus());
         ApiErrorResponse cuerpo = cuerpo(respuesta);
-        assertEquals("CONFLICT", cuerpo.getErrorCode());
+        assertEquals("INTERNAL_ERROR", cuerpo.getErrorCode());
+        assertNotNull(UUID.fromString(cuerpo.getDetails().get("correlationId").toString()));
         assertFalse(cuerpo.getMessage().contains("SELECT"));
         assertFalse(cuerpo.getMessage().contains("clinica"));
         assertFalse(cuerpo.getMessage().contains("secreto"));
@@ -161,7 +164,7 @@ class ExceptionMappersTest {
     }
 
     @Test
-    void persistenceMapperTraduceOtroSqlStateA409Generico() {
+    void persistenceMapperExplicaUnConflictoDeSerializacion() {
         Response respuesta = new PersistenceMapper().toResponse(
                 persistenciaConSqlState("40001"));
 
@@ -267,6 +270,52 @@ class ExceptionMappersTest {
         Object correlationId = cuerpo.getDetails().get("correlationId");
         assertNotNull(correlationId);
         assertNotNull(UUID.fromString(correlationId.toString()));
+    }
+
+    @Test
+    void persistenceMapperDistingueCausasDeConflicto() {
+        String duplicado = cuerpo(new PersistenceMapper().toResponse(persistenciaConSqlState("23505"))).getMessage();
+        String referencia = cuerpo(new PersistenceMapper().toResponse(persistenciaConSqlState("23503"))).getMessage();
+        assertTrue(duplicado.contains("datos únicos"));
+        assertTrue(referencia.contains("registros relacionados"));
+        assertEquals(409, new PersistenceMapper().toResponse(new LockTimeoutException()).getStatus());
+        assertEquals(422, new PersistenceMapper().toResponse(persistenciaConSqlState("23502")).getStatus());
+    }
+
+    @Test
+    void errorHttpConservaEstadoDesconocidoYCabecerasDelProtocolo() {
+        var mapper = new WebApplicationMapper();
+        Response limitado = mapper.toResponse(new WebApplicationException(
+                Response.status(429).header("Retry-After", "30").build()));
+        assertEquals(429, limitado.getStatus());
+        assertEquals(429, cuerpo(limitado).getStatusCode());
+        assertEquals("30", limitado.getHeaderString("Retry-After"));
+        Response noPermitido = mapper.toResponse(new NotAllowedException("GET"));
+        assertEquals(405, noPermitido.getStatus());
+        assertTrue(noPermitido.getAllowedMethods().contains("GET"));
+    }
+
+    @Test
+    void errorHttp500ConservaEstadoYOcultaDetalleInterno() {
+        Response respuesta = new WebApplicationMapper().toResponse(new WebApplicationException(
+                "detalle sensible", Response.status(502).build()));
+        assertEquals(502, respuesta.getStatus());
+        assertEquals(502, cuerpo(respuesta).getStatusCode());
+        assertFalse(cuerpo(respuesta).getMessage().contains("detalle sensible"));
+        assertNotNull(cuerpo(respuesta).getDetails().get("correlationId"));
+    }
+
+    @Test
+    void errorTransaccionalConservaMotivoDeNegocioYPrecondicion() {
+        var mapper = new TransactionalMapper();
+        Response negocio = mapper.toResponse(new TransactionalException("rollback",
+                new ValidacionNegocioException("El rol está inactivo.")));
+        assertEquals(422, negocio.getStatus());
+        assertEquals("El rol está inactivo.", cuerpo(negocio).getMessage());
+        Response precondicion = mapper.toResponse(new TransactionalException("rollback",
+                new PreconditionFailedException("El estado cambió.")));
+        assertEquals(412, precondicion.getStatus());
+        assertEquals("El estado cambió.", cuerpo(precondicion).getMessage());
     }
 
     private PersistenceException persistenciaConSqlState(String sqlState) {

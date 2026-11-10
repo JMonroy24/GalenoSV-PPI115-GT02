@@ -11,12 +11,12 @@ public record ExamenResultadoDTO(
         @Schema(readOnly = true)
         Date fechaCreacion,
         @NotBlank
-        @Size(max = 2147483647)
+        @Size(max = 4000)
         String resultado,
         @NotBlank
-        @Size(max = 2147483647)
+        @Size(max = 4000)
         String interpretacion,
-        @Size(max = 2147483647)
+        @Size(max = 500)
         String rutaAtestado,
         UUID idOrdenExamen) {
 }
