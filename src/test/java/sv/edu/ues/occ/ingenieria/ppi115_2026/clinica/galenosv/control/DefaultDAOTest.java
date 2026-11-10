@@ -108,7 +108,17 @@ class DefaultDAOTest {
 
     @Test
     void autocompletarUsaFiltroYLimitaCantidad() {
-        PersonaDAO espia = spy(dao);
+        var espia = spy(new DefaultDAO<Persona, UUID>(Persona.class) {
+            @Override
+            public EntityManager getEntityManager() {
+                return em;
+            }
+
+            @Override
+            protected List<String> getCamposBusqueda() {
+                return List.of("nombres", "apellidos");
+            }
+        });
         doReturn(List.of()).when(espia).findRange(anyInt(), anyInt(), anyString());
         assertTrue(espia.buscarParaAutocompletar("a", 10).isEmpty());
         espia.buscarParaAutocompletar(" Ana ", 500);

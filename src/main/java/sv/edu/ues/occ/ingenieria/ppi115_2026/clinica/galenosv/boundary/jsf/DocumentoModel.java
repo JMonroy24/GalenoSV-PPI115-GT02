@@ -45,8 +45,7 @@ public class DocumentoModel extends ModelTransaccional<Documento, UUID> implemen
      * Método para p:autoComplete. Busca Personas por nombres o apellidos.
      */
     public java.util.List<sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona> completePersona(String query) {
-        if (query == null || query.trim().length() < 2) return java.util.List.of();
-        return personaService.findRange(0, 20, query);
+        return completar(query, texto -> personaService.buscarParaAutocompletar(texto, 20));
     }
 
     public DocumentoService getDocumentoService() {

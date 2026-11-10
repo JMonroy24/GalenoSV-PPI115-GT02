@@ -54,14 +54,12 @@ public class ConsultaProcedimientoPasoModel extends ModelTransaccional<ConsultaP
 
     /** Método para p:autoComplete. Busca procedimientos de consulta. */
     public List<ConsultaProcedimiento> completeConsultaProcedimiento(String query) {
-        if (query == null || query.trim().length() < 2) return java.util.List.of();
-        return consultaProcedimientoService.buscarParaAutocompletar(query, 20);
+        return completar(query, texto -> consultaProcedimientoService.buscarParaAutocompletar(texto, 20));
     }
 
     /** Método para p:autoComplete. Busca asignaciones Persona/Rol. */
     public List<PersonaRol> completePersonaRol(String query) {
-        if (query == null || query.trim().length() < 2) return java.util.List.of();
-        return personaRolService.buscarParaAutocompletar(query, 20);
+        return completar(query, texto -> personaRolService.buscarParaAutocompletar(texto, 20));
     }
 
     public ConsultaProcedimientoPasoService getConsultaProcedimientoPasoService() {

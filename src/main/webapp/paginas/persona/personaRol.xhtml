@@ -40,12 +40,10 @@
                                 placeholder="Escriba un nombre para buscar..." label="Persona" requiredMessage="Complete el campo persona." minQueryLength="2"/>
 
                 <p:outputLabel value="Rol:" for="idRol"/>
-                <p:selectOneMenu id="idRol" disabled="#{personaRolModel.estadoModificar}" value="#{personaRolModel.registroActual.idRol}"
-                                 converter="#{entityConverter}" required="true" filter="true" label="Rol" requiredMessage="Complete el campo rol.">
-                    <f:selectItem itemLabel="Seleccione un rol..." itemValue="#{null}" noSelectionOption="true"/>
-                    <f:selectItems value="#{rolModel.rolesActivos}" var="r"
-                                   itemLabel="#{r.nombre}" itemValue="#{r}"/>
-                </p:selectOneMenu>
+                <p:autoComplete id="idRol" disabled="#{personaRolModel.estadoModificar}" value="#{personaRolModel.registroActual.idRol}"
+                                 converter="#{entityConverter}" required="true" label="Rol" requiredMessage="Complete el campo rol."
+                                completeMethod="#{rolModel.completeRol}" var="r" itemLabel="#{r.nombre}" itemValue="#{r}"
+                                minQueryLength="1" queryDelay="350" scrollHeight="250" forceSelection="true" placeholder="Busque un rol"/>
 
                 <p:outputLabel value="Clínica:" for="idClinica"/>
                 <p:selectOneMenu id="idClinica" disabled="#{personaRolModel.estadoModificar}" value="#{personaRolModel.registroActual.idClinica}"

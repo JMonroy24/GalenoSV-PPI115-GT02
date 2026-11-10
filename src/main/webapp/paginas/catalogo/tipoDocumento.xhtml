@@ -28,21 +28,17 @@
             </p:column>
 
             <f:facet name="formulario">
-                <h:panelGrid columns="2" cellpadding="7" columnClasses="ui-grid-col-4,ui-grid-col-8" style="width:100%">
-
-                <p:outputLabel value="Nombre:" for="nombre"/>
-                <p:inputText id="nombre" value="#{tipoDocumentoModel.registroActual.nombre}" required="true" label="Nombre" requiredMessage="Complete el campo nombre." maxlength="155"/>
-
-                <p:outputLabel value="Indicaciones:" for="indicaciones"/>
-                <p:inputTextarea id="indicaciones" value="#{tipoDocumentoModel.registroActual.indicaciones}" label="Indicaciones" maxlength="2000"/>
-
-                <p:outputLabel value="Expresión Regular:" for="expresionRegular"/>
-                <p:inputText id="expresionRegular" value="#{tipoDocumentoModel.registroActual.expresionRegular}" label="Expresión Regular" maxlength="500"/>
-
-                <p:outputLabel value="Activo:" for="activo"/>
-                <p:selectBooleanCheckbox id="activo" value="#{tipoDocumentoModel.registroActual.activo}"/>
-
-                </h:panelGrid>
+                <p:outputPanel styleClass="crud-fields">
+                    <p:outputLabel value="Nombre:" for="nombre"/>
+                    <p:inputText id="nombre" value="#{tipoDocumentoModel.registroActual.nombre}" required="true" label="Nombre" requiredMessage="Complete el campo nombre." maxlength="155"/>
+                    <p:outputLabel value="Expresión Regular:" for="expresionRegular"/>
+                    <p:inputText id="expresionRegular" value="#{tipoDocumentoModel.registroActual.expresionRegular}" label="Expresión Regular" maxlength="500"/>
+                    <small>Opcional. Define el formato que se acepta. Ejemplo <code>\d{8}-\d</code>.</small>
+                    <p:outputLabel value="Indicaciones:" for="indicaciones"/>
+                    <p:inputTextarea id="indicaciones" value="#{tipoDocumentoModel.registroActual.indicaciones}" label="Indicaciones" maxlength="2000"/>
+                    <p:outputLabel value="Activo:" for="activo"/>
+                    <p:selectBooleanCheckbox id="activo" value="#{tipoDocumentoModel.registroActual.activo}"/>
+                </p:outputPanel>
             </f:facet>
 
         </crud:crudTransaccional>

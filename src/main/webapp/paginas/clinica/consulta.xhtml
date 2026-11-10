@@ -175,15 +175,14 @@
 
                             <p:panelGrid columns="2" style="width:100%; margin-top:1rem">
                                 <p:outputLabel for="cpProc" value="Procedimiento:"/>
-                                <p:selectOneMenu id="cpProc"
+                                <p:autoComplete id="cpProc"
                                                  value="#{consultaModel.procedimientoNuevo.idProcedimiento}"
-                                                 converter="#{entityConverter}" filter="true">
-                                    <f:selectItem itemLabel="Seleccione un procedimiento..." itemValue="#{null}"
-                                                  noSelectionOption="true"/>
-                                    <f:selectItems value="#{procedimientoModel.procedimientosActivos}" var="proc"
-                                                   itemLabel="#{proc.nombre}" itemValue="#{proc}"/>
-                                    <p:ajax process="@this" listener="#{consultaModel.actualizarInicioPrevisto}" update="detalleInicio"/>
-                                </p:selectOneMenu>
+                                                 converter="#{entityConverter}"
+                                                completeMethod="#{procedimientoModel.completeProcedimiento}" var="proc" itemLabel="#{proc.nombre}" itemValue="#{proc}"
+                                                minQueryLength="1" queryDelay="350" scrollHeight="250" forceSelection="true" placeholder="Busque un procedimiento">
+                                    <p:ajax event="itemSelect" process="@this" listener="#{consultaModel.actualizarInicioPrevisto}" update="detalleInicio"/>
+                                    <p:ajax event="clear" process="@this" listener="#{consultaModel.actualizarInicioPrevisto}" update="detalleInicio"/>
+                                </p:autoComplete>
 
                                 <h:outputText value="Primer paso y responsable:"/>
                                 <p:outputPanel id="detalleInicio">

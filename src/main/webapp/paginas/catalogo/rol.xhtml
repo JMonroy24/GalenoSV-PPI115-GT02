@@ -28,7 +28,7 @@
             </p:column>
 
             <f:facet name="formulario">
-                <h:panelGrid columns="2" cellpadding="7" columnClasses="ui-grid-col-4,ui-grid-col-8" style="width:100%">
+                <p:outputPanel styleClass="crud-fields">
 
                 <p:outputLabel value="#{msg['label.name']}:" for="nombre"/>
                 <p:inputText id="nombre" value="#{rolModel.registroActual.nombre}" required="true" label="#{msg['label.name']}" requiredMessage="#{msg['req.name']}" maxlength="155"/>
@@ -39,7 +39,7 @@
                 <p:outputLabel value="#{msg['label.active']}:" for="activo"/>
                 <p:selectBooleanCheckbox id="activo" value="#{rolModel.registroActual.activo}"/>
 
-                </h:panelGrid>
+                </p:outputPanel>
             </f:facet>
 
         </crud:crudTransaccional>

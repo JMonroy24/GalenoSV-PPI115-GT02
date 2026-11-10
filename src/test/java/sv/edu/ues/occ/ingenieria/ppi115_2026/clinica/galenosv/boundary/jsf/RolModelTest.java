@@ -112,4 +112,37 @@ public class RolModelTest {
         assertEquals(rolService, rolModel.getRolService());
         assertNotNull(rolModel.crearNuevoRegistro());
     }
+
+    @Test
+    void listadoNoConsultaHastaIngresarUnFiltro() {
+        rolModel.init();
+        var lista = rolModel.getLazyModel();
+
+        for (String filtro : new String[]{null, "   ", " "}) {
+            lista.setFiltroGlobal(filtro);
+            assertTrue(lista.isEsperaFiltro());
+            assertEquals(0, lista.count(null));
+            assertTrue(lista.load(0, 10, null, null).isEmpty());
+        }
+        verifyNoInteractions(rolService);
+
+        lista.setFiltroGlobal("  M  ");
+        assertFalse(lista.isEsperaFiltro());
+        lista.count(null);
+        lista.load(0, 10, null, null);
+        verify(rolService).count("M", java.util.List.of());
+        verify(rolService).findRange(0, 10, "M", java.util.List.of(), java.util.List.of());
+    }
+
+    @Test
+    void sugiereRolesConUnCaracterPeroIgnoraElFiltroVacio() {
+        assertTrue(rolModel.completeRol(" ").isEmpty());
+        verifyNoInteractions(rolService);
+
+        var rol = new Rol(UUID.randomUUID());
+        rol.setNombre("M");
+        when(rolService.buscarParaAutocompletar("M", 20)).thenReturn(java.util.List.of(rol));
+
+        assertEquals(java.util.List.of(rol), rolModel.completeRol(" M "));
+    }
 }

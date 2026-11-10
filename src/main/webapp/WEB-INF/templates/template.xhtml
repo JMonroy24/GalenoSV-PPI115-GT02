@@ -56,13 +56,13 @@
                     <ui:include src="/WEB-INF/templates/menu.xhtml"/>
                 </div>
 
-                <p:growl id="growlGlobal" showDetail="true" life="4000"><p:autoUpdate/></p:growl>
-
                 <div class="layout-content">
                     <ui:insert name="contenido">
 
                     </ui:insert>
                 </div>
+
+                <p:growl id="growlGlobal" showDetail="true" life="4000"><p:autoUpdate/></p:growl>
 
                 <div class="layout-footer">
                     #{msg['app.name']} v1.0 &#8212; #{msg['app.footer.text']}

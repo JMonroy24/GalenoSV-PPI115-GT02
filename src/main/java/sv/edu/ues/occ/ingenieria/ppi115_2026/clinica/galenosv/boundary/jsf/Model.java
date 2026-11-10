@@ -17,6 +17,11 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterfa
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import java.util.stream.Collectors;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import jakarta.persistence.OptimisticLockException;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DefaultDAO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.persistence.ErroresConexion;
 
 /**
  * Backing bean abstracto y genérico para vistas JSF con operaciones CRUD.
@@ -65,8 +70,7 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
         try {
             registros = getDAO().findAll();
         } catch (Exception e) {
-            registrarError("cargar datos", e);
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Error", "No se pudieron cargar los datos.");
+            notificarError("cargar datos", e);
         }
     }
 
@@ -121,16 +125,19 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
                 persistirCambios(registroActual);
                 agregarMensaje(FacesMessage.SEVERITY_INFO, "Éxito", "Registro actualizado correctamente.");
             }
-            cargarDatos();
-            cancelar();
+            finalizarGuardado();
         } catch (ValidacionNegocioException e) {
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Validación", e.getMessage());
             marcarValidacionFallida();
         } catch (Exception e) {
-            registrarError("guardar registro", e);
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Error", clasificarError(e));
+            notificarError("guardar registro", e);
             marcarValidacionFallida();
         }
+    }
+
+    protected void finalizarGuardado() {
+        cargarDatos();
+        cancelar();
     }
 
     /**
@@ -158,8 +165,7 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
             agregarMensaje(FacesMessage.SEVERITY_INFO, "Éxito", "Registro eliminado correctamente.");
         } catch (Exception e) {
             estado = estadoAnterior;
-            registrarError("eliminar registro", e);
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Error", clasificarError(e));
+            notificarError("eliminar registro", e);
         }
     }
 
@@ -171,8 +177,14 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
      * @return mensaje descriptivo
      */
     protected String clasificarError(Exception e) {
+        if (ErroresConexion.esConexion(e)) {
+            return "No se pudo conectar a la base de datos. Contacte al administrador si el problema persiste.";
+        }
         Set<Throwable> visitadas = Collections.newSetFromMap(new IdentityHashMap<>());
         for (Throwable causa = e; causa != null && visitadas.add(causa); causa = causa.getCause()) {
+            if (causa instanceof OptimisticLockException) {
+                return "Otro usuario modificó este registro. Vuelva a abrirlo e intente nuevamente.";
+            }
             if (causa instanceof ValidacionNegocioException) return causa.getMessage();
             if (causa instanceof ConstraintViolationException cve && !cve.getConstraintViolations().isEmpty()) {
                 return cve.getConstraintViolations().stream().map(ConstraintViolation::getMessage)
@@ -202,9 +214,56 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
         };
     }
 
-    private void registrarError(String operacion, Exception e) {
-        // SQL puede incluir documentos o información clínica; registrar sólo el tipo del error.
-        LOGGER.log(Level.WARNING, "No se pudo {0}. Tipo: {1}", new Object[]{operacion, e.getClass().getName()});
+    protected void notificarError(String operacion, Exception e) {
+        // Los mensajes de SQL pueden contener datos clínicos. Registrar tipos y estados, sin valores.
+        String tipos = tiposDeError(e);
+        LOGGER.log(Level.WARNING, "No se pudo {0}. Causas: {1}", new Object[]{operacion, tipos});
+        agregarMensaje(FacesMessage.SEVERITY_ERROR, "Error", clasificarError(e));
+    }
+
+    private String tiposDeError(Throwable error) {
+        Set<Throwable> visitadas = Collections.newSetFromMap(new IdentityHashMap<>());
+        var tipos = new java.util.StringJoiner(" → ");
+        for (Throwable causa = error; causa != null && visitadas.add(causa); causa = causa.getCause()) {
+            String tipo = causa.getClass().getSimpleName();
+            if (causa instanceof SQLException sql && sql.getSQLState() != null) {
+                tipo += " (" + sql.getSQLState() + ")";
+            }
+            tipos.add(tipo);
+        }
+        return tipos.toString();
+    }
+
+    protected <R> List<R> completar(String filtro, Function<String, List<R>> buscar) {
+        return completar(filtro, 2, buscar);
+    }
+
+    protected <R> List<R> completar(String filtro, int minimo, Function<String, List<R>> buscar) {
+        String texto = DefaultDAO.normalizarFiltro(filtro);
+        if (texto == null || texto.length() < minimo) {
+            return List.of();
+        }
+        return consultar("buscar sugerencias", () -> buscar.apply(texto), List.of());
+    }
+
+    protected <R> List<R> filtrarPorNombre(List<R> registros, String filtro, Function<R, String> nombre) {
+        if (filtro == null) return registros;
+        String texto = filtro.toLowerCase(java.util.Locale.ROOT);
+        return registros.stream()
+                .filter(registro -> {
+                    String valor = nombre.apply(registro);
+                    return valor != null && valor.toLowerCase(java.util.Locale.ROOT).contains(texto);
+                })
+                .toList();
+    }
+
+    protected <R> R consultar(String operacion, Supplier<R> consulta, R respaldo) {
+        try {
+            return consulta.get();
+        } catch (RuntimeException e) {
+            notificarError(operacion, e);
+            return respaldo;
+        }
     }
 
     protected void marcarValidacionFallida() {
@@ -234,8 +293,8 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
             accion.run();
             agregarMensaje(FacesMessage.SEVERITY_INFO, titulo, mensajeOk);
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error en relación: " + titulo, e);
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, titulo, clasificarError(e));
+            notificarError(titulo, e);
+            marcarValidacionFallida();
         }
     }
 

@@ -1,7 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,15 +33,14 @@ class ProcedimientoModelTest {
     }
 
     @Test
-    void testInitYCargarDatos() {
-        Procedimiento procedimiento = new Procedimiento(UUID.randomUUID());
-        when(procedimientoService.findAll()).thenReturn(List.of(procedimiento));
-
+    void inicializaLaPaginacionSinCargarElCatalogoCompleto() {
         procedimientoModel.init();
 
-        assertNotNull(procedimientoModel.getRegistros());
-        assertEquals(1, procedimientoModel.getRegistros().size());
-        verify(procedimientoService).findAll();
+        assertNotNull(procedimientoModel.getLazyModel());
+        verifyNoInteractions(procedimientoService);
+
+        procedimientoModel.getLazyModel().load(0, 15, Map.of(), Map.of());
+        verify(procedimientoService).findRange(0, 15, null, List.of(), List.of());
     }
 
     @Test
@@ -77,7 +76,6 @@ class ProcedimientoModelTest {
 
     @Test
     void testGuardarCrear() {
-        when(procedimientoService.findAll()).thenReturn(Collections.emptyList());
 
         procedimientoModel.prepararNuevo();
         procedimientoModel.getRegistroActual().setNombre("Toma de muestra sanguínea");
@@ -91,7 +89,6 @@ class ProcedimientoModelTest {
 
     @Test
     void testGuardarModificar() {
-        when(procedimientoService.findAll()).thenReturn(Collections.emptyList());
         Procedimiento procedimiento = new Procedimiento(UUID.randomUUID());
 
         procedimientoModel.seleccionar(procedimiento);
@@ -103,7 +100,6 @@ class ProcedimientoModelTest {
 
     @Test
     void testEliminar() {
-        when(procedimientoService.findAll()).thenReturn(Collections.emptyList());
         Procedimiento procedimiento = new Procedimiento(UUID.randomUUID());
 
         procedimientoModel.eliminar(procedimiento);

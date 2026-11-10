@@ -18,6 +18,10 @@ import java.util.UUID;
 @Entity
 @Table(name = "rol")
 @NamedQueries({
+    @NamedQuery(name = "Rol.buscarParaAutocompletar", query =
+        "SELECT r FROM Rol r"
+        + " WHERE r.activo = true AND LOWER(r.nombre) LIKE :patron ESCAPE '\\'"
+        + " ORDER BY r.nombre, r.idRol"),
     @NamedQuery(name = "Rol.findAll", query = "SELECT r FROM Rol r"),
     @NamedQuery(name = "Rol.findByNombre", query = "SELECT r FROM Rol r WHERE r.nombre = :nombre"),
     @NamedQuery(name = "Rol.findByActivo", query = "SELECT r FROM Rol r WHERE r.activo = :activo"),

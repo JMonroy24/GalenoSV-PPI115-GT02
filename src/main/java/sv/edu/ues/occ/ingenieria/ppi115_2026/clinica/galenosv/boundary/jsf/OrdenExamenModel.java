@@ -59,8 +59,7 @@ public class OrdenExamenModel extends ModelTransaccional<OrdenExamen, UUID> impl
 
     /** Método para p:autoComplete. Busca pasos de procedimiento de consulta. */
     public List<ConsultaProcedimientoPaso> completeConsultaProcedimientoPaso(String query) {
-        if (query == null || query.trim().length() < 2) return java.util.List.of();
-        return consultaProcedimientoPasoService.buscarParaAutocompletar(query, 20);
+        return completar(query, texto -> consultaProcedimientoPasoService.buscarParaAutocompletar(texto, 20));
     }
 
     private ExamenResultado nuevoResultado() {

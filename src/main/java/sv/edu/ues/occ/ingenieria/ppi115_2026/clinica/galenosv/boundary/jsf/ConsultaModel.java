@@ -82,9 +82,9 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
 
     /** Método para p:autoComplete. Busca asignaciones Persona/Rol. */
     public List<PersonaRol> completePersonaRol(String query) {
-        if (query == null || query.trim().length() < 2) return java.util.List.of();
-        if (idClinicaActual() == null) return List.of();
-        return personaRolService.buscarPacientes(query, idClinicaActual(), 20);
+        UUID idClinica = idClinicaActual();
+        if (idClinica == null) return List.of();
+        return completar(query, texto -> personaRolService.buscarPacientes(texto, idClinica, 20));
     }
 
 
@@ -338,16 +338,16 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
             @Override
             public int count(java.util.Map<String, org.primefaces.model.FilterMeta> filtros) {
                 if (!rangoFiltroValido()) return 0;
-                return Math.toIntExact(consultaService.countFiltrado(idClinicaActual(), inicioDia(fechaDesde),
-                        finDia(fechaHasta), getFiltroGlobal()));
+                return consultar("contar consultas", () -> Math.toIntExact(consultaService.countFiltrado(
+                        idClinicaActual(), inicioDia(fechaDesde), finDia(fechaHasta), getFiltroGlobal())), 0);
             }
             @Override
             public List<Consulta> load(int first, int max,
                     java.util.Map<String, org.primefaces.model.SortMeta> orden,
                     java.util.Map<String, org.primefaces.model.FilterMeta> filtros) {
                 if (!rangoFiltroValido()) return List.of();
-                return consultaService.findRangeFiltrado(first, max, idClinicaActual(), inicioDia(fechaDesde),
-                        finDia(fechaHasta), getFiltroGlobal());
+                return consultar("cargar consultas", () -> consultaService.findRangeFiltrado(first, max,
+                        idClinicaActual(), inicioDia(fechaDesde), finDia(fechaHasta), getFiltroGlobal()), List.of());
             }
         };
     }

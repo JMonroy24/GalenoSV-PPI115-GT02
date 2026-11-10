@@ -92,6 +92,10 @@ class PostgreSQLIT {
             paciente.setNombre("Paciente"); paciente.setActivo(true);
             var doctor = new Rol(UUID.randomUUID());
             doctor.setNombre("Doctor"); doctor.setActivo(true);
+            var rolBreve = new Rol(UUID.randomUUID());
+            rolBreve.setNombre("Q");
+            rolBreve.setActivo(true);
+            em.persist(rolBreve);
             var inactivo = new Rol(UUID.randomUUID());
             inactivo.setNombre("Paciente inactivo"); inactivo.setActivo(false);
             Persona persona = new Persona(UUID.randomUUID()); persona.setNombres("Ana50%_"); persona.setApellidos("Prueba");
@@ -108,11 +112,72 @@ class PostgreSQLIT {
             var secuencia = new ProcedimientoPasoSecuencia(UUID.randomUUID());
             secuencia.setIdProcedimientoPaso(inicio); secuencia.setIdProcedimientoPasoReferencia(siguiente.getIdProcedimientoPaso());
             secuencia.setTipoSecuencia("SIGUIENTE"); em.persist(secuencia);
+            var cp = new ConsultaProcedimiento(UUID.randomUUID());
+            cp.setIdConsulta(consulta);
+            cp.setIdProcedimiento(procedimiento);
+            cp.setFechaInicio(fecha);
+            em.persist(cp);
+            var cpp = new ConsultaProcedimientoPaso(UUID.randomUUID());
+            cpp.setIdConsultaProcedimiento(cp);
+            cpp.setIdPersonaRol(responsable);
+            cpp.setFechaInicio(fecha);
+            cpp.setEstado("PENDIENTE");
+            em.persist(cpp);
+            var orden = new OrdenExamen(UUID.randomUUID());
+            orden.setIdConsultaProcedimientoPaso(cpp);
+            orden.setFechaCreacion(fecha);
+            orden.setIndicaciones("Preparación 50%_");
+            em.persist(orden);
+            var examenActivo = new Examen(UUID.randomUUID());
+            examenActivo.setNombre("Hemograma activo");
+            examenActivo.setActivo(true);
+            em.persist(examenActivo);
+            var examenInactivo = new Examen(UUID.randomUUID());
+            examenInactivo.setNombre("Hemograma inactivo");
+            examenInactivo.setActivo(false);
+            em.persist(examenInactivo);
+            var tipo = new TipoExamen(UUID.randomUUID());
+            tipo.setNombre("Hematología");
+            tipo.setActivo(true);
+            em.persist(tipo);
+
             em.getTransaction().commit(); em.clear();
             PersonaRolDAO personas = new PersonaRolDAO(em); ConsultaDAO consultas = new ConsultaDAO(em);
             assertEquals(List.of(pr), personas.buscarPacientes("50%_", clinica.getIdClinica(), 20));
+            assertEquals(List.of(consulta), consultas.buscarParaAutocompletar("ana50%_ prueba", 20));
+            assertTrue(consultas.buscarParaAutocompletar("51%_", 20).isEmpty());
+            assertEquals(List.of(persona), new PersonaDAO(em).buscarParaAutocompletar("ANA50%_ Prueba", 20));
+            assertEquals(List.of(responsable), personas.buscarParaAutocompletar("Prueba Doctor", 20));
+            assertEquals(List.of(cp), new ConsultaProcedimientoDAO(em).buscarParaAutocompletar("Ana50%_ Prueba", 20));
+            assertEquals(List.of(cpp), new ConsultaProcedimientoPasoDAO(em).buscarParaAutocompletar("pendiente", 20));
+            assertEquals(List.of(orden), new OrdenExamenDAO(em).buscarParaAutocompletar("50%_", 20));
+            assertEquals(List.of(orden), new OrdenExamenDAO(em).buscarParaAutocompletar("prueba", 20));
+            assertEquals(List.of(doctor), new RolDAO(em).buscarParaAutocompletar("doctor", 20));
+            assertEquals(List.of(rolBreve), new RolDAO(em).buscarParaAutocompletar("q", 20));
+            assertEquals(List.of(procedimiento), new ProcedimientoDAO(em).buscarParaAutocompletar("prueba", 20));
+            assertEquals(List.of(examenActivo), new ExamenDAO(em).buscarParaAutocompletar("hemograma", 20));
+            assertEquals(List.of(tipo), new TipoExamenDAO(em).buscarParaAutocompletar("hematología", 20));
             assertEquals(responsable, personas.findResponsable(clinica.getIdClinica(), doctor.getIdRol()));
-            assertEquals(inicio, new ProcedimientoPasoDAO(em).findPasoInicial(procedimiento.getIdProcedimiento()));
+            var pasos = new ProcedimientoPasoDAO(em);
+            assertEquals(inicio, pasos.findPasoInicial(procedimiento.getIdProcedimiento()));
+            var idProcedimiento = procedimiento.getIdProcedimiento();
+            var idPaso = inicio.getIdProcedimientoPaso();
+            var pasoSinExamenes = pasos.findByProcedimiento(idProcedimiento).stream()
+                    .filter(inicio::equals).findFirst().orElseThrow();
+            assertTrue(pasoSinExamenes.getProcedimientoPasoExamenList().isEmpty());
+
+            em.getTransaction().begin();
+            var relacionExamen = new ProcedimientoPasoExamen(UUID.randomUUID());
+            relacionExamen.setIdProcedimientoPaso(em.getReference(ProcedimientoPaso.class, idPaso));
+            relacionExamen.setIdExamen(em.getReference(Examen.class, examenActivo.getIdExamen()));
+            relacionExamen.setActivo(true);
+            em.persist(relacionExamen);
+            em.getTransaction().commit();
+            em.clear();
+            var pasoRefrescado = pasos.findByProcedimiento(idProcedimiento).stream()
+                    .filter(inicio::equals).findFirst().orElseThrow();
+            assertEquals(List.of(relacionExamen), pasoRefrescado.getProcedimientoPasoExamenList());
+
             assertEquals(List.of(consulta), consultas.findRangeFiltrado(0, 10, clinica.getIdClinica(), fecha, fecha, "50%_"));
             assertEquals(1, consultas.countFiltrado(clinica.getIdClinica(), null, null));
             assertEquals(0, consultas.countFiltrado(otra.getIdClinica(), null, null));
@@ -200,24 +265,25 @@ class PostgreSQLIT {
     void paginacionYBusquedaLiteralFuncionanConJpa() {
         EntityManager em = factory.createEntityManager();
         String grupo = "Prueba " + UUID.randomUUID();
+        PersonaDAO dao = new PersonaDAO(em);
+        PersonaService personas = new PersonaService(dao);
         try {
             em.getTransaction().begin();
             for (int i = 0; i < 6; i++) {
                 Persona p = new Persona(UUID.randomUUID());
                 p.setNombres(i == 0 ? "50%_ descuento" : "50XX descuento");
                 p.setApellidos(grupo);
-                em.persist(p);
+                personas.create(p);
             }
             em.getTransaction().commit();
             em.clear();
-            PersonaDAO dao = new PersonaDAO(em);
             List<Persona> todos = dao.findRange(0, 6, grupo);
             List<Persona> primera = dao.findRange(0, 3, grupo);
             List<Persona> segunda = dao.findRange(3, 3, grupo);
             assertEquals(todos.subList(0, 3), primera);
             assertEquals(todos.subList(3, 6), segunda);
-            assertEquals(1, dao.count("50%_"));
-            assertEquals("50%_ descuento", dao.findRange(0, 10, "50%_").get(0).getNombres());
+            assertEquals(1, dao.count("50%_ descuento"));
+            assertEquals("50%_ descuento", dao.findRange(0, 10, "50%_ descuento").get(0).getNombres());
             assertNotNull(todos.get(0).getFechaCreacion());
         } finally {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();

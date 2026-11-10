@@ -161,6 +161,18 @@ class ExceptionMappersTest {
     }
 
     @Test
+    void transactionalMapperDetectaConexionEnUnaExcepcionSqlEncadenada() {
+        SQLException batch = new SQLException("detalle técnico", "HY000");
+        batch.setNextException(new SQLException("credencial privada", "28P01"));
+
+        Response respuesta = new TransactionalMapper().toResponse(new TransactionalException("fallo", batch));
+
+        assertEquals(503, respuesta.getStatus());
+        assertEquals("SERVICE_UNAVAILABLE", cuerpo(respuesta).getErrorCode());
+        assertFalse(cuerpo(respuesta).getMessage().contains("credencial privada"));
+    }
+
+    @Test
     void persistenceMapperTraduceOtroSqlStateA409Generico() {
         Response respuesta = new PersistenceMapper().toResponse(
                 persistenciaConSqlState("40001"));

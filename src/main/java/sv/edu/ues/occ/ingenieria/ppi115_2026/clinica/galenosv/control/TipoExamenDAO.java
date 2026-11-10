@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.io.Serializable;
+import java.util.List;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoExamen;
 
@@ -50,5 +51,10 @@ public class TipoExamenDAO extends DefaultDAO<TipoExamen, UUID> implements Seria
                 "SELECT t FROM TipoExamen t WHERE t.activo = true ORDER BY t.nombre",
                 TipoExamen.class)
                 .getResultList();
+    }
+
+    @Override
+    public List<TipoExamen> buscarParaAutocompletar(String filtro, int max) {
+        return autocompletarConConsulta("TipoExamen.buscarParaAutocompletar", filtro, max, 1);
     }
 }

@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.io.Serializable;
+import java.util.List;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Procedimiento;
 
@@ -54,5 +55,10 @@ public class ProcedimientoDAO
                 "SELECT p FROM Procedimiento p WHERE p.activo = true ORDER BY p.nombre",
                 Procedimiento.class)
                 .getResultList();
+    }
+
+    @Override
+    public List<Procedimiento> buscarParaAutocompletar(String filtro, int max) {
+        return autocompletarConConsulta("Procedimiento.buscarParaAutocompletar", filtro, max, 1);
     }
 }

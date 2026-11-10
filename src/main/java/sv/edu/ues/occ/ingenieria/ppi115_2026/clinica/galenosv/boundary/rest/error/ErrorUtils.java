@@ -16,8 +16,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.persistence.ErroresConexion;
 
 public final class ErrorUtils {
+
+    private static final Logger LOG = Logger.getLogger(ErrorUtils.class.getName());
 
     private ErrorUtils() {
     }
@@ -83,17 +86,18 @@ public final class ErrorUtils {
     }
 
     public static Response respuestaPersistencia(PersistenceException exception) {
-        Optional<SQLException> sqlException = buscarCausa(exception, SQLException.class);
-        if (sqlException.isPresent()) {
-            String sqlState = sqlException.get().getSQLState();
-            if ("23505".equals(sqlState) || "23503".equals(sqlState)) {
-                return respuesta(ApiErrorCode.CONFLICT, null, Map.of());
-            }
-            if (sqlState != null && sqlState.startsWith("08")) {
-                return respuesta(ApiErrorCode.SERVICE_UNAVAILABLE, null, Map.of());
-            }
+        if (ErroresConexion.esConexion(exception)) {
+            return respuestaConexion(exception);
         }
         return respuesta(ApiErrorCode.CONFLICT, null, Map.of());
+    }
+
+    static Response respuestaConexion(Throwable exception) {
+        String sqlState = buscarCausa(exception, SQLException.class)
+                .map(SQLException::getSQLState).orElse("sin SQLState");
+        LOG.log(Level.WARNING, "Base de datos no disponible. Tipo: {0}, SQLState: {1}",
+                new Object[]{exception.getClass().getSimpleName(), sqlState});
+        return respuesta(ApiErrorCode.SERVICE_UNAVAILABLE, null, Map.of());
     }
 
     public static Response respuestaInterna(Throwable exception, Logger logger) {

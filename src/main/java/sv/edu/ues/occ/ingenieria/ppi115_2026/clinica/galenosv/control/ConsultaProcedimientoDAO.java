@@ -49,26 +49,9 @@ public class ConsultaProcedimientoDAO extends DefaultDAO<ConsultaProcedimiento, 
      * @param max    cantidad máxima de resultados
      * @return lista de coincidencias
      */
+    @Override
     public List<ConsultaProcedimiento> buscarParaAutocompletar(String filtro, int max) {
-        String texto = normalizarFiltro(filtro);
-        if (texto == null || texto.length() < 2) {
-            return java.util.List.of();
-        }
-        String patron = patronBusqueda(texto);
-        return getEntityManager().createQuery(
-                "SELECT cp FROM ConsultaProcedimiento cp"
-                + " LEFT JOIN FETCH cp.idProcedimiento proc"
-                + " LEFT JOIN FETCH cp.idConsulta c"
-                + " LEFT JOIN FETCH c.idPersonaRol pr"
-                + " LEFT JOIN FETCH pr.idPersona p"
-                + " WHERE LOWER(proc.nombre) LIKE :patron ESCAPE '\\'"
-                + " OR LOWER(p.nombres) LIKE :patron ESCAPE '\\'"
-                + " OR LOWER(p.apellidos) LIKE :patron ESCAPE '\\'"
-                + " ORDER BY cp.fechaInicio DESC, cp.idConsultaProcedimiento",
-                ConsultaProcedimiento.class)
-                .setParameter("patron", patron)
-                .setMaxResults(limitarAutocompletado(max))
-                .getResultList();
+        return autocompletarConConsulta("ConsultaProcedimiento.buscarParaAutocompletar", filtro, max, 2);
     }
 
     @Override

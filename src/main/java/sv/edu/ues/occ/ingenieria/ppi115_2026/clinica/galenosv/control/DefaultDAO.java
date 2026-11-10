@@ -170,6 +170,17 @@ public abstract class DefaultDAO<T, ID extends Serializable> implements DAOInter
         return findRange(0, limitarAutocompletado(max), texto);
     }
 
+    protected List<T> autocompletarConConsulta(String consulta, String filtro, int max, int minimo) {
+        String texto = normalizarFiltro(filtro);
+        if (texto == null || texto.length() < minimo) {
+            return List.of();
+        }
+        return getEntityManager().createNamedQuery(consulta, entityClass)
+                .setParameter("patron", patronBusqueda(texto))
+                .setMaxResults(limitarAutocompletado(max))
+                .getResultList();
+    }
+
     protected static int limitarAutocompletado(int max) {
         return Math.max(1, Math.min(50, max));
     }
@@ -178,7 +189,7 @@ public abstract class DefaultDAO<T, ID extends Serializable> implements DAOInter
         if (valor == null || valor.isBlank()) {
             return null;
         }
-        String texto = valor.trim();
+        String texto = valor.strip();
         return texto.substring(0, Math.min(texto.length(), MAX_FILTRO));
     }
 

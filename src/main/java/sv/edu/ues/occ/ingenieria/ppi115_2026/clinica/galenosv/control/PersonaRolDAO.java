@@ -52,28 +52,9 @@ public class PersonaRolDAO extends DefaultDAO<PersonaRol, UUID> implements Seria
      * @param max    cantidad máxima de resultados
      * @return lista de coincidencias
      */
+    @Override
     public List<PersonaRol> buscarParaAutocompletar(String filtro, int max) {
-        String texto = normalizarFiltro(filtro);
-        if (texto == null || texto.length() < 2) {
-            return java.util.List.of();
-        }
-        String patron = patronBusqueda(texto);
-        return getEntityManager().createQuery(
-                "SELECT pr FROM PersonaRol pr"
-                + " LEFT JOIN FETCH pr.idPersona p"
-                + " LEFT JOIN FETCH pr.idRol r"
-                + " LEFT JOIN FETCH pr.idClinica c"
-                + " WHERE LOWER(p.nombres) LIKE :patron ESCAPE '\\'"
-                + " OR LOWER(p.apellidos) LIKE :patron ESCAPE '\\'"
-                + " OR LOWER(r.nombre) LIKE :patron ESCAPE '\\'"
-                + " OR LOWER(c.nombre) LIKE :patron ESCAPE '\\'"
-                + " OR LOWER(CONCAT(p.nombres, ' ', p.apellidos)) LIKE :patron ESCAPE '\\'"
-                + " OR LOWER(CONCAT(p.nombres, ' ', p.apellidos, ' ', r.nombre)) LIKE :patron ESCAPE '\\'"
-                + " ORDER BY p.apellidos, p.nombres, pr.idPersonaRol",
-                PersonaRol.class)
-                .setParameter("patron", patron)
-                .setMaxResults(limitarAutocompletado(max))
-                .getResultList();
+        return autocompletarConConsulta("PersonaRol.buscarParaAutocompletar", filtro, max, 2);
     }
 
     @Override
@@ -122,15 +103,7 @@ public class PersonaRolDAO extends DefaultDAO<PersonaRol, UUID> implements Seria
     public List<PersonaRol> buscarPacientes(String filtro, UUID idClinica, int max) {
         String texto = normalizarFiltro(filtro);
         if (idClinica == null || texto == null || texto.length() < 2) return List.of();
-        return getEntityManager().createQuery(
-                "SELECT pr FROM PersonaRol pr JOIN FETCH pr.idPersona p"
-                + " JOIN FETCH pr.idRol r JOIN FETCH pr.idClinica c"
-                + " WHERE c.idClinica = :clinica AND c.activo = true AND r.activo = true"
-                + " AND LOWER(r.nombre) LIKE :rolPaciente"
-                + " AND (LOWER(p.nombres) LIKE :patron ESCAPE '\\'"
-                + " OR LOWER(p.apellidos) LIKE :patron ESCAPE '\\'"
-                + " OR LOWER(CONCAT(p.nombres, ' ', p.apellidos)) LIKE :patron ESCAPE '\\')"
-                + " ORDER BY p.apellidos, p.nombres, pr.idPersonaRol", PersonaRol.class)
+        return getEntityManager().createNamedQuery("PersonaRol.buscarPacientes", PersonaRol.class)
                 .setParameter("clinica", idClinica).setParameter("rolPaciente", "%" + ROL_PACIENTE + "%").setParameter("patron", patronBusqueda(texto))
                 .setMaxResults(limitarAutocompletado(max)).getResultList();
     }

@@ -11,7 +11,7 @@
     <ui:define name="contenido">
         <h:form id="frmCambiarRol">
             <p:panel header="#{msg['page.change_role.header']}" style="max-width: 600px; margin: 2rem auto;">
-                <p:panelGrid columns="2" layout="flex" contentStyleClass="ui-fluid" style="width: 100%;">
+                <p:outputPanel styleClass="crud-fields">
 
                     <p:outputLabel for="selClinica" value="#{msg['page.change_role.active_clinic']}"/>
                     <p:selectOneMenu id="selClinica" value="#{sesionBean.clinicaTemp}" converter="#{entityConverter}" filter="true">
@@ -22,12 +22,12 @@
                     </p:selectOneMenu>
 
                     <p:outputLabel for="selRol" value="#{msg['page.change_role.role']}"/>
-                    <p:selectOneMenu id="selRol" value="#{sesionBean.rolTemp}" converter="#{entityConverter}" filter="true">
-                        <f:selectItem itemLabel="#{msg['page.change_role.select_role']}" itemValue="#{null}" noSelectionOption="true"/>
-                        <f:selectItems value="#{sesionBean.rolesActivos}" var="rol"
-                                       itemLabel="#{rol.nombre}" itemValue="#{rol}"/>
-                        <p:ajax event="change" update="selPersona" listener="#{sesionBean.onChangeClinicaRol}"/>
-                    </p:selectOneMenu>
+                    <p:autoComplete id="selRol" value="#{sesionBean.rolTemp}" converter="#{entityConverter}"
+                                    completeMethod="#{rolModel.completeRol}" var="rol" itemLabel="#{rol.nombre}" itemValue="#{rol}"
+                                    minQueryLength="1" queryDelay="350" scrollHeight="250" forceSelection="true" placeholder="#{msg['page.change_role.select_role']}">
+                        <p:ajax event="itemSelect" update="selPersona" listener="#{sesionBean.onChangeClinicaRol}"/>
+                        <p:ajax event="clear" update="selPersona" listener="#{sesionBean.onChangeClinicaRol}"/>
+                    </p:autoComplete>
 
                     <p:outputLabel for="selPersona" value="#{msg['page.change_role.person']}"/>
                     <p:selectOneMenu id="selPersona" value="#{sesionBean.personaTemp}" converter="#{entityConverter}" filter="true">
@@ -36,7 +36,7 @@
                                        itemLabel="#{persona.nombres} #{persona.apellidos}" itemValue="#{persona}"/>
                     </p:selectOneMenu>
 
-                </p:panelGrid>
+                </p:outputPanel>
 
                 <f:facet name="footer">
                     <p:commandButton value="#{msg['page.change_role.btn_use_clinic']}" icon="pi pi-building" action="#{sesionBean.aplicarClinica}"

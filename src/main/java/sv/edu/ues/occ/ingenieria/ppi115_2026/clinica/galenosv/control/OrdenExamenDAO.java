@@ -45,20 +45,9 @@ public class OrdenExamenDAO extends DefaultDAO<OrdenExamen, UUID> implements Ser
      * @param max    cantidad máxima de resultados
      * @return lista de coincidencias
      */
+    @Override
     public List<OrdenExamen> buscarParaAutocompletar(String filtro, int max) {
-        String patron = "%" + (filtro == null ? "" : filtro.trim().toLowerCase()) + "%";
-        return getEntityManager().createQuery(
-                "SELECT o FROM OrdenExamen o"
-                + " LEFT JOIN o.idConsultaProcedimientoPaso cpp"
-                + " LEFT JOIN cpp.idConsultaProcedimiento cp"
-                + " LEFT JOIN cp.idProcedimiento proc"
-                + " WHERE LOWER(o.indicaciones) LIKE :patron"
-                + " OR LOWER(proc.nombre) LIKE :patron"
-                + " ORDER BY o.fechaCreacion DESC",
-                OrdenExamen.class)
-                .setParameter("patron", patron)
-                .setMaxResults(max)
-                .getResultList();
+        return autocompletarConConsulta("OrdenExamen.buscarParaAutocompletar", filtro, max, 2);
     }
 
     @Override

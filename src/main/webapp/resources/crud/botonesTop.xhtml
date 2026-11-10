@@ -11,18 +11,18 @@
     </cc:interface>
 
     <cc:implementation>
-        <p:commandButton value="#{msg['btn.new']}" icon="pi pi-plus"
-                         styleClass="ui-button-success mr-2"
+        <p:commandButton id="btnNuevo" value="#{msg['btn.new']}" icon="pi pi-plus"
+                         styleClass="accion-nuevo"
                          action="#{cc.attrs.model.prepararNuevo()}"
                          process="@this"
-                         update="#{cc.attrs.update}"
+                         update="#{cc.attrs.update}" resetValues="true"
                          />
 
         <p:commandButton value="#{msg['btn.edit']}" icon="pi pi-pencil"
-                         styleClass="ui-button-warning mr-2"
+                         styleClass="ui-button-warning"
                          action="#{cc.attrs.model.seleccionar(cc.attrs.model.seleccion)}"
                          process="@this"
-                         update="#{cc.attrs.update}"
+                         update="#{cc.attrs.update}" resetValues="true"
 
                          disabled="#{cc.attrs.model.seleccion == null}"/>
 

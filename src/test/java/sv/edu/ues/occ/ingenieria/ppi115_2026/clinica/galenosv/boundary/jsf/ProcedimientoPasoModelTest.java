@@ -141,4 +141,23 @@ class ProcedimientoPasoModelTest {
         verify(asignacionService).guardarPaso(argThat(p -> otro.equals(p.getIdProcedimiento())
                 && rol.equals(p.getIdRol())), eq(true), isNull(), anyList());
     }
+
+    @Test
+    void filtrarAsignacionesNoModificaLaListaQueSeGuarda() {
+        Examen examen = new Examen(UUID.randomUUID());
+        examen.setNombre("Hemograma");
+        examen.setActivo(true);
+        model.setExamenSeleccionado(examen);
+        model.agregarExamen();
+
+        model.setFiltroExamenes("radiografía");
+        assertTrue(model.getExamenesVisibles().isEmpty());
+        assertEquals(1, model.getExamenesAsignados().size());
+
+        model.setFiltroExamenes("  HEMO  ");
+        assertEquals(model.getExamenesAsignados(), model.getExamenesVisibles());
+
+        model.prepararNuevo();
+        assertNull(model.getFiltroExamenes());
+    }
 }

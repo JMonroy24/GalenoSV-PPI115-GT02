@@ -32,10 +32,10 @@
     <dataSource id="galenoSV" jndiName="jdbc/galenoSV">
         <jdbcDriver libraryRef="PostgreSQLLib"/>
         <properties.postgresql
-            serverName="${env.GALENOSV_DB_HOST}"
-            portNumber="${env.GALENOSV_DB_PORT}"
-            databaseName="${env.GALENOSV_DB_NAME}"
-            user="${env.GALENOSV_DB_USER}"
+            serverName="${GALENOSV_DB_HOST}"
+            portNumber="${GALENOSV_DB_PORT}"
+            databaseName="${GALENOSV_DB_NAME}"
+            user="${GALENOSV_DB_USER}"
             password="${env.GALENOSV_DB_PASSWORD}"/>
 
     </dataSource>

@@ -22,6 +22,27 @@ import java.util.UUID;
 @Entity
 @Table(name = "persona_rol")
 @NamedQueries({
+    @NamedQuery(name = "PersonaRol.buscarPacientes", query =
+        "SELECT pr FROM PersonaRol pr JOIN FETCH pr.idPersona p"
+        + " JOIN FETCH pr.idRol r JOIN FETCH pr.idClinica c"
+        + " WHERE c.idClinica = :clinica AND c.activo = true AND r.activo = true"
+        + " AND LOWER(r.nombre) LIKE :rolPaciente"
+        + " AND (LOWER(p.nombres) LIKE :patron ESCAPE '\\'"
+        + " OR LOWER(p.apellidos) LIKE :patron ESCAPE '\\'"
+        + " OR LOWER(CONCAT(p.nombres, ' ', p.apellidos)) LIKE :patron ESCAPE '\\')"
+        + " ORDER BY p.apellidos, p.nombres, pr.idPersonaRol"),
+    @NamedQuery(name = "PersonaRol.buscarParaAutocompletar", query =
+        "SELECT pr FROM PersonaRol pr"
+        + " LEFT JOIN FETCH pr.idPersona p"
+        + " LEFT JOIN FETCH pr.idRol r"
+        + " LEFT JOIN FETCH pr.idClinica c"
+        + " WHERE LOWER(p.nombres) LIKE :patron ESCAPE '\\'"
+        + " OR LOWER(p.apellidos) LIKE :patron ESCAPE '\\'"
+        + " OR LOWER(r.nombre) LIKE :patron ESCAPE '\\'"
+        + " OR LOWER(c.nombre) LIKE :patron ESCAPE '\\'"
+        + " OR LOWER(CONCAT(p.nombres, ' ', p.apellidos)) LIKE :patron ESCAPE '\\'"
+        + " OR LOWER(CONCAT(p.nombres, ' ', p.apellidos, ' ', r.nombre)) LIKE :patron ESCAPE '\\'"
+        + " ORDER BY p.apellidos, p.nombres, pr.idPersonaRol"),
     @NamedQuery(name = "PersonaRol.findAll", query = "SELECT p FROM PersonaRol p"),
     @NamedQuery(name = "PersonaRol.findByFechaCreacion", query = "SELECT p FROM PersonaRol p WHERE p.fechaCreacion = :fechaCreacion")})
 public class PersonaRol implements IdentificableEntity {

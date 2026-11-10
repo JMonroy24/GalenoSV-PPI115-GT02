@@ -14,7 +14,7 @@
         <h:outputScript rendered="#{param['autoOpen'] == 'true'}">
             $(window).on('load', function() {
                 setTimeout(function() {
-                    $('.ui-button-success:has(.pi-plus)').click();
+                    document.querySelector('#frmPrincipal .accion-nuevo')?.click();
                 }, 200);
             });
         </h:outputScript>
@@ -62,12 +62,10 @@
                                     placeholder="Escriba nombre, apellido o referencia..." label="Consulta" minQueryLength="2"/>
 
                     <p:outputLabel value="Procedimiento:" for="idProcedimiento"/>
-                    <p:selectOneMenu id="idProcedimiento" disabled="#{consultaProcedimientoModel.estadoModificar}" value="#{consultaProcedimientoModel.registroActual.idProcedimiento}"
-                                     converter="#{entityConverter}" required="true" requiredMessage="Seleccione un procedimiento." filter="true" label="Procedimiento">
-                        <f:selectItem itemLabel="Seleccione un procedimiento..." itemValue="#{null}" noSelectionOption="true"/>
-                        <f:selectItems value="#{procedimientoModel.procedimientosActivos}" var="pr"
-                                       itemLabel="#{pr.nombre}" itemValue="#{pr}"/>
-                    </p:selectOneMenu>
+                    <p:autoComplete id="idProcedimiento" disabled="#{consultaProcedimientoModel.estadoModificar}" value="#{consultaProcedimientoModel.registroActual.idProcedimiento}"
+                                     converter="#{entityConverter}" required="true" requiredMessage="Seleccione un procedimiento." label="Procedimiento"
+                                    completeMethod="#{procedimientoModel.completeProcedimiento}" var="pr" itemLabel="#{pr.nombre}" itemValue="#{pr}"
+                                    minQueryLength="1" queryDelay="350" scrollHeight="250" forceSelection="true" placeholder="Busque un procedimiento"/>
 
                     <p:outputLabel value="Fecha de inicio:" for="fechaInicio"/>
                     <p:datePicker id="fechaInicio" value="#{consultaProcedimientoModel.registroActual.fechaInicio}"

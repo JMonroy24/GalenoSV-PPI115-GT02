@@ -22,7 +22,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Procedimi
  */
 @Named("procedimientoModel")
 @ViewScoped
-public class ProcedimientoModel extends Model<Procedimiento, UUID>
+public class ProcedimientoModel extends ModelTransaccional<Procedimiento, UUID>
         implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -35,6 +35,7 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
     private List<ProcedimientoPaso> pasos = List.of();
     private final Map<UUID, ProcedimientoPaso> padres = new HashMap<>();
     private int pestanaActiva;
+    private boolean editorPasoVisible;
     private Procedimiento procedimientoSeleccionado;
     private TreeNode<ProcedimientoPaso> nodoPasoSeleccionado;
 
@@ -54,9 +55,27 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
     public void nuevoPaso() {
         nodoPasoSeleccionado = null;
         pasoModel.prepararNuevo();
+        editorPasoVisible = true;
     }
+
     public void editarPasoSeleccionado() {
-        if (nodoPasoSeleccionado != null) pasoModel.seleccionar(nodoPasoSeleccionado.getData());
+        if (nodoPasoSeleccionado == null) return;
+        try {
+            pasoModel.seleccionar(nodoPasoSeleccionado.getData());
+            editorPasoVisible = true;
+        } catch (RuntimeException e) {
+            cancelarPaso();
+            notificarError("cargar el paso", e);
+        }
+    }
+
+    public void cancelarPaso() {
+        pasoModel.cancelar();
+        editorPasoVisible = false;
+    }
+
+    public boolean isEditorPasoVisible() {
+        return editorPasoVisible;
     }
     public void eliminarPasoSeleccionado() {
         if (nodoPasoSeleccionado != null) eliminarPaso(nodoPasoSeleccionado.getData());
@@ -67,37 +86,34 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
         procedimientoSeleccionado = null;
         nodoPasoSeleccionado = null;
         pestanaActiva = 0;
+        editorPasoVisible = false;
         arbolPasos = null;
     }
     @Override public void seleccionar(Procedimiento procedimiento) {
         super.seleccionar(procedimiento);
         pestanaActiva = 0;
+        editorPasoVisible = false;
         pasoModel.abrirProcedimiento(procedimiento);
         refrescarPasos();
         advertirSinFin();
     }
     @Override public void cancelar() {
         super.cancelar();
+        procedimientoSeleccionado = null;
+        editorPasoVisible = false;
         arbolPasos = null;
         pasos = List.of();
         padres.clear();
     }
-    @Override public void guardar() {
-        try {
-            Procedimiento actual = getRegistroActual();
-            if (isEstadoCrear()) procedimientoService.create(actual);
-            else if (isEstadoModificar()) procedimientoService.update(actual);
-            else return;
-            cargarDatos();
-            super.seleccionar(actual);
-            pasoModel.abrirProcedimiento(actual);
-            refrescarPasos();
-            advertirSinFin();
-            agregarMensaje(FacesMessage.SEVERITY_INFO, "Procedimiento", "Procedimiento guardado. Puede administrar sus pasos.");
-        } catch (Exception e) {
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Procedimiento", clasificarError(e));
-        }
+    @Override
+    protected void finalizarGuardado() {
+        Procedimiento actual = getRegistroActual();
+        super.seleccionar(actual);
+        pasoModel.abrirProcedimiento(actual);
+        refrescarPasos();
+        advertirSinFin();
     }
+
     @Override public void eliminar(Procedimiento procedimiento) {
         Estado anterior = getEstado();
         super.eliminar(procedimiento);
@@ -105,6 +121,7 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
     }
     public void guardarPaso() {
         if (pasoModel.guardarPaso()) {
+            editorPasoVisible = false;
             refrescarPasos();
             advertirSinFin();
             pestanaActiva = 1;
@@ -112,6 +129,7 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
     }
     public void eliminarPaso(ProcedimientoPaso paso) {
         if (pasoModel.eliminarPaso(paso)) {
+            editorPasoVisible = false;
             refrescarPasos();
             advertirSinFin();
             pestanaActiva = 1;
@@ -177,7 +195,7 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
 
     @PostConstruct
     public void init() {
-        cargarDatos();
+        inicializarLazyModel();
     }
 
     @Override
@@ -207,5 +225,9 @@ public class ProcedimientoModel extends Model<Procedimiento, UUID>
 
     public List<Procedimiento> getProcedimientosActivos() {
         return procedimientoService.findAllActivos();
+    }
+
+    public List<Procedimiento> completeProcedimiento(String query) {
+        return completar(query, 1, texto -> procedimientoService.buscarParaAutocompletar(texto, 20));
     }
 }

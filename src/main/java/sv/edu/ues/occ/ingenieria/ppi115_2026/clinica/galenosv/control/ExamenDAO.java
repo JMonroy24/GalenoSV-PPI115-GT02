@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.io.Serializable;
+import java.util.List;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Examen;
 
@@ -53,5 +54,10 @@ public class ExamenDAO extends DefaultDAO<Examen, UUID> implements Serializable 
                 "SELECT e FROM Examen e WHERE e.activo = true ORDER BY e.nombre",
                 Examen.class)
                 .getResultList();
+    }
+
+    @Override
+    public List<Examen> buscarParaAutocompletar(String filtro, int max) {
+        return autocompletarConConsulta("Examen.buscarParaAutocompletar", filtro, max, 1);
     }
 }

@@ -9,6 +9,11 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
+import jakarta.persistence.PersistenceException;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -144,23 +149,50 @@ class PersonaRolDAOTest {
         verify(queryLong, times(1)).getSingleResult();
     }
 
-    @Test
-    void testBuscarParaAutocompletar() {
-        when(em.createQuery(anyString(), eq(PersonaRol.class))).thenReturn(query);
-        when(query.setParameter(eq("patron"), anyString())).thenReturn(query);
-        when(query.setMaxResults(anyInt())).thenReturn(query);
-        when(query.getResultList()).thenReturn(List.of(new PersonaRol(UUID.randomUUID())));
+    @ParameterizedTest
+    @CsvSource({"'  AnA  ', %ana%, 10, 10", "' A%_ ', %a\\%\\_%, 500, 50", "'  XY', %xy%, 0, 1"})
+    void buscarParaAutocompletarUsaConsultaNombradaYAcotaResultados(
+            String texto, String patron, int max, int limite) {
+        PersonaRol coincidencia = new PersonaRol(UUID.randomUUID());
+        prepararAutocompletado(patron, limite);
+        when(query.getResultList()).thenReturn(List.of(coincidencia));
 
-        List<PersonaRol> result = dao.buscarParaAutocompletar("test", 10);
-
-        assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(List.of(coincidencia), dao.buscarParaAutocompletar(texto, max));
+        verify(query).setParameter("patron", patron);
+        verify(query).setMaxResults(limite);
     }
-    
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", " a ", "\t\n", "\u2003"})
+    void buscarParaAutocompletarSinFiltroUtilNoConsultaJPA(String filtro) {
+        assertTrue(dao.buscarParaAutocompletar(filtro, 10).isEmpty());
+        verifyNoInteractions(em, query);
+    }
+
     @Test
-    void testBuscarParaAutocompletar_Null() {
-        assertNotNull(dao.buscarParaAutocompletar(null, 10));
-        assertTrue(dao.buscarParaAutocompletar("t", 10).isEmpty());
+    void buscarParaAutocompletarDevuelveListaVaciaCuandoNoHayCoincidencias() {
+        prepararAutocompletado("%zz%", 10);
+        when(query.getResultList()).thenReturn(List.of());
+
+        assertTrue(dao.buscarParaAutocompletar("zz", 10).isEmpty());
+        verify(query).getResultList();
+    }
+
+    @Test
+    void buscarParaAutocompletarPropagaLaExcepcionDePersistencia() {
+        prepararAutocompletado("%ana%", 10);
+        var fallo = new PersistenceException("Fallo de conexión");
+        when(query.getResultList()).thenThrow(fallo);
+
+        assertSame(fallo, assertThrows(PersistenceException.class,
+                () -> dao.buscarParaAutocompletar("Ana", 10)));
+    }
+
+    private void prepararAutocompletado(String patron, int limite) {
+        when(em.createNamedQuery("PersonaRol.buscarParaAutocompletar", PersonaRol.class)).thenReturn(query);
+        when(query.setParameter("patron", patron)).thenReturn(query);
+        when(query.setMaxResults(limite)).thenReturn(query);
     }
 
     @Test
@@ -245,7 +277,7 @@ class PersonaRolDAOTest {
     @Test
     void testBuscarPacientes() {
         UUID idClinica = UUID.randomUUID();
-        when(em.createQuery(anyString(), eq(PersonaRol.class))).thenReturn(query);
+        when(em.createNamedQuery("PersonaRol.buscarPacientes", PersonaRol.class)).thenReturn(query);
         when(query.setParameter(eq("clinica"), any())).thenReturn(query);
         when(query.setParameter(eq("rolPaciente"), anyString())).thenReturn(query);
         when(query.setParameter(eq("patron"), anyString())).thenReturn(query);

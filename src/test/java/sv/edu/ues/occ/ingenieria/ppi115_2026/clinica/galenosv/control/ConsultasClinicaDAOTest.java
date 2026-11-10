@@ -1,6 +1,8 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NamedQuery;
+import java.util.Arrays;
 import jakarta.persistence.TypedQuery;
 import java.util.Date;
 import java.util.List;
@@ -65,13 +67,16 @@ class ConsultasClinicaDAOTest {
     @SuppressWarnings("unchecked")
     void pacientesAgrupanElTextoYFiltranClinicaYRolActivo() {
         EntityManager em = mock(EntityManager.class); TypedQuery<PersonaRol> query = mock(TypedQuery.class, RETURNS_SELF);
-        when(em.createQuery(anyString(), eq(PersonaRol.class))).thenReturn(query);
+        when(em.createNamedQuery("PersonaRol.buscarPacientes", PersonaRol.class)).thenReturn(query);
         UUID clinica = UUID.randomUUID(); PersonaRolDAO dao = new PersonaRolDAO(em);
         assertTrue(dao.buscarPacientes("a", clinica, 20).isEmpty()); assertTrue(dao.buscarPacientes(null, clinica, 20).isEmpty());
         verifyNoInteractions(em); dao.buscarPacientes("50%_", clinica, 20);
-        ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class); verify(em).createQuery(sql.capture(), eq(PersonaRol.class));
-        assertTrue(sql.getValue().contains("c.idClinica = :clinica")); assertTrue(sql.getValue().contains("r.activo = true"));
-        assertTrue(sql.getValue().contains("LOWER(r.nombre) LIKE :rolPaciente")); assertTrue(sql.getValue().contains(" AND (LOWER(p.nombres)"));
+        verify(em).createNamedQuery("PersonaRol.buscarPacientes", PersonaRol.class);
+        String jpql = Arrays.stream(PersonaRol.class.getAnnotationsByType(NamedQuery.class))
+                .filter(q -> q.name().equals("PersonaRol.buscarPacientes"))
+                .findFirst().orElseThrow().query();
+        assertTrue(jpql.contains("c.idClinica = :clinica")); assertTrue(jpql.contains("r.activo = true"));
+        assertTrue(jpql.contains("LOWER(r.nombre) LIKE :rolPaciente")); assertTrue(jpql.contains(" AND (LOWER(p.nombres)"));
         verify(query).setParameter("clinica", clinica); verify(query).setParameter("rolPaciente", "%paciente%"); verify(query).setParameter("patron", "%50\\%\\_%"); verify(query).setMaxResults(20);
     }
 

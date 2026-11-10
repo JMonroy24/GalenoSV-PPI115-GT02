@@ -192,13 +192,10 @@
 
                                 <p:panelGrid columns="2" style="width:100%; margin-top:1rem">
                                     <p:outputLabel for="rolSel" value="Rol:"/>
-                                    <p:selectOneMenu id="rolSel" value="#{personaModel.rolNuevo.idRol}"
-                                                     converter="#{entityConverter}" filter="true">
-                                        <f:selectItem itemLabel="Seleccione un rol..." itemValue="#{null}"
-                                                      noSelectionOption="true"/>
-                                        <f:selectItems value="#{personaModel.rolesActivos}" var="r"
-                                                       itemLabel="#{r.nombre}" itemValue="#{r}"/>
-                                    </p:selectOneMenu>
+                                    <p:autoComplete id="rolSel" value="#{personaModel.rolNuevo.idRol}"
+                                                     converter="#{entityConverter}"
+                                                    completeMethod="#{rolModel.completeRol}" var="r" itemLabel="#{r.nombre}" itemValue="#{r}"
+                                                    minQueryLength="1" queryDelay="350" scrollHeight="250" forceSelection="true" placeholder="Busque un rol"/>
 
                                     <p:outputLabel for="rolClinica" value="Clínica:"/>
                                     <p:selectOneMenu id="rolClinica" value="#{personaModel.rolNuevo.idClinica}"

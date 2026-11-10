@@ -5,6 +5,7 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
+import java.util.List;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.RolService;
@@ -24,7 +25,7 @@ public class RolModel extends ModelTransaccional<Rol, UUID> implements Serializa
 
     @PostConstruct
     public void init() {
-        inicializarLazyModel();
+        inicializarLazyModel(true);
     }
 
     @Override
@@ -55,5 +56,9 @@ public class RolModel extends ModelTransaccional<Rol, UUID> implements Serializa
 
     public void setRolService(RolService rolService) {
         this.rolService = rolService;
+    }
+
+    public List<Rol> completeRol(String query) {
+        return completar(query, 1, texto -> rolService.buscarParaAutocompletar(texto, 20));
     }
 }

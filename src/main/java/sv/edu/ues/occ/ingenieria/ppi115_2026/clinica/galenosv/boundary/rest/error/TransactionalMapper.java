@@ -8,6 +8,7 @@ import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 import java.util.Optional;
 import java.util.logging.Logger;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.persistence.ErroresConexion;
 
 @Provider
 public class TransactionalMapper implements ExceptionMapper<TransactionalException> {
@@ -21,6 +22,9 @@ public class TransactionalMapper implements ExceptionMapper<TransactionalExcepti
                 = ErrorUtils.buscarCausa(exception, ConstraintViolationException.class, MAX_NIVELES_CAUSA);
         if (validacion.isPresent()) {
             return ErrorUtils.respuestaValidacion(validacion.get());
+        }
+        if (ErroresConexion.esConexion(exception)) {
+            return ErrorUtils.respuestaConexion(exception);
         }
         Optional<PersistenceException> persistencia
                 = ErrorUtils.buscarCausa(exception, PersistenceException.class, MAX_NIVELES_CAUSA);

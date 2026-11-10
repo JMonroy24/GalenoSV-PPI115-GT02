@@ -5,6 +5,7 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
+import java.util.List;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TipoExamenService;
@@ -55,5 +56,9 @@ public class TipoExamenModel extends ModelTransaccional<TipoExamen, UUID> implem
 
     public void setTipoExamenService(TipoExamenService tipoExamenService) {
         this.tipoExamenService = tipoExamenService;
+    }
+
+    public List<TipoExamen> completeTipoExamen(String query) {
+        return completar(query, 1, texto -> tipoExamenService.buscarParaAutocompletar(texto, 20));
     }
 }

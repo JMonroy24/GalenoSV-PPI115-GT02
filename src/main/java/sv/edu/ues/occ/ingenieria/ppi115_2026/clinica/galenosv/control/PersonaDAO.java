@@ -38,4 +38,8 @@ public class PersonaDAO extends DefaultDAO<Persona, UUID> implements Serializabl
         return List.of("nombres", "apellidos");
     }
 
+    @Override
+    public List<Persona> buscarParaAutocompletar(String filtro, int max) {
+        return autocompletarConConsulta("Persona.buscarParaAutocompletar", filtro, max, 2);
+    }
 }

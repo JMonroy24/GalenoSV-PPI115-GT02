@@ -66,18 +66,27 @@ class ModelTest {
         assertEquals("La fecha de fin debe ser posterior al inicio.", ultimoMensaje().getDetail());
     }
 
-    @Test
-    void errorPersistenciaTambienConservaEstadoYActivaValidationFailed() {
+    @ParameterizedTest
+    @EnumSource(value = Estado.class, names = {"CREAR", "MODIFICAR"})
+    void errorPersistenciaTambienConservaEstadoYActivaValidationFailed(Estado estado) {
         model.prepararNuevo();
+        model.setEstado(estado);
         Persona editada = model.getRegistroActual();
-        doThrow(new PersistenceException(new SQLException("mensaje traducido", "23505"))).when(dao).create(editada);
+        var fallo = new PersistenceException(new SQLException("mensaje traducido", "23505"));
+        if (estado == Estado.CREAR) {
+            doThrow(fallo).when(dao).create(editada);
+        } else {
+            doThrow(fallo).when(dao).update(editada);
+        }
 
         model.guardar();
 
         assertSame(editada, model.getRegistroActual());
-        assertEquals(Estado.CREAR, model.getEstado());
+        assertEquals(estado, model.getEstado());
         verify(context).validationFailed();
-        verify(dao, never()).findAll();
+        if (estado == Estado.CREAR) verify(dao).create(editada);
+        else verify(dao).update(editada);
+        verifyNoMoreInteractions(dao);
         assertTrue(ultimoMensaje().getDetail().contains("Ya existe"));
     }
 
@@ -164,7 +173,8 @@ class ModelTest {
 
     @ParameterizedTest
     @CsvSource({"23505,Ya existe", "23503,relacionado", "23502,obligatorios", "22001,longitud",
-            "23514,reglas", "40001,Otro usuario", "40P01,Otro usuario", "55P03,Otro usuario"})
+            "23514,reglas", "40001,Otro usuario", "40P01,Otro usuario", "55P03,Otro usuario",
+            "08001,conectar", "28P01,conectar", "3D000,conectar"})
     void clasificaSqlStateSinDependerDelIdioma(String state, String fragmento) {
         String mensaje = model.clasificarError(new PersistenceException(
                 new SQLException("contenido de la base no apto para mostrar", state)));

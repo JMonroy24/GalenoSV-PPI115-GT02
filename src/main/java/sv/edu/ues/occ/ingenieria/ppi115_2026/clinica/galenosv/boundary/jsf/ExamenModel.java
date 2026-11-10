@@ -13,9 +13,8 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DefaultDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Examen;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ExamenTipoExamen;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoExamen;
@@ -28,7 +27,6 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.TipoExame
 public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(ExamenModel.class.getName());
 
     @Inject
     protected ExamenService examenService;
@@ -37,6 +35,7 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
     private TipoExamen tipoSeleccionado;
     private ExamenTipoExamen asignacionTipoSeleccionada;
     private String observacionesTipo;
+    private String filtroTipos;
 
     public ExamenTipoExamen getAsignacionTipoSeleccionada() { return asignacionTipoSeleccionada; }
     public void setAsignacionTipoSeleccionada(ExamenTipoExamen seleccionada) { asignacionTipoSeleccionada = seleccionada; }
@@ -66,9 +65,13 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
     @Override
     public void seleccionar(Examen examen) {
         if (examen == null) return;
-        super.seleccionar(examen);
-        tiposAsignados = examenService.findTiposByExamen(examen.getIdExamen());
-        limpiarSeleccionTipo();
+        try {
+            tiposAsignados = examenService.findTiposByExamen(examen.getIdExamen());
+            super.seleccionar(examen);
+            limpiarSeleccionTipo();
+        } catch (RuntimeException e) {
+            notificarError("cargar tipos del examen", e);
+        }
     }
 
     @Override
@@ -114,9 +117,7 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
             marcarValidacionFallida();
         } catch (Exception e) {
             marcarValidacionFallida();
-            LOGGER.log(Level.SEVERE, "Error al asignar un tipo al examen", e);
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Tipo de examen",
-                    clasificarError(e));
+            notificarError("asignar un tipo al examen", e);
         }
     }
 
@@ -141,20 +142,30 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
             marcarValidacionFallida();
         } catch (Exception e) {
             marcarValidacionFallida();
-            LOGGER.log(Level.SEVERE, "Error al quitar un tipo del examen", e);
-            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Tipo de examen",
-                    clasificarError(e));
+            notificarError("quitar un tipo del examen", e);
         }
     }
 
     private void limpiarSeleccionTipo() {
-        asignacionTipoSeleccionada = null;
+        setFiltroTipos(null);
         tipoSeleccionado = null;
         observacionesTipo = null;
     }
 
     public List<ExamenTipoExamen> getTiposAsignados() {
         return tiposAsignados;
+    }
+
+    public List<ExamenTipoExamen> getTiposVisibles() {
+        return filtrarPorNombre(tiposAsignados, filtroTipos,
+                asignacion -> asignacion.getIdTipoExamen() == null ? null : asignacion.getIdTipoExamen().getNombre());
+    }
+
+    public String getFiltroTipos() { return filtroTipos; }
+
+    public void setFiltroTipos(String filtro) {
+        filtroTipos = DefaultDAO.normalizarFiltro(filtro);
+        asignacionTipoSeleccionada = null;
     }
 
     public TipoExamen getTipoSeleccionado() {
@@ -187,8 +198,11 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
 
     @Override
     protected void validarNegocio(Examen registro) {
-        if (isEstadoCrear() && tipoSeleccionado != null) {
+        if (!isEstadoCrear()) return;
+        if (tipoSeleccionado != null) {
             ValidadorComun.activo(tipoSeleccionado.getActivo(), "El tipo de examen");
+        } else if (observacionesTipo != null && !observacionesTipo.isBlank()) {
+            throw new ValidacionNegocioException("Seleccione un tipo para guardar sus observaciones.");
         }
     }
 
@@ -204,5 +218,9 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
         asignacion.setFechaCreacion(new Date());
         asignacion.setObservaciones(observacionesTipo);
         examenService.crearExamenConTipo(examen, asignacion);
+    }
+
+    public List<Examen> completeExamen(String query) {
+        return completar(query, 1, texto -> examenService.buscarParaAutocompletar(texto, 20));
     }
 }

@@ -50,8 +50,7 @@ public class ExamenResultadoModel extends ModelTransaccional<ExamenResultado, UU
 
     /** Método para p:autoComplete. Busca órdenes de examen. */
     public List<OrdenExamen> completeOrdenExamen(String query) {
-        if (query == null || query.trim().length() < 2) return java.util.List.of();
-        return ordenExamenService.buscarParaAutocompletar(query, 20);
+        return completar(query, texto -> ordenExamenService.buscarParaAutocompletar(texto, 20));
     }
 
     public ExamenResultadoService getExamenResultadoService() {

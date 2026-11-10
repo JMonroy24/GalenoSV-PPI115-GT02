@@ -67,7 +67,10 @@ public class ProcedimientoPasoDAO
                 + "LEFT JOIN FETCH p.procedimientoPasoExamenList a "
                 + "LEFT JOIN FETCH a.idExamen "
                 + "WHERE p.idProcedimiento.idProcedimiento = :id", ProcedimientoPaso.class)
-                .setParameter("id", idProcedimiento).getResultList();
+                .setParameter("id", idProcedimiento)
+                // La asociación se guarda desde el lado del examen. Refrescar la colección inversa.
+                .setHint("eclipselink.refresh", true)
+                .getResultList();
     }
     public boolean tieneFin(UUID idProcedimiento) {
         if (idProcedimiento == null) return false;

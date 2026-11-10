@@ -1,14 +1,11 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
-import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.*;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.*;
 
@@ -17,7 +14,6 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.*;
 @ViewScoped
 public class ProcedimientoPasoModel extends Model<ProcedimientoPaso, UUID> implements Serializable {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = Logger.getLogger(ProcedimientoPasoModel.class.getName());
     @Inject protected ProcedimientoPasoService procedimientoPasoService;
     @Inject protected ProcedimientoPasoExamenService procedimientoPasoExamenService;
     @Inject protected ProcedimientoPasoSecuenciaService procedimientoPasoSecuenciaService;
@@ -29,11 +25,11 @@ public class ProcedimientoPasoModel extends Model<ProcedimientoPaso, UUID> imple
     private List<ProcedimientoPasoExamen> examenesAsignados = new ArrayList<>();
     private ProcedimientoPasoExamen examenAsignadoSeleccionado;
     private Examen examenSeleccionado;
+    private String filtroExamenes;
     private String observacionesExamen;
     private UUID rolOriginal;
     private UUID padreOriginal;
 
-    @PostConstruct public void init() { cargarDatos(); }
     @Override protected DAOInterface<ProcedimientoPaso, UUID> getDAO() { return procedimientoPasoService; }
     @Override protected ProcedimientoPaso crearNuevoRegistro() {
         ProcedimientoPaso paso = new ProcedimientoPaso(UUID.randomUUID());
@@ -77,7 +73,7 @@ public class ProcedimientoPasoModel extends Model<ProcedimientoPaso, UUID> imple
     private void limpiarExamen() {
         examenSeleccionado = null;
         observacionesExamen = null;
-        examenAsignadoSeleccionado = null;
+        setFiltroExamenes(null);
     }
     public void agregarExamen() {
         if (getRegistroActual() == null || examenSeleccionado == null
@@ -107,12 +103,6 @@ public class ProcedimientoPasoModel extends Model<ProcedimientoPaso, UUID> imple
                 .filter(p -> !p.equals(getRegistroActual()))
                 .sorted(Comparator.comparing(ProcedimientoPaso::getNombre, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
                 .toList();
-    }
-    public List<Rol> getRolesActivos() {
-        return rolService.findAll().stream().filter(r -> Boolean.TRUE.equals(r.getActivo())).toList();
-    }
-    public List<Examen> getExamenesActivos() {
-        return examenService.findAll().stream().filter(e -> Boolean.TRUE.equals(e.getActivo())).toList();
     }
     protected boolean validarNegocio() {
         ProcedimientoPaso paso = getRegistroActual();
@@ -163,6 +153,7 @@ public class ProcedimientoPasoModel extends Model<ProcedimientoPaso, UUID> imple
     }
     private boolean error(String detalle) {
         agregarMensaje(FacesMessage.SEVERITY_ERROR, "Paso de procedimiento", detalle);
+        marcarValidacionFallida();
         return false;
     }
     /** Devuelve éxito para que el procedimiento refresque el árbol solo tras guardar. */
@@ -174,8 +165,9 @@ public class ProcedimientoPasoModel extends Model<ProcedimientoPaso, UUID> imple
             agregarMensaje(FacesMessage.SEVERITY_INFO, "Paso", "Paso y exámenes guardados correctamente.");
             return true;
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error al guardar paso", e);
-            error(clasificarError(e)); return false;
+            notificarError("guardar paso", e);
+            marcarValidacionFallida();
+            return false;
         }
     }
     @Override public void guardar() { guardarPaso(); }
@@ -190,12 +182,28 @@ public class ProcedimientoPasoModel extends Model<ProcedimientoPaso, UUID> imple
             prepararNuevo();
             agregarMensaje(FacesMessage.SEVERITY_INFO, "Paso", "Paso eliminado correctamente.");
             return true;
-        } catch (Exception e) { error(clasificarError(e)); return false; }
+        } catch (Exception e) {
+            notificarError("eliminar paso", e);
+            return false;
+        }
     }
     @Override public void eliminar(ProcedimientoPaso paso) { eliminarPaso(paso); }
     public ProcedimientoPaso getDependeDe() { return dependeDe; }
     public void setDependeDe(ProcedimientoPaso paso) { dependeDe = paso; }
     public List<ProcedimientoPasoExamen> getExamenesAsignados() { return examenesAsignados; }
+
+    public List<ProcedimientoPasoExamen> getExamenesVisibles() {
+        return filtrarPorNombre(examenesAsignados, filtroExamenes,
+                asignacion -> asignacion.getIdExamen() == null ? null : asignacion.getIdExamen().getNombre());
+    }
+
+    public String getFiltroExamenes() { return filtroExamenes; }
+
+    public void setFiltroExamenes(String filtro) {
+        filtroExamenes = DefaultDAO.normalizarFiltro(filtro);
+        examenAsignadoSeleccionado = null;
+    }
+
     public ProcedimientoPasoExamen getExamenAsignadoSeleccionado() { return examenAsignadoSeleccionado; }
     public void setExamenAsignadoSeleccionado(ProcedimientoPasoExamen examen) { examenAsignadoSeleccionado = examen; }
     public Examen getExamenSeleccionado() { return examenSeleccionado; }

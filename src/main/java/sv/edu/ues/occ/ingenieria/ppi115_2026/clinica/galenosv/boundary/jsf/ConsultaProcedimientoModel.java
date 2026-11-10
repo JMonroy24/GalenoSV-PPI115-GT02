@@ -74,8 +74,7 @@ public class ConsultaProcedimientoModel extends ModelTransaccional<ConsultaProce
 
     /** Método para p:autoComplete. Busca consultas por persona o referencia. */
     public List<Consulta> completeConsulta(String query) {
-        if (query == null || query.trim().length() < 2) return java.util.List.of();
-        return consultaService.buscarParaAutocompletar(query, 20);
+        return completar(query, texto -> consultaService.buscarParaAutocompletar(texto, 20));
     }
 
     public ConsultaProcedimientoService getConsultaProcedimientoService() {

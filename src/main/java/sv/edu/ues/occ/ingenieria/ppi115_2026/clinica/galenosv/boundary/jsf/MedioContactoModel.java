@@ -50,8 +50,7 @@ public class MedioContactoModel extends ModelTransaccional<MedioContacto, UUID> 
     protected PersonaService personaService;
 
     public java.util.List<sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Persona> completePersona(String query) {
-        if (query == null || query.trim().length() < 2) return java.util.List.of();
-        return personaService.buscarParaAutocompletar(query, 10);
+        return completar(query, texto -> personaService.buscarParaAutocompletar(texto, 10));
     }
 
 }

@@ -4,6 +4,7 @@
                 xmlns:h="jakarta.faces.html"
                 xmlns:f="jakarta.faces.core"
                 xmlns:ui="jakarta.faces.facelets"
+                xmlns:pt="jakarta.faces.passthrough"
                 xmlns:p="http://primefaces.org/ui"
                 xmlns:crud="jakarta.faces.composite/crud">
 
@@ -11,123 +12,98 @@
 
     <ui:define name="contenido">
         <h:form id="frmPrincipal">
-<crud:crudTransaccional model="#{examenModel}" lazyModel="#{examenModel.lazyModel}"
-                           titulo="Exámenes"
-                           anchoDialogo="800">
+            <crud:crudTransaccional id="examenes" model="#{examenModel}" lazyModel="#{examenModel.lazyModel}"
+                                    titulo="Exámenes" tituloRelaciones="Tipos asignados"
+                                    mostrarRelacionesEnCreacion="false">
+                <p:column headerText="Nombre" sortBy="#{registro.nombre}">
+                    <h:outputText value="#{registro.nombre}"/>
+                </p:column>
+                <p:column headerText="Activo">
+                    <h:outputText value="#{registro.activo ? 'Sí' : 'No'}"/>
+                </p:column>
+                <p:column headerText="Observaciones" sortBy="#{registro.observaciones}">
+                    <h:outputText value="#{registro.observaciones}"/>
+                </p:column>
 
-            <p:column headerText="Nombre" sortBy="#{registro.nombre}">
-                <h:outputText value="#{registro.nombre}"/>
-            </p:column>
+                <f:facet name="formulario">
+                    <p:outputPanel styleClass="crud-fields">
+                        <p:outputLabel for="nombre" value="Nombre del examen"/>
+                        <p:inputText id="nombre" value="#{examenModel.registroActual.nombre}"
+                                     required="true" requiredMessage="Ingrese el nombre del examen." maxlength="255"/>
 
-            <p:column headerText="Activo">
-                <h:outputText value="#{registro.activo eq true ? 'Sí' : 'No'}"/>
-            </p:column>
+                        <p:outputLabel for="observaciones" value="Observaciones del examen"/>
+                        <p:inputTextarea id="observaciones" value="#{examenModel.registroActual.observaciones}"
+                                         rows="3" autoResize="false" maxlength="2000"/>
+                        <p:selectBooleanCheckbox id="activo" value="#{examenModel.registroActual.activo}" itemLabel="Examen activo"/>
 
-            <p:column headerText="Observaciones" sortBy="#{registro.observaciones}">
-                <h:outputText value="#{registro.observaciones}"/>
-            </p:column>
+                        <p:fieldset legend="Tipo inicial (opcional)" rendered="#{examenModel.estadoCrear}">
+                            <p:outputPanel styleClass="crud-fields">
+                                <p:outputLabel for="tipoInicial" value="Tipo de examen"/>
+                                <p:autoComplete id="tipoInicial" value="#{examenModel.tipoSeleccionado}"
+                                                completeMethod="#{tipoExamenModel.completeTipoExamen}"
+                                                var="tipo" itemLabel="#{tipo.nombre}" itemValue="#{tipo}"
+                                                converter="#{entityConverter}" forceSelection="true"
+                                                minQueryLength="1" queryDelay="350" scrollHeight="250"
+                                                placeholder="Busque por nombre"/>
+                                <p:outputLabel for="obsTipoInicial" value="Observaciones de la asignación"/>
+                                <p:inputTextarea id="obsTipoInicial" value="#{examenModel.observacionesTipo}"
+                                                 rows="2" autoResize="false" maxlength="2000"/>
+                            </p:outputPanel>
+                        </p:fieldset>
+                    </p:outputPanel>
+                </f:facet>
 
-            <f:facet name="formulario">
-                <p:outputPanel rendered="#{examenModel.estadoCrear}">
-                    <p:outputLabel for="tipoInicial" value="Tipo de examen:"/>
-                    <p:selectOneMenu id="tipoInicial" value="#{examenModel.tipoSeleccionado}" converter="#{entityConverter}">
-                        <f:selectItem itemLabel="Seleccione un tipo..." itemValue="#{null}" noSelectionOption="true"/>
-                        <f:selectItems value="#{tipoExamenModel.tiposActivos}" var="tipo" itemLabel="#{tipo.nombre}" itemValue="#{tipo}"/>
-                    </p:selectOneMenu>
-                    <p:outputLabel for="obsTipoInicial" value="Observaciones del tipo:"/>
-                    <p:inputTextarea id="obsTipoInicial" value="#{examenModel.observacionesTipo}" rows="2" maxlength="2000"/>
-                </p:outputPanel>
-                <p:outputLabel for="nombre" value="Nombre:"/>
-                <p:inputText id="nombre"
-                             value="#{examenModel.registroActual.nombre}"
-                             required="true"
-                             requiredMessage="Ingrese el nombre del examen."
-                             maxlength="255" label="Nombre"/>
-
-                <p:outputLabel for="activo" value="Activo:"/>
-                <p:selectBooleanCheckbox id="activo"
-                                         value="#{examenModel.registroActual.activo}"/>
-
-                <p:outputLabel for="observaciones"
-                               value="Observaciones:"/>
-                <p:inputTextarea id="observaciones"
-                                 value="#{examenModel.registroActual.observaciones}"
-                                 rows="3"
-                                 autoResize="false" label="Observaciones" maxlength="2000"/>
-            </f:facet>
-
-            <f:facet name="relaciones">
-                <p:outputPanel rendered="#{examenModel.estadoModificar}">
-                    <p:panel header="Tipos asignados"
-                             style="margin-top:1rem">
-
-                        <p:toolbar id="accionesTipo"><p:toolbarGroup>
-                            <p:commandButton value="Eliminar seleccionado" icon="pi pi-trash"
-                                             action="#{examenModel.quitarTipoSeleccionado()}"
-                                             disabled="#{empty examenModel.asignacionTipoSeleccionada}"
-                                             process="@this" update="@form" styleClass="ui-button-danger">
-                                <p:confirm header="Quitar tipo" message="¿Desea quitar el tipo seleccionado del examen?"/>
-                            </p:commandButton>
-                        </p:toolbarGroup></p:toolbar>
-                        <p:dataTable id="tablaTipos" selectionMode="single"
-                                     selection="#{examenModel.asignacionTipoSeleccionada}"
-                                     rowKey="#{asignacion.idExamenTipoExamen}"
-                                     value="#{examenModel.tiposAsignados}"
-                                     var="asignacion"
-                                     emptyMessage="Este examen aún no tiene tipos asignados."
-                                     size="small">
-
+                <f:facet name="relaciones">
+                    <p:outputPanel id="tiposAsignados">
+                        <p:toolbar id="accionesTipo">
+                            <p:toolbarGroup>
+                                <p:commandButton value="Quitar tipo seleccionado" icon="pi pi-trash"
+                                                 action="#{examenModel.quitarTipoSeleccionado()}"
+                                                 disabled="#{empty examenModel.asignacionTipoSeleccionada}"
+                                                 process="@this" update="tiposAsignados" styleClass="ui-button-danger">
+                                    <p:confirm header="Quitar tipo" message="¿Desea quitar el tipo seleccionado del examen?"/>
+                                </p:commandButton>
+                            </p:toolbarGroup>
+                        </p:toolbar>
+                        <p:inputText id="filtroTipos" value="#{examenModel.filtroTipos}"
+                                     placeholder="Filtre los tipos asignados" pt:aria-label="Filtre los tipos asignados" maxlength="100">
+                            <p:ajax event="keyup" delay="350" process="@this" update="tablaTipos accionesTipo"/>
+                        </p:inputText>
+                        <p:dataTable id="tablaTipos" value="#{examenModel.tiposVisibles}" var="asignacion"
+                                     selectionMode="single" selection="#{examenModel.asignacionTipoSeleccionada}"
+                                     rowKey="#{asignacion.idExamenTipoExamen}" reflow="true" size="small"
+                                     paginator="true" paginatorAlwaysVisible="false" rows="10"
+                                     emptyMessage="No hay tipos asignados que coincidan.">
                             <p:ajax event="rowSelect" process="@this" update="accionesTipo"/>
                             <p:ajax event="rowUnselect" process="@this" update="accionesTipo"/>
                             <p:column headerText="Tipo">
                                 <h:outputText value="#{asignacion.idTipoExamen.nombre}"/>
                             </p:column>
-
                             <p:column headerText="Observaciones">
                                 <h:outputText value="#{asignacion.observaciones}"/>
                             </p:column>
-
-
                         </p:dataTable>
 
-                        <p:panelGrid columns="2"
-                                     style="width:100%; margin-top:1rem">
-                            <p:outputLabel for="tipoSeleccionado"
-                                           value="Agregar tipo:"/>
-                            <p:selectOneMenu id="tipoSeleccionado"
-                                             value="#{examenModel.tipoSeleccionado}"
-                                             converter="#{entityConverter}"
-                                             filter="true" label="Agregar tipo">
-                                <f:selectItem itemLabel="Seleccione un tipo..."
-                                              itemValue="#{null}"
-                                              noSelectionOption="true"/>
-                                <f:selectItems value="#{tipoExamenModel.tiposActivos}"
-                                               var="tipo"
-                                               itemLabel="#{tipo.nombre}"
-                                               itemValue="#{tipo}"/>
-                            </p:selectOneMenu>
-
-                            <p:outputLabel for="observacionesTipo"
-                                           value="Observaciones del tipo:"/>
-                            <p:inputTextarea id="observacionesTipo"
-                                             value="#{examenModel.observacionesTipo}"
-                                             rows="2"
-                                             autoResize="false" label="Observaciones del tipo" maxlength="2000"/>
-
-                            <h:outputText value=""/>
-                            <p:commandButton value="Asignar tipo"
-                                             icon="pi pi-plus"
-                                             styleClass="ui-button-success"
-                                             action="#{examenModel.agregarTipo()}"
-                                             process="@this tipoSeleccionado observacionesTipo"
-                                             update="@form"/>
-                        </p:panelGrid>
-                    </p:panel>
-                </p:outputPanel>
-            </f:facet>
-
-        </crud:crudTransaccional>
-</h:form>
+                        <p:fieldset legend="Asignar otro tipo" styleClass="crud-secondary">
+                            <p:outputPanel styleClass="crud-fields">
+                                <p:outputLabel for="tipoSeleccionado" value="Tipo de examen"/>
+                                <p:autoComplete id="tipoSeleccionado" value="#{examenModel.tipoSeleccionado}"
+                                                completeMethod="#{tipoExamenModel.completeTipoExamen}"
+                                                var="tipo" itemLabel="#{tipo.nombre}" itemValue="#{tipo}"
+                                                converter="#{entityConverter}" forceSelection="true"
+                                                minQueryLength="1" queryDelay="350" scrollHeight="250"
+                                                placeholder="Busque por nombre"/>
+                                <p:outputLabel for="observacionesTipo" value="Observaciones de la asignación"/>
+                                <p:inputTextarea id="observacionesTipo" value="#{examenModel.observacionesTipo}"
+                                                 rows="2" autoResize="false" maxlength="2000"/>
+                                <p:commandButton value="Asignar tipo" icon="pi pi-plus"
+                                                 action="#{examenModel.agregarTipo()}" styleClass="ui-button-success"
+                                                 process="@this tipoSeleccionado observacionesTipo" update="tiposAsignados"/>
+                            </p:outputPanel>
+                        </p:fieldset>
+                    </p:outputPanel>
+                </f:facet>
+            </crud:crudTransaccional>
+        </h:form>
     </ui:define>
-
 </ui:composition>

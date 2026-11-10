@@ -12,6 +12,8 @@
         <cc:attribute name="lazyModel"     required="true" />
         <cc:attribute name="titulo"        required="true" type="java.lang.String" />
         <cc:attribute name="anchoDialogo"  default="600"   type="java.lang.Integer" />
+        <cc:attribute name="tituloRelaciones" default="#{msg['lbl.relations']}" />
+        <cc:attribute name="mostrarRelacionesEnCreacion" default="true" type="java.lang.Boolean" />
         <cc:facet     name="formulario" />
         <cc:facet     name="relaciones" />
         <cc:facet     name="accionesExtra" />
@@ -22,10 +24,8 @@
 
         <!-- ═══ VISTA LISTA (tabla) ═══ -->
         <p:outputPanel id="frmCrud" rendered="#{cc.attrs.model.registroActual == null}">
-            <p:growl id="mensajes" showDetail="true" life="3000"><p:autoUpdate/></p:growl>
-
             <p:panel header="#{cc.attrs.titulo}">
-                <p:toolbar id="toolbarTop">
+                <p:toolbar id="toolbarTop" styleClass="crud-toolbar">
                     <p:toolbarGroup>
                         <cc:renderFacet name="accionesExtra"/>
                         <crud:botonesTop model="#{cc.attrs.model}" update="crudContainer" dialog="dlgFormularioTx" />
@@ -33,19 +33,22 @@
                     <p:toolbarGroup align="right">
                         <p:inputText id="campoBusqueda"
                                      value="#{cc.attrs.lazyModel.filtroGlobal}"
-                                     placeholder="#{msg['lbl.search']}" maxlength="100"/>
+                                     placeholder="#{msg['lbl.search']}" pt:aria-label="#{msg['btn.search']}" maxlength="100"/>
                         <p:commandButton icon="pi pi-search"
                                          title="#{msg['btn.search']}" pt:aria-label="#{msg['btn.search']}"
                                          styleClass="ui-button-info"
                                          process="campoBusqueda @this"
-                                         update="tabla"/>
+                                         update="tabla toolbarTop">
+                            <f:setPropertyActionListener value="#{null}" target="#{cc.attrs.model.seleccion}"/>
+                        </p:commandButton>
                         <p:commandButton icon="pi pi-times"
                                          title="#{msg['btn.clear']}" pt:aria-label="#{msg['btn.clear']}"
                                          styleClass="ui-button-secondary"
                                          process="@this"
-                                         update="campoBusqueda tabla">
+                                         update="tabla toolbarTop" resetValues="true">
                             <f:setPropertyActionListener value="#{null}"
                                                          target="#{cc.attrs.lazyModel.filtroGlobal}"/>
+                            <f:setPropertyActionListener value="#{null}" target="#{cc.attrs.model.seleccion}"/>
                         </p:commandButton>
                     </p:toolbarGroup>
                 </p:toolbar>
@@ -53,7 +56,8 @@
                 <p:dataTable id="tabla" var="registro"
                              value="#{cc.attrs.lazyModel}"
                              lazy="true"
-                             emptyMessage="#{msg['msg.empty_records']}"
+                             emptyMessage="#{cc.attrs.lazyModel.esperaFiltro ? msg['msg.enter_filter'] : msg['msg.empty_records']}"
+                             reflow="true"
                              rows="15"
                              paginator="true"
                              paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
@@ -71,8 +75,9 @@
                     <cc:insertChildren/>
                 </p:dataTable>
             </p:panel>
+        </p:outputPanel>
 
-            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+            <p:confirmDialog global="true" responsive="true">
                 <p:commandButton value="#{msg['btn.yes']}" type="button"
                                  styleClass="ui-confirmdialog-yes ui-button-danger"
                                  icon="pi pi-check"/>
@@ -80,7 +85,6 @@
                                  styleClass="ui-confirmdialog-no ui-button-secondary"
                                  icon="pi pi-times"/>
             </p:confirmDialog>
-        </p:outputPanel>
 
         <!-- ═══ VISTA FORMULARIO (crear / editar) ═══ -->
         <p:outputPanel id="frmDialogo" rendered="#{cc.attrs.model.registroActual != null}">
@@ -88,30 +92,20 @@
                 <p:messages id="msgForm" showDetail="true" closable="true"/>
 
                 <!-- ─── Campos principales del formulario ─── -->
-                <p:outputPanel id="pnlFormulario" style="display:block">
+                <p:outputPanel id="pnlFormulario" styleClass="crud-main-fields">
                     <cc:renderFacet name="formulario"/>
-                </p:outputPanel>
-
-                <!-- ─── Relaciones (solo en modo editar) ─── -->
-                <p:outputPanel rendered="#{not empty cc.facets.relaciones}">
-                    <p:divider/>
-                    <p:tabView id="tabRelaciones">
-                        <p:tab title="#{msg['lbl.relations']}">
-                            <cc:renderFacet name="relaciones"/>
-                        </p:tab>
-                    </p:tabView>
                 </p:outputPanel>
 
                 <p:divider/>
 
                 <!-- ─── Botones Guardar / Cancelar ─── -->
-                <p:toolbar>
+                <p:toolbar styleClass="crud-toolbar">
                     <p:toolbarGroup align="right">
                         <p:commandButton id="btnGuardar"
                                          value="#{msg['btn.save']}" icon="pi pi-check"
                                          styleClass="ui-button-success"
                                          action="#{cc.attrs.model.guardar()}"
-                                         process="@form"
+                                         process="@this :#{cc.facets.formulario.clientId}"
                                          update="crudContainer"/>
                         <p:commandButton id="btnCancelar"
                                          value="#{msg['btn.cancel']}" icon="pi pi-times"
@@ -119,11 +113,20 @@
                                          action="#{cc.attrs.model.cancelar()}"
                                          process="@this"
                                          update="crudContainer"
-                                         immediate="true"/>
+                                         resetValues="true"/>
                     </p:toolbarGroup>
                 </p:toolbar>
 
             </p:panel>
+
+            <p:outputPanel rendered="#{not empty cc.facets.relaciones and (cc.attrs.model.estadoModificar or cc.attrs.mostrarRelacionesEnCreacion)}"
+                           styleClass="crud-secondary">
+                <p:tabView id="tabRelaciones">
+                    <p:tab title="#{cc.attrs.tituloRelaciones}">
+                        <cc:renderFacet name="relaciones"/>
+                    </p:tab>
+                </p:tabView>
+            </p:outputPanel>
         </p:outputPanel>
 
         </p:outputPanel>

@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.io.Serializable;
+import java.util.List;
 import java.util.UUID;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Rol;
 
@@ -50,5 +51,10 @@ public class RolDAO extends DefaultDAO<Rol, UUID> implements Serializable {
                 "SELECT r FROM Rol r WHERE r.activo = true ORDER BY r.nombre",
                 Rol.class)
                 .getResultList();
+    }
+
+    @Override
+    public List<Rol> buscarParaAutocompletar(String filtro, int max) {
+        return autocompletarConConsulta("Rol.buscarParaAutocompletar", filtro, max, 1);
     }
 }

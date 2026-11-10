@@ -23,6 +23,15 @@ import java.util.UUID;
 @Entity
 @Table(name = "consulta")
 @NamedQueries({
+    @NamedQuery(name = "Consulta.buscarParaAutocompletar", query =
+        "SELECT c FROM Consulta c"
+        + " LEFT JOIN FETCH c.idPersonaRol pr"
+        + " LEFT JOIN FETCH pr.idPersona p"
+        + " WHERE LOWER(c.referenciaExterna) LIKE :patron ESCAPE '\\'"
+        + " OR LOWER(p.nombres) LIKE :patron ESCAPE '\\'"
+        + " OR LOWER(p.apellidos) LIKE :patron ESCAPE '\\'"
+        + " OR LOWER(CONCAT(p.nombres, ' ', p.apellidos)) LIKE :patron ESCAPE '\\'"
+        + " ORDER BY c.fechaInicio DESC, c.idConsulta"),
     @NamedQuery(name = "Consulta.findAll", query = "SELECT c FROM Consulta c"),
     @NamedQuery(name = "Consulta.findByFechaInicio", query = "SELECT c FROM Consulta c WHERE c.fechaInicio = :fechaInicio"),
     @NamedQuery(name = "Consulta.findByFechaFin", query = "SELECT c FROM Consulta c WHERE c.fechaFin = :fechaFin"),

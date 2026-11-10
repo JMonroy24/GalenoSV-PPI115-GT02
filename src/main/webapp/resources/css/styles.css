@@ -114,3 +114,110 @@
     overflow-wrap: anywhere;
     text-align: left;
 }
+
+
+/* Los formularios y las acciones se adaptan al espacio de cada pantalla. */
+body .accion-nuevo.ui-button {
+    background: #1763ab;
+    border-color: #1763ab;
+    color: #fff;
+}
+
+body .accion-nuevo.ui-button:not(:disabled):hover {
+    background: #124d84;
+    border-color: #124d84;
+}
+
+.crud-toolbar,
+.crud-toolbar .ui-toolbar-group-left,
+.crud-toolbar .ui-toolbar-group-right,
+.crud-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.crud-toolbar .ui-toolbar-group-right .ui-inputfield {
+    flex: 1 1 10rem;
+    min-width: 0;
+}
+
+.crud-actions {
+    margin-block: 1rem;
+}
+
+.crud-fields {
+    display: grid;
+    gap: 0.6rem;
+    max-width: 42rem;
+    min-width: 0;
+}
+
+.crud-fields > * {
+    min-width: 0;
+}
+
+.crud-fields > .ui-inputfield,
+.crud-fields > .ui-autocomplete,
+.crud-fields > .ui-autocomplete > .ui-inputfield,
+.crud-fields > .ui-selectonemenu {
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.crud-fields > .ui-outputlabel:not(:first-child) {
+    margin-top: 0.5rem;
+}
+
+.crud-fields > .ui-button {
+    justify-self: start;
+}
+
+.crud-fields small {
+    color: var(--text-color-secondary, #5b6472);
+}
+
+.crud-secondary {
+    margin-block-start: 1.25rem;
+}
+
+.crud-secondary.ui-panel > .ui-panel-titlebar,
+.crud-secondary .ui-tabs-nav,
+.crud-secondary.ui-fieldset {
+    border-inline-start: 0.25rem solid #1763ab;
+}
+
+.crud-tree .ui-treetable-tablewrapper {
+    overflow-x: auto;
+}
+
+.crud-tree td,
+.ui-datatable-reflow td {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 680px) {
+    .layout-content {
+        padding: 0.75rem;
+        min-width: 0;
+    }
+
+    .crud-toolbar .ui-toolbar-group-right {
+        width: 100%;
+    }
+
+    .crud-main-fields table,
+    .crud-main-fields tbody,
+    .crud-main-fields tr,
+    .crud-main-fields td {
+        display: block;
+    }
+
+    .crud-main-fields .ui-inputfield,
+    .crud-main-fields .ui-selectonemenu,
+    .crud-main-fields .ui-autocomplete {
+        box-sizing: border-box;
+        max-width: 100%;
+    }
+}

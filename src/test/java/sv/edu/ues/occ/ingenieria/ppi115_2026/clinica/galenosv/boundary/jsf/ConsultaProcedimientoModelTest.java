@@ -1,13 +1,24 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import jakarta.faces.application.FacesMessage;
+import jakarta.faces.context.FacesContext;
+import jakarta.persistence.PersistenceException;
+import java.sql.SQLException;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimiento;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,6 +31,9 @@ public class ConsultaProcedimientoModelTest {
 
     @Mock
     private ConsultaProcedimientoService consultaProcedimientoService;
+
+    @Mock
+    private ConsultaService consultaService;
 
     @InjectMocks
     private ConsultaProcedimientoModel consultaProcedimientoModel;
@@ -93,6 +107,48 @@ public class ConsultaProcedimientoModelTest {
 
         verify(consultaProcedimientoService).update(cp);
         assertEquals(Estado.NINGUNO, consultaProcedimientoModel.getEstado());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"  ", " a ", "\u2003"})
+    void completarConsultaConFiltroInsuficienteNoInvocaElServicio(String filtro) {
+        assertTrue(consultaProcedimientoModel.completeConsulta(filtro).isEmpty());
+        verifyNoInteractions(consultaService);
+    }
+
+    @Test
+    void completarConsultaDevuelveCoincidenciasDelFiltroNormalizado() {
+        List<Consulta> esperadas = List.of(new Consulta(UUID.randomUUID()));
+        when(consultaService.buscarParaAutocompletar("Ana Pérez", 20)).thenReturn(esperadas);
+
+        assertEquals(esperadas, consultaProcedimientoModel.completeConsulta("  Ana Pérez  "));
+        verify(consultaService).buscarParaAutocompletar("Ana Pérez", 20);
+    }
+
+    @Test
+    void completarConsultaSinCoincidenciasNoAgregaUnMensajeDeError() {
+        FacesContext contexto = mock(FacesContext.class);
+        faces.when(FacesContext::getCurrentInstance).thenReturn(contexto);
+        when(consultaService.buscarParaAutocompletar("zz", 20)).thenReturn(List.of());
+
+        assertTrue(consultaProcedimientoModel.completeConsulta("zz").isEmpty());
+        verify(contexto, never()).addMessage(any(), any());
+    }
+
+    @Test
+    void completarConsultaNotificaUnFalloDeConexionSinExponerDetalles() {
+        FacesContext contexto = mock(FacesContext.class);
+        faces.when(FacesContext::getCurrentInstance).thenReturn(contexto);
+        var fallo = new PersistenceException(new SQLException("credencial privada", "28P01"));
+        when(consultaService.buscarParaAutocompletar("Ana", 20)).thenThrow(fallo);
+
+        assertTrue(consultaProcedimientoModel.completeConsulta("Ana").isEmpty());
+        var mensaje = ArgumentCaptor.forClass(FacesMessage.class);
+        verify(contexto).addMessage(isNull(), mensaje.capture());
+        assertEquals(FacesMessage.SEVERITY_ERROR, mensaje.getValue().getSeverity());
+        assertTrue(mensaje.getValue().getDetail().contains("conectar a la base de datos"));
+        assertFalse(mensaje.getValue().getDetail().contains("credencial privada"));
     }
 
     @Test

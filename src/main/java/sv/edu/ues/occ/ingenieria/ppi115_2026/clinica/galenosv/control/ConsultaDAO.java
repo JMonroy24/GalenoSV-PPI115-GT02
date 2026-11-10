@@ -45,24 +45,9 @@ public class ConsultaDAO extends DefaultDAO<Consulta, UUID> implements Serializa
      * @param max    cantidad máxima de resultados
      * @return lista de coincidencias
      */
+    @Override
     public List<Consulta> buscarParaAutocompletar(String filtro, int max) {
-        String texto = normalizarFiltro(filtro);
-        if (texto == null || texto.length() < 2) {
-            return java.util.List.of();
-        }
-        String patron = patronBusqueda(texto);
-        return getEntityManager().createQuery(
-                "SELECT c FROM Consulta c"
-                + " LEFT JOIN FETCH c.idPersonaRol pr"
-                + " LEFT JOIN FETCH pr.idPersona p"
-                + " WHERE LOWER(c.referenciaExterna) LIKE :patron ESCAPE '\\'"
-                + " OR LOWER(p.nombres) LIKE :patron ESCAPE '\\'"
-                + " OR LOWER(p.apellidos) LIKE :patron ESCAPE '\\'"
-                + " ORDER BY c.fechaInicio DESC, c.idConsulta",
-                Consulta.class)
-                .setParameter("patron", patron)
-                .setMaxResults(limitarAutocompletado(max))
-                .getResultList();
+        return autocompletarConConsulta("Consulta.buscarParaAutocompletar", filtro, max, 2);
     }
 
     @Override
