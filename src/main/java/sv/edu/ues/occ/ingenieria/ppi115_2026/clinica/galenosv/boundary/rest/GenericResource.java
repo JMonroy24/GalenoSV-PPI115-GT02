@@ -137,15 +137,13 @@ public abstract class GenericResource<E, D, ID extends Serializable> {
     public Response actualizar(@PathParam("id") String id,
             @HeaderParam("If-Match") String ifMatch,
             @Valid D dto) {
+        if (ifMatch == null || ifMatch.isBlank()) {
+            throw new PreconditionRequiredException(
+                    "Debe enviar el encabezado If-Match con el ETag actual del recurso.");
+        }
         ID clave = parseId(id);
         E entidad = getService().actualizarSi(clave,
-                e -> {
-                    if (ifMatch == null || ifMatch.isBlank()) {
-                        throw new PreconditionRequiredException(
-                                "Debe enviar el encabezado If-Match con el ETag actual del recurso.");
-                    }
-                    return ETagUtils.coincide(ifMatch, ETagUtils.calcular(getMapper().toDTO(e)));
-                },
+                e -> ETagUtils.coincide(ifMatch, ETagUtils.calcular(getMapper().toDTO(e))),
                 e -> {
                     getMapper().copiar(dto, e);
                     setId(e, clave);

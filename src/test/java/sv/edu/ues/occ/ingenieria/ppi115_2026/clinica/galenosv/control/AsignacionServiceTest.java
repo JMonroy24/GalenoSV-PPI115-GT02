@@ -60,4 +60,23 @@ class AsignacionServiceTest {
         doThrow(new IllegalStateException("fallo al confirmar")).when(em).flush();
         assertThrows(IllegalStateException.class, () -> service.guardarPaso(paso, true, null, List.of()));
     }
+    @Test void eliminarPasoConHijosLanzaValidacionNegocioException() {
+        var procedimiento = new Procedimiento(UUID.randomUUID());
+        var padre = new ProcedimientoPaso(UUID.randomUUID());
+        var hijo = new ProcedimientoPaso(UUID.randomUUID()); hijo.setIdProcedimiento(procedimiento);
+        // padre es origen (tiene hijos), hijo es el que intentamos eliminar... pero según el código
+        // el paso a eliminar es el que aparece como idProcedimientoPaso (origen) de una secuencia SIGUIENTE
+        var relacion = new ProcedimientoPasoSecuencia(UUID.randomUUID());
+        relacion.setIdProcedimientoPaso(padre); // padre tiene hijos
+        relacion.setIdProcedimientoPasoReferencia(hijo.getIdProcedimientoPaso());
+        relacion.setTipoSecuencia("SIGUIENTE");
+        padre.setIdProcedimiento(procedimiento);
+        when(secuenciaDAO.findByProcedimiento(procedimiento.getIdProcedimiento())).thenReturn(List.of(relacion));
+        var ex = assertThrows(ValidacionNegocioException.class, () -> service.eliminarPaso(padre));
+        assertEquals("No se puede eliminar un paso con hijos.", ex.getMessage());
+        verify(pasoDAO, never()).delete(any());
+        verify(secuenciaDAO, never()).delete(any());
+        verify(examenDAO, never()).delete(any());
+    }
 }
+

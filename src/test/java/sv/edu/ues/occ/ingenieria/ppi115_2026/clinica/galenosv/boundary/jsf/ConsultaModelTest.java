@@ -13,6 +13,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -86,7 +87,8 @@ public class ConsultaModelTest {
         consultaModel.getRegistroActual().setIdPersonaRol(paciente);
         consultaModel.guardar();
 
-        verify(consultaService).create(any(Consulta.class));
+        UUID clinicaId = consultaModel.sesionBean.getClinicaActual().getIdClinica();
+        verify(consultaService).crear(any(Consulta.class), eq(clinicaId));
         assertEquals(Estado.NINGUNO, consultaModel.getEstado());
         assertNull(consultaModel.getRegistroActual());
     }
@@ -103,7 +105,8 @@ public class ConsultaModelTest {
         consultaModel.getRegistroActual().setIdPersonaRol(paciente);
         consultaModel.guardar();
 
-        verify(consultaService).update(c);
+        UUID clinicaId = consultaModel.sesionBean.getClinicaActual().getIdClinica();
+        verify(consultaService).actualizar(c, clinicaId);
         assertEquals(Estado.NINGUNO, consultaModel.getEstado());
     }
 

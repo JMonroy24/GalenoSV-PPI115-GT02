@@ -10,20 +10,17 @@ import static org.mockito.Mockito.*;
 
 class ModelValidacionesTest {
 
-
-
-
-
     @Test
     void personaRechazaVaciosYFechaFutura() {
         var model = new PersonaModel();
+        var service = new PersonaService(mock(PersonaDAO.class));
         var persona = new Persona(UUID.randomUUID());
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(persona));
+        assertThrows(ValidacionNegocioException.class, () -> service.crear(persona));
         persona.setNombres(" Ana "); persona.setApellidos(" Pérez ");
         persona.setFechaNacimiento(new Date(model.getHoy().getTime() + 86400000L));
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(persona));
+        assertThrows(ValidacionNegocioException.class, () -> service.crear(persona));
         persona.setFechaNacimiento(java.util.Date.from(java.time.LocalDate.of(1970, 1, 1).atStartOfDay(java.time.ZoneId.of("America/El_Salvador")).toInstant()));
-        assertDoesNotThrow(() -> model.validarNegocio(persona));
+        assertDoesNotThrow(() -> service.crear(persona));
         assertEquals("Ana", persona.getNombres()); assertEquals("Pérez", persona.getApellidos());
         assertNotNull(model.getHoy());
     }
@@ -52,70 +49,76 @@ class ModelValidacionesTest {
 
     @Test
     void personaRolExigeClinicaYRechazaDuplicadoEInactivos() {
-        var model = new PersonaRolModel(); var dao = mock(PersonaRolService.class); model.setPersonaRolService(dao);
+        var personaRolDAO = mock(PersonaRolDAO.class);
+        var service = new PersonaRolService(personaRolDAO);
         var registro = new PersonaRol(UUID.randomUUID());
         var persona = new Persona(UUID.randomUUID()); registro.setIdPersona(persona);
         var rol = new Rol(UUID.randomUUID()); rol.setActivo(true); registro.setIdRol(rol);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
+        assertThrows(ValidacionNegocioException.class, () -> service.crear(registro));
         var asignada = new Clinica(UUID.randomUUID()); asignada.setActivo(true); registro.setIdClinica(asignada);
-        assertDoesNotThrow(() -> model.validarNegocio(registro));
-        when(dao.existeAsignacion(persona.getIdPersona(), rol.getIdRol(), asignada.getIdClinica(), registro.getIdPersonaRol())).thenReturn(true);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
+        assertDoesNotThrow(() -> service.crear(registro));
+        when(personaRolDAO.existeAsignacion(persona.getIdPersona(), rol.getIdRol(), asignada.getIdClinica(), registro.getIdPersonaRol())).thenReturn(true);
+        assertThrows(ValidacionNegocioException.class, () -> service.crear(registro));
         rol.setActivo(false);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
+        assertThrows(ValidacionNegocioException.class, () -> service.crear(registro));
         rol.setActivo(true);
         var clinica = new Clinica(UUID.randomUUID()); clinica.setActivo(false); registro.setIdClinica(clinica);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
+        assertThrows(ValidacionNegocioException.class, () -> service.crear(registro));
         clinica.setActivo(true);
-        assertDoesNotThrow(() -> model.validarNegocio(registro));
+        assertDoesNotThrow(() -> service.crear(registro));
     }
 
     @Test
     void losTresModelosClinicosRechazanFechasInvertidas() {
         var consulta = new Consulta(UUID.randomUUID()); consulta.setFechaInicio(new Date(100)); consulta.setFechaFin(new Date(1));
-        var modelConsulta = new ConsultaModel(); modelConsulta.sesionBean = new SesionBean();
-        var clinica = new Clinica(UUID.randomUUID()); clinica.setActivo(true); modelConsulta.sesionBean.setClinicaActual(clinica);
+        var clinica = new Clinica(UUID.randomUUID()); clinica.setActivo(true);
         var rol = new Rol(UUID.randomUUID()); rol.setActivo(true); rol.setNombre("Paciente");
         var paciente = new PersonaRol(UUID.randomUUID()); paciente.setIdClinica(clinica); paciente.setIdRol(rol); consulta.setIdPersonaRol(paciente);
         var cp = new ConsultaProcedimiento(UUID.randomUUID()); cp.setFechaInicio(new Date(100)); cp.setFechaFin(new Date(1));
         var paso = new ConsultaProcedimientoPaso(UUID.randomUUID()); paso.setFechaInicio(new Date(100)); paso.setFechaFin(new Date(1)); paso.setEstado("Registrado");
-        assertThrows(ValidacionNegocioException.class, () -> modelConsulta.validarNegocio(consulta));
-        assertThrows(ValidacionNegocioException.class, () -> new ConsultaProcedimientoModel().validarNegocio(cp));
-        assertThrows(ValidacionNegocioException.class, () -> new ConsultaProcedimientoPasoModel().validarNegocio(paso));
+        var cs = new ConsultaService(mock(ConsultaDAO.class));
+        var cps = new ConsultaProcedimientoService(mock(ConsultaProcedimientoDAO.class));
+        var cpps = new ConsultaProcedimientoPasoService(mock(ConsultaProcedimientoPasoDAO.class));
+        assertThrows(ValidacionNegocioException.class, () -> cs.crear(consulta));
+        assertThrows(ValidacionNegocioException.class, () -> cps.crear(cp));
+        assertThrows(ValidacionNegocioException.class, () -> cpps.crear(paso));
         consulta.setFechaFin(new Date(100)); cp.setFechaFin(null); paso.setFechaFin(new Date(200));
-        assertDoesNotThrow(() -> modelConsulta.validarNegocio(consulta));
-        assertDoesNotThrow(() -> new ConsultaProcedimientoModel().validarNegocio(cp));
-        assertDoesNotThrow(() -> new ConsultaProcedimientoPasoModel().validarNegocio(paso));
+        assertDoesNotThrow(() -> cs.crear(consulta));
+        assertDoesNotThrow(() -> cps.crear(cp));
+        assertDoesNotThrow(() -> cpps.crear(paso));
     }
 
     @Test
     void procedimientoDebeCaberEnConsultaYTenerCatalogoActivo() {
-        var model = new ConsultaProcedimientoModel(); var registro = new ConsultaProcedimiento(UUID.randomUUID());
+        var service = new ConsultaProcedimientoService(mock(ConsultaProcedimientoDAO.class));
+        var registro = new ConsultaProcedimiento(UUID.randomUUID());
         var consulta = new Consulta(UUID.randomUUID()); consulta.setFechaInicio(new Date(100)); consulta.setFechaFin(new Date(300));
         registro.setIdConsulta(consulta); registro.setFechaInicio(new Date(1));
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
+        assertThrows(ValidacionNegocioException.class, () -> service.crear(registro));
         registro.setFechaInicio(new Date(200)); registro.setFechaFin(new Date(400));
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
+        assertThrows(ValidacionNegocioException.class, () -> service.crear(registro));
         registro.setFechaFin(new Date(300));
         var procedimiento = new Procedimiento(UUID.randomUUID()); procedimiento.setActivo(false); registro.setIdProcedimiento(procedimiento);
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(registro));
+        assertThrows(ValidacionNegocioException.class, () -> service.crear(registro));
         procedimiento.setActivo(true);
-        assertDoesNotThrow(() -> model.validarNegocio(registro));
+        assertDoesNotThrow(() -> service.crear(registro));
     }
 
     @Test
     void ordenYResultadoExigenContenidoYPadre() {
-        var orden = new OrdenExamen(UUID.randomUUID()); var model = new OrdenExamenModel();
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(orden));
+        var orden = new OrdenExamen(UUID.randomUUID());
+        var ordenService = new OrdenExamenService(mock(OrdenExamenDAO.class));
+        assertThrows(ValidacionNegocioException.class, () -> ordenService.crear(orden));
         orden.setIndicaciones(" Tomar muestra ");
-        assertThrows(ValidacionNegocioException.class, () -> model.validarNegocio(orden));
+        assertThrows(ValidacionNegocioException.class, () -> ordenService.crear(orden));
         orden.setIdConsultaProcedimientoPaso(new ConsultaProcedimientoPaso(UUID.randomUUID()));
-        assertDoesNotThrow(() -> model.validarNegocio(orden));
+        assertDoesNotThrow(() -> ordenService.crear(orden));
         assertEquals("Tomar muestra", orden.getIndicaciones());
-        var resultado = new ExamenResultado(UUID.randomUUID()); var modeloResultado = new ExamenResultadoModel();
-        assertThrows(ValidacionNegocioException.class, () -> modeloResultado.validarNegocio(resultado));
+        var resultado = new ExamenResultado(UUID.randomUUID());
+        var resultadoService = new ExamenResultadoService(mock(ExamenResultadoDAO.class));
+        assertThrows(ValidacionNegocioException.class, () -> resultadoService.crear(resultado));
         resultado.setResultado(" Normal "); resultado.setInterpretacion(" Sin alteraciones "); resultado.setIdOrdenExamen(orden);
-        assertDoesNotThrow(() -> modeloResultado.validarNegocio(resultado));
+        assertDoesNotThrow(() -> resultadoService.crear(resultado));
         assertEquals("Normal", resultado.getResultado());
     }
 

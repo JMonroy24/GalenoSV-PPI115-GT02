@@ -308,9 +308,13 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
     }
 
     @Override
-    protected void validarNegocio(Consulta registro) {
-        validarPaciente(registro);
-        ValidadorComun.rangoFechas(registro.getFechaInicio(), registro.getFechaFin());
+    protected void persistirNuevo(Consulta r) {
+        consultaService.crear(r, idClinicaActual());
+    }
+
+    @Override
+    protected void persistirCambios(Consulta r) {
+        consultaService.actualizar(r, idClinicaActual());
     }
 
     private UUID idClinicaActual() {

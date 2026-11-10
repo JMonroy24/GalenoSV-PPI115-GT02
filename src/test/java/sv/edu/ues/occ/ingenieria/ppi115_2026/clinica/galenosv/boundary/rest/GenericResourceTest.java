@@ -123,15 +123,40 @@ class GenericResourceTest {
         DefaultDAO<Entidad, UUID> dao = daoMock();
         DefaultService<Entidad, UUID> service = new TestService(dao);
         EntityMapper<Entidad, DTO> mapper = mapperMock();
-        Entidad entidad = new Entidad(ID, "Original");
-        when(dao.findById(ID)).thenReturn(entidad);
 
         TestResource resource = new TestResource(service, mapper);
 
         assertThrows(PreconditionRequiredException.class,
                 () -> resource.actualizar(ID.toString(), null, new DTO(null, "Nuevo")));
+        verify(dao, never()).findByIdBloqueando(any());
         verify(mapper, never()).copiar(any(), any());
         verify(dao, never()).update(any());
+    }
+
+    @Test
+    void putSinIfMatchAIdInexistenteLanzaPreconditionRequired() {
+        DefaultDAO<Entidad, UUID> dao = daoMock();
+        DefaultService<Entidad, UUID> service = new TestService(dao);
+        EntityMapper<Entidad, DTO> mapper = mapperMock();
+        // El dao NO tiene stub: si se llegara a llamar findByIdBloqueando devolvería null -> 404.
+        // La prueba verifica que se obtiene 428 antes de consultar la BD.
+        TestResource resource = new TestResource(service, mapper);
+
+        assertThrows(PreconditionRequiredException.class,
+                () -> resource.actualizar(ID.toString(), null, new DTO(null, "Nuevo")));
+        verify(dao, never()).findByIdBloqueando(any());
+    }
+
+    @Test
+    void putConIfMatchEnBlancoLanzaPreconditionRequired() {
+        DefaultDAO<Entidad, UUID> dao = daoMock();
+        DefaultService<Entidad, UUID> service = new TestService(dao);
+        EntityMapper<Entidad, DTO> mapper = mapperMock();
+        TestResource resource = new TestResource(service, mapper);
+
+        assertThrows(PreconditionRequiredException.class,
+                () -> resource.actualizar(ID.toString(), "  ", new DTO(null, "Nuevo")));
+        verify(dao, never()).findByIdBloqueando(any());
     }
 
     @Test
@@ -141,7 +166,7 @@ class GenericResourceTest {
         EntityMapper<Entidad, DTO> mapper = mapperMock();
         Entidad entidad = new Entidad(ID, "Original");
         DTO actual = new DTO(ID, "Original");
-        when(dao.findById(ID)).thenReturn(entidad);
+        when(dao.findByIdBloqueando(ID)).thenReturn(entidad);
         when(mapper.toDTO(entidad)).thenReturn(actual);
 
         TestResource resource = new TestResource(service, mapper);
@@ -161,7 +186,7 @@ class GenericResourceTest {
         Entidad entidad = new Entidad(ID, "Original");
         DTO actual = new DTO(ID, "Original");
         DTO cambios = new DTO(null, "Nuevo");
-        when(dao.findById(ID)).thenReturn(entidad);
+        when(dao.findByIdBloqueando(ID)).thenReturn(entidad);
         when(mapper.toDTO(entidad)).thenReturn(actual);
 
         TestResource resource = new TestResource(service, mapper);

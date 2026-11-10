@@ -337,14 +337,7 @@ public class PersonaModel extends ModelTransaccional<Persona, UUID> implements S
         this.personaService = personaService;
     }
 
-    @Override
-    protected void validarNegocio(Persona registro) {
-        registro.setNombres(ValidadorComun.textoObligatorio(registro.getNombres(), "El campo Nombres"));
-        registro.setApellidos(ValidadorComun.textoObligatorio(registro.getApellidos(), "El campo Apellidos"));
-        if (registro.getFechaNacimiento() != null && !registro.getFechaNacimiento().before(getHoy())) {
-            throw new ValidacionNegocioException("La fecha de nacimiento debe estar en el pasado.");
-        }
-    }
+    
 
     public Date getHoy() {
         var zona = java.time.ZoneId.of("America/El_Salvador");

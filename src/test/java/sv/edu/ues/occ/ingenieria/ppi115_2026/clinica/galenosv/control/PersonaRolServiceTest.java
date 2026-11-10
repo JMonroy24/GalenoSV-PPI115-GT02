@@ -66,4 +66,61 @@ class PersonaRolServiceTest {
         asignacion.setIdClinica(clinica);
         return asignacion;
     }
+
+    @Test
+    void crearConPersonaNulaLanzaValidacionNegocioException() {
+        PersonaRol pr = nuevaAsignacion();
+        pr.setIdPersona(null);
+        assertThrows(ValidacionNegocioException.class, () -> personaRolService.crear(pr));
+        verify(personaRolDAO, never()).create(any());
+    }
+
+    @Test
+    void crearConRolNuloLanzaValidacionNegocioException() {
+        PersonaRol pr = nuevaAsignacion();
+        pr.setIdRol(null);
+        assertThrows(ValidacionNegocioException.class, () -> personaRolService.crear(pr));
+        verify(personaRolDAO, never()).create(any());
+    }
+
+    @Test
+    void crearConRolInactivoLanzaValidacionNegocioException() {
+        PersonaRol pr = nuevaAsignacion();
+        pr.getIdRol().setActivo(Boolean.FALSE);
+        assertThrows(ValidacionNegocioException.class, () -> personaRolService.crear(pr));
+        verify(personaRolDAO, never()).create(any());
+    }
+
+    @Test
+    void crearConClinicaNulaLanzaValidacionNegocioException() {
+        PersonaRol pr = nuevaAsignacion();
+        pr.setIdClinica(null);
+        assertThrows(ValidacionNegocioException.class, () -> personaRolService.crear(pr));
+        verify(personaRolDAO, never()).create(any());
+    }
+
+    @Test
+    void crearConClinicaInactivaLanzaValidacionNegocioException() {
+        PersonaRol pr = nuevaAsignacion();
+        pr.getIdClinica().setActivo(Boolean.FALSE);
+        assertThrows(ValidacionNegocioException.class, () -> personaRolService.crear(pr));
+        verify(personaRolDAO, never()).create(any());
+    }
+
+    @Test
+    void crearConAsignacionDuplicadaLanzaValidacionNegocioException() {
+        PersonaRol pr = nuevaAsignacion();
+        when(personaRolDAO.existeAsignacion(any(), any(), any(), any())).thenReturn(true);
+        assertThrows(ValidacionNegocioException.class, () -> personaRolService.crear(pr));
+        verify(personaRolDAO, never()).create(any());
+    }
+
+    @Test
+    void crearValidoLlamaDAOCreate() {
+        PersonaRol pr = nuevaAsignacion();
+        when(personaRolDAO.existeAsignacion(any(), any(), any(), any())).thenReturn(false);
+        personaRolService.crear(pr);
+        verify(personaRolDAO).create(pr);
+    }
 }
+
