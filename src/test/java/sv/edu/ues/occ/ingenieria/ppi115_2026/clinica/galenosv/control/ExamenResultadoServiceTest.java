@@ -55,4 +55,51 @@ class ExamenResultadoServiceTest {
         assertEquals(fechaOriginal, existente.getFechaCreacion());
         verify(examenResultadoDAO).update(existente);
     }
+
+    @Test
+    void crearConResultadoEnBlancoLanzaValidacionNegocioException() {
+        ExamenResultado er = new ExamenResultado(UUID.randomUUID());
+        er.setResultado("   ");
+        er.setInterpretacion("Normal");
+        er.setIdOrdenExamen(new OrdenExamen(UUID.randomUUID()));
+
+        assertThrows(ValidacionNegocioException.class, () -> examenResultadoService.crear(er));
+        verify(examenResultadoDAO, never()).create(any());
+    }
+
+    @Test
+    void crearConInterpretacionEnBlancoLanzaValidacionNegocioException() {
+        ExamenResultado er = new ExamenResultado(UUID.randomUUID());
+        er.setResultado("5.2");
+        er.setInterpretacion("  ");
+        er.setIdOrdenExamen(new OrdenExamen(UUID.randomUUID()));
+
+        assertThrows(ValidacionNegocioException.class, () -> examenResultadoService.crear(er));
+        verify(examenResultadoDAO, never()).create(any());
+    }
+
+    @Test
+    void crearConIdOrdenExamenNullLanzaValidacionNegocioException() {
+        ExamenResultado er = new ExamenResultado(UUID.randomUUID());
+        er.setResultado("5.2");
+        er.setInterpretacion("Normal");
+        er.setIdOrdenExamen(null);
+
+        assertThrows(ValidacionNegocioException.class, () -> examenResultadoService.crear(er));
+        verify(examenResultadoDAO, never()).create(any());
+    }
+
+    @Test
+    void crearValidoRecortaResultadoEInterpretacion() {
+        ExamenResultado er = new ExamenResultado(UUID.randomUUID());
+        er.setResultado("  5.2  ");
+        er.setInterpretacion("  Normal  ");
+        er.setIdOrdenExamen(new OrdenExamen(UUID.randomUUID()));
+
+        examenResultadoService.crear(er);
+
+        assertEquals("5.2", er.getResultado());
+        assertEquals("Normal", er.getInterpretacion());
+        verify(examenResultadoDAO).create(er);
+    }
 }

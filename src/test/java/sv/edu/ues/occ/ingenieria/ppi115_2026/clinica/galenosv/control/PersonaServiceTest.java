@@ -52,4 +52,46 @@ class PersonaServiceTest {
         assertEquals(fechaOriginal, existente.getFechaCreacion());
         verify(personaDAO).update(existente);
     }
+
+    @Test
+    void crearConNombresEnBlancoLanzaValidacionNegocioException() {
+        Persona p = new Persona(UUID.randomUUID());
+        p.setNombres("   ");
+        p.setApellidos("Pérez");
+        assertThrows(ValidacionNegocioException.class, () -> personaService.crear(p));
+        verify(personaDAO, never()).create(any());
+    }
+
+    @Test
+    void crearConApellidosEnBlancoLanzaValidacionNegocioException() {
+        Persona p = new Persona(UUID.randomUUID());
+        p.setNombres("Ana");
+        p.setApellidos("   ");
+        assertThrows(ValidacionNegocioException.class, () -> personaService.crear(p));
+        verify(personaDAO, never()).create(any());
+    }
+
+    @Test
+    void crearConFechaNacimientoMananaLanzaValidacionNegocioException() {
+        Persona p = new Persona(UUID.randomUUID());
+        p.setNombres("Ana");
+        p.setApellidos("Pérez");
+        // fecha = mañana
+        p.setFechaNacimiento(new Date(System.currentTimeMillis() + 86_400_000L));
+        assertThrows(ValidacionNegocioException.class, () -> personaService.crear(p));
+        verify(personaDAO, never()).create(any());
+    }
+
+    @Test
+    void crearValidoRecortaNombresYApellidos() {
+        Persona p = new Persona(UUID.randomUUID());
+        p.setNombres("  Ana  ");
+        p.setApellidos("  Pérez  ");
+
+        personaService.crear(p);
+
+        assertEquals("Ana", p.getNombres());
+        assertEquals("Pérez", p.getApellidos());
+        verify(personaDAO).create(p);
+    }
 }

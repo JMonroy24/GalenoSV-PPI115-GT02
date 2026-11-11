@@ -93,7 +93,7 @@ class DefaultServiceTest {
     void actualizarSiAplicaCambiosValidaYActualiza() {
         UUID id = UUID.randomUUID();
         Clinica c = new Clinica(id);
-        when(clinicaDAO.findById(id)).thenReturn(c);
+        when(clinicaDAO.findByIdBloqueando(id)).thenReturn(c);
 
         Clinica resultado = service.actualizarSi(id, e -> true, e -> e.setNombre("Nuevo"));
 
@@ -107,7 +107,7 @@ class DefaultServiceTest {
     @Test
     void actualizarSiInexistenteLanzaNotFound() {
         UUID id = UUID.randomUUID();
-        when(clinicaDAO.findById(id)).thenReturn(null);
+        when(clinicaDAO.findByIdBloqueando(id)).thenReturn(null);
 
         assertThrows(NotFoundException.class,
                 () -> service.actualizarSi(id, e -> true, e -> e.setNombre("Nuevo")));
@@ -119,13 +119,25 @@ class DefaultServiceTest {
         UUID id = UUID.randomUUID();
         Clinica c = new Clinica(id);
         c.setNombre("Original");
-        when(clinicaDAO.findById(id)).thenReturn(c);
+        when(clinicaDAO.findByIdBloqueando(id)).thenReturn(c);
 
         assertThrows(PreconditionFailedException.class,
                 () -> service.actualizarSi(id, e -> false, e -> e.setNombre("Nuevo")));
         assertEquals("Original", c.getNombre());
         assertFalse(service.validarInvocado);
         verify(clinicaDAO, never()).update(any());
+    }
+
+    @Test
+    void actualizarSiUsaFindByIdBloqueandoYNuncaFindById() {
+        UUID id = UUID.randomUUID();
+        Clinica c = new Clinica(id);
+        when(clinicaDAO.findByIdBloqueando(id)).thenReturn(c);
+
+        service.actualizarSi(id, e -> true, e -> e.setNombre("X"));
+
+        verify(clinicaDAO).findByIdBloqueando(id);
+        verify(clinicaDAO, never()).findById(any());
     }
 
     @Test
@@ -221,5 +233,32 @@ class DefaultServiceTest {
     void normalizarFiltroDelegaEnDefaultDAO() {
         assertEquals("test", DefaultService.normalizarFiltro("  test  "));
         assertNull(DefaultService.normalizarFiltro("   "));
+    }
+
+    @Test
+    void actualizarSiDelegaEnActualizarOverride() {
+        UUID id = UUID.randomUUID();
+        Clinica c = new Clinica(id);
+        when(clinicaDAO.findByIdBloqueando(id)).thenReturn(c);
+
+        int[] llamadas = {0};
+        DefaultService<Clinica, UUID> servicioConOverride = new DefaultService<>() {
+            @Override
+            protected DefaultDAO<Clinica, UUID> getDAO() {
+                return clinicaDAO;
+            }
+
+            @Override
+            public void actualizar(Clinica entidad) {
+                llamadas[0]++;
+                // No llamamos a super.actualizar para evitar llamada real a dao.update
+            }
+        };
+
+        servicioConOverride.actualizarSi(id, e -> true, e -> e.setNombre("Override"));
+
+        assertEquals(1, llamadas[0], "actualizarSi debe invocar actualizar exactamente una vez");
+        assertEquals("Override", c.getNombre(), "los cambios deben aplicarse antes de llamar a actualizar");
+        verify(clinicaDAO, never()).update(any());
     }
 }

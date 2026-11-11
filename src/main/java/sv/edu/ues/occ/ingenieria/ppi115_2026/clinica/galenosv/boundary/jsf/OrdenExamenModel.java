@@ -1,7 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException;
-import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidadorComun;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
 import jakarta.faces.view.ViewScoped;
@@ -136,11 +136,7 @@ public class OrdenExamenModel extends ModelTransaccional<OrdenExamen, UUID> impl
     public void setOrdenExamenService(OrdenExamenService ordenExamenService) {
         this.ordenExamenService = ordenExamenService;
     }
-    @Override
-    protected void validarNegocio(OrdenExamen registro) {
-        registro.setIndicaciones(ValidadorComun.textoObligatorio(registro.getIndicaciones(), "Las indicaciones"));
-        ValidadorComun.requerido(registro.getIdConsultaProcedimientoPaso(), "Seleccione un paso de la consulta.");
-    }
+    
 
 
     private ExamenResultado resultadoSeleccionado;
