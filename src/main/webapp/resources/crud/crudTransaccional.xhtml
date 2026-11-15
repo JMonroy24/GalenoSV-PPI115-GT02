@@ -38,14 +38,14 @@
                                          title="#{msg['btn.search']}" pt:aria-label="#{msg['btn.search']}"
                                          styleClass="ui-button-info"
                                          process="campoBusqueda @this"
-                                         update="tabla toolbarTop">
+                                         update="tabla toolbarTop ayudaFiltro">
                             <f:setPropertyActionListener value="#{null}" target="#{cc.attrs.model.seleccion}"/>
                         </p:commandButton>
                         <p:commandButton icon="pi pi-times"
                                          title="#{msg['btn.clear']}" pt:aria-label="#{msg['btn.clear']}"
-                                         styleClass="ui-button-secondary"
+                                         styleClass="ui-button-info ui-button-outlined"
                                          process="@this"
-                                         update="tabla toolbarTop" resetValues="true">
+                                         update="tabla toolbarTop ayudaFiltro" resetValues="true">
                             <f:setPropertyActionListener value="#{null}"
                                                          target="#{cc.attrs.lazyModel.filtroGlobal}"/>
                             <f:setPropertyActionListener value="#{null}" target="#{cc.attrs.model.seleccion}"/>
@@ -53,6 +53,10 @@
                     </p:toolbarGroup>
                 </p:toolbar>
 
+                <p:outputPanel id="ayudaFiltro" styleClass="crud-filter-help" pt:aria-live="polite">
+                    <h:outputText value="Ingrese un filtro y pulse Buscar para cargar registros."
+                                  rendered="#{cc.attrs.lazyModel.esperaFiltro}"/>
+                </p:outputPanel>
                 <p:dataTable id="tabla" var="registro"
                              value="#{cc.attrs.lazyModel}"
                              lazy="true"
@@ -77,12 +81,12 @@
             </p:panel>
         </p:outputPanel>
 
-            <p:confirmDialog global="true" responsive="true">
+            <p:confirmDialog global="true" responsive="true" styleClass="crud-dialog">
                 <p:commandButton value="#{msg['btn.yes']}" type="button"
                                  styleClass="ui-confirmdialog-yes ui-button-danger"
                                  icon="pi pi-check"/>
                 <p:commandButton value="#{msg['btn.no']}" type="button"
-                                 styleClass="ui-confirmdialog-no ui-button-secondary"
+                                 styleClass="ui-confirmdialog-no ui-button-info ui-button-outlined"
                                  icon="pi pi-times"/>
             </p:confirmDialog>
 
@@ -108,8 +112,8 @@
                                          process="@this :#{cc.facets.formulario.clientId}"
                                          update="crudContainer"/>
                         <p:commandButton id="btnCancelar"
-                                         value="#{msg['btn.cancel']}" icon="pi pi-times"
-                                         styleClass="ui-button-secondary"
+                                         value="Volver a la lista" icon="pi pi-arrow-left"
+                                         styleClass="ui-button-info ui-button-outlined"
                                          action="#{cc.attrs.model.cancelar()}"
                                          process="@this"
                                          update="crudContainer"

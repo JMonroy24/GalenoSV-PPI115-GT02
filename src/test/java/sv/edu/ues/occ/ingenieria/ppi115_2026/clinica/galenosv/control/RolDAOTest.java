@@ -146,7 +146,7 @@ class RolDAOTest {
 
     @Test
     void testFindAllActivos() {
-        when(em.createQuery(anyString(), eq(Rol.class))).thenReturn(query);
+        when(em.createNamedQuery(anyString(), eq(Rol.class))).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(new Rol(UUID.randomUUID())));
 
         List<Rol> result = dao.findAllActivos();

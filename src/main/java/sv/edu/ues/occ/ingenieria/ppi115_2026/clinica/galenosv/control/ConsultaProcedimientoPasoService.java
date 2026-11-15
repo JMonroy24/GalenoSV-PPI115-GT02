@@ -34,11 +34,6 @@ public class ConsultaProcedimientoPasoService extends DefaultService<ConsultaPro
         r.setEstado(ValidadorComun.textoObligatorio(r.getEstado(), "El estado"));
     }
 
-    @Override
-    public List<ConsultaProcedimientoPaso> buscarParaAutocompletar(String filtro, int max) {
-        return consultaProcedimientoPasoDAO.buscarParaAutocompletar(filtro, max);
-    }
-
     public List<ConsultaProcedimientoPaso> findByConsultaProcedimiento(UUID idConsultaProcedimiento) {
         if (idConsultaProcedimiento == null) {
             return List.of();

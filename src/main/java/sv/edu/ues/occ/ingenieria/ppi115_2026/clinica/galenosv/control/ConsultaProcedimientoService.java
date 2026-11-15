@@ -40,11 +40,6 @@ public class ConsultaProcedimientoService extends DefaultService<ConsultaProcedi
         }
     }
 
-    @Override
-    public List<ConsultaProcedimiento> buscarParaAutocompletar(String filtro, int max) {
-        return consultaProcedimientoDAO.buscarParaAutocompletar(filtro, max);
-    }
-
     public List<ConsultaProcedimiento> findByConsulta(UUID idConsulta) {
         if (idConsulta == null) {
             return List.of();

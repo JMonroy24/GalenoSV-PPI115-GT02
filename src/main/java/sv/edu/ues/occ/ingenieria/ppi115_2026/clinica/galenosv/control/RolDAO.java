@@ -47,9 +47,7 @@ public class RolDAO extends DefaultDAO<Rol, UUID> implements Serializable {
      * @return lista de Rol ordenada por nombre
      */
     public java.util.List<Rol> findAllActivos() {
-        return getEntityManager().createQuery(
-                "SELECT r FROM Rol r WHERE r.activo = true ORDER BY r.nombre",
-                Rol.class)
+        return getEntityManager().createNamedQuery("Rol.findAllActivos", Rol.class)
                 .getResultList();
     }
 

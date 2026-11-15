@@ -40,7 +40,12 @@ class ProcedimientoModelTest {
         verifyNoInteractions(procedimientoService);
 
         procedimientoModel.getLazyModel().load(0, 15, Map.of(), Map.of());
-        verify(procedimientoService).findRange(0, 15, null, List.of(), List.of());
+        assertTrue(procedimientoModel.getLazyModel().isEsperaFiltro());
+        assertEquals(0, procedimientoModel.getLazyModel().count(Map.of()));
+        verifyNoInteractions(procedimientoService);
+        procedimientoModel.getLazyModel().setFiltroGlobal("Consulta");
+        procedimientoModel.getLazyModel().load(0, 15, Map.of(), Map.of());
+        verify(procedimientoService).findRange(0, 15, "Consulta", List.of(), List.of());
     }
 
     @Test

@@ -82,10 +82,8 @@ public class ProcedimientoPasoExamenDAO
 
     public boolean existePasoExamen(UUID idPaso, UUID idExamen, UUID excluirId) {
         if (idPaso == null || idExamen == null) return false;
-        String jpql = "SELECT COUNT(p) FROM ProcedimientoPasoExamen p"
-                + " WHERE p.idProcedimientoPaso.idProcedimientoPaso = :paso AND p.idExamen.idExamen = :examen"
-                + (excluirId == null ? "" : " AND p.idProcedimientoPasoExamen <> :excluir");
-        var query = getEntityManager().createQuery(jpql, Long.class)
+        String consulta = excluirId == null ? "ProcedimientoPasoExamen.existePasoExamen" : "ProcedimientoPasoExamen.existePasoExamenExcluyendo";
+        var query = getEntityManager().createNamedQuery(consulta, Long.class)
                 .setParameter("paso", idPaso).setParameter("examen", idExamen);
         if (excluirId != null) query.setParameter("excluir", excluirId);
         return query.getSingleResult() > 0;

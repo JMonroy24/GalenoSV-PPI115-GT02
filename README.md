@@ -156,6 +156,39 @@ no es necesario modificar sus usuarios, tablas o datos.
 Puede usar opcionalmente `src/main/liberty/config/server.env`, excluido de Git.
 `compose.yaml` es una alternativa opcional para una base propia de desarrollo.
 
+**Configurar HTTPS y las claves de autenticación de Liberty**
+
+En PowerShell 7, ejecute una vez desde la raíz del repositorio:
+
+```powershell
+./scripts/configurar-seguridad-local.ps1
+```
+
+El script genera `GALENOSV_KEYSTORE_PASSWORD` y `GALENOSV_LTPA_PASSWORD` en
+`src/main/liberty/config/server.env`, excluido de Git. Conserva los valores
+existentes y las credenciales de PostgreSQL y de los usuarios de la aplicación.
+En otros entornos, defina ambas variables antes de arrancar el servidor.
+Mantenga estas claves entre reinicios; no las regenere mientras reutiliza los
+archivos de seguridad existentes.
+
+`server.xml` configura el [almacén TLS de Liberty](https://openliberty.io/docs/latest/reference/config/keyStore.html)
+y las [claves LTPA](https://openliberty.io/docs/latest/reference/config/ltpa.html)
+con esas variables. Su ausencia provoca los errores `CWWKS9582E` y `CWWKS4118E`.
+Liberty genera el certificado local para HTTPS; en desarrollo, el navegador
+puede advertir que es un certificado autofirmado.
+
+Si utiliza la base existente del contenedor `GalenoSV-db`, inicie Docker Desktop
+y el contenedor antes de Liberty:
+
+```powershell
+docker desktop start
+docker start GalenoSV-db
+```
+
+`GALENOSV_DB_PORT` en `server.env` debe coincidir con el puerto publicado por
+el contenedor (por ejemplo, `5433` para `5433:5432`). Un contenedor detenido
+provoca `Connection refused` y respuestas `503` al consultar la API.
+
 ## API REST
 
 La API se publica bajo la base `https://localhost:9443/galenoSV/api/v1` y requiere

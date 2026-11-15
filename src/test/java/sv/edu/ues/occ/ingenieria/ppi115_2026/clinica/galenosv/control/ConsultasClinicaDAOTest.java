@@ -14,6 +14,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class ConsultasClinicaDAOTest {
+    private static String consulta(Class<?> entidad, String nombre) {
+        return Arrays.stream(entidad.getAnnotationsByType(NamedQuery.class))
+                .filter(q -> q.name().equals(nombre)).findFirst().orElseThrow().query();
+    }
+
     @Test
     void sinClinicaNoSeConsultaLaBase() {
         EntityManager em = mock(EntityManager.class);
@@ -29,36 +34,36 @@ class ConsultasClinicaDAOTest {
     @SuppressWarnings("unchecked")
     void documentosSoloCompruebanDuplicadosDeLaMismaPersona() {
         EntityManager em = mock(EntityManager.class); TypedQuery<Long> query = mock(TypedQuery.class, RETURNS_SELF);
-        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(query); when(query.getSingleResult()).thenReturn(1L);
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(query); when(query.getSingleResult()).thenReturn(1L);
         DocumentoDAO dao = new DocumentoDAO(em); UUID persona = UUID.randomUUID(), tipo = UUID.randomUUID(), excluir = UUID.randomUUID();
         assertFalse(dao.existePersonaTipoValor(null, tipo, "123", null)); verifyNoInteractions(em);
         assertTrue(dao.existePersonaTipoValor(persona, tipo, " ABC ", excluir));
-        ArgumentCaptor<String> jpql = ArgumentCaptor.forClass(String.class); verify(em).createQuery(jpql.capture(), eq(Long.class));
-        assertTrue(jpql.getValue().contains("d.idPersona.idPersona = :persona"));
+        ArgumentCaptor<String> jpql = ArgumentCaptor.forClass(String.class); verify(em).createNamedQuery(jpql.capture(), eq(Long.class));
+        assertTrue(consulta(Documento.class, jpql.getValue()).contains("d.idPersona.idPersona = :persona"));
         verify(query).setParameter("persona", persona); verify(query).setParameter("valor", "abc"); verify(query).setParameter("excluir", excluir);
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    void listadoYConteoSoloEnlazanLosParametrosPresentes() {
+    void listadoYConteoUsanConsultasNombradasYParametrosTipados() {
         EntityManager em = mock(EntityManager.class);
         TypedQuery<Consulta> lista = mock(TypedQuery.class, RETURNS_SELF);
         TypedQuery<Long> conteo = mock(TypedQuery.class, RETURNS_SELF);
-        when(em.createQuery(anyString(), eq(Consulta.class))).thenReturn(lista);
-        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(conteo);
+        when(em.createNamedQuery(anyString(), eq(Consulta.class))).thenReturn(lista);
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(conteo);
         when(conteo.getSingleResult()).thenReturn(2L);
         ConsultaDAO dao = new ConsultaDAO(em); UUID clinica = UUID.randomUUID(); Date desde = new Date(100), hasta = new Date(200);
         dao.findRangeFiltrado(15, 10, clinica, desde, null);
         ArgumentCaptor<String> jpql = ArgumentCaptor.forClass(String.class);
-        verify(em).createQuery(jpql.capture(), eq(Consulta.class));
-        assertTrue(jpql.getValue().contains("c.fechaInicio >= :desde")); assertFalse(jpql.getValue().contains(":hasta"));
-        assertTrue(jpql.getValue().contains("ORDER BY c.fechaInicio DESC, c.idConsulta"));
+        verify(em).createNamedQuery(jpql.capture(), eq(Consulta.class));
+        assertEquals("Consulta.findRangeFiltrado", jpql.getValue());
+        assertTrue(consulta(Consulta.class, jpql.getValue()).contains("ORDER BY c.fechaInicio DESC, c.idConsulta"));
         verify(lista).setParameter("clinica", clinica); verify(lista).setParameter("desde", desde);
-        verify(lista, never()).setParameter(eq("hasta"), any()); verify(lista).setFirstResult(15); verify(lista).setMaxResults(10);
+        verify(lista).setParameter("filtrarHasta", false); verify(lista).setParameter("hasta", new Date(0)); verify(lista).setFirstResult(15); verify(lista).setMaxResults(10);
         assertEquals(2, dao.countFiltrado(clinica, null, hasta));
-        verify(em).createQuery(jpql.capture(), eq(Long.class));
-        assertFalse(jpql.getValue().contains("FETCH")); assertFalse(jpql.getValue().contains(":desde")); assertTrue(jpql.getValue().contains(":hasta"));
-        verify(conteo).setParameter("hasta", hasta); verify(conteo, never()).setParameter(eq("desde"), any());
+        verify(em).createNamedQuery(jpql.capture(), eq(Long.class));
+        assertEquals("Consulta.countFiltrado", jpql.getValue()); assertFalse(consulta(Consulta.class, jpql.getValue()).contains("FETCH"));
+        verify(conteo).setParameter("hasta", hasta); verify(conteo).setParameter("filtrarDesde", false); verify(conteo).setParameter("desde", new Date(0));
         assertThrows(IllegalArgumentException.class, () -> dao.findRangeFiltrado(-1, 10, clinica, null, null));
         assertThrows(IllegalArgumentException.class, () -> dao.findRangeFiltrado(0, 0, clinica, null, null));
     }
@@ -85,14 +90,14 @@ class ConsultasClinicaDAOTest {
     void pasoInicialNoEsDestinoYResponsablePerteneceAlRolYClinica() {
         EntityManager em = mock(EntityManager.class); TypedQuery<ProcedimientoPaso> pasos = mock(TypedQuery.class, RETURNS_SELF);
         TypedQuery<PersonaRol> personas = mock(TypedQuery.class, RETURNS_SELF);
-        when(em.createQuery(anyString(), eq(ProcedimientoPaso.class))).thenReturn(pasos);
-        when(em.createQuery(anyString(), eq(PersonaRol.class))).thenReturn(personas);
+        when(em.createNamedQuery(anyString(), eq(ProcedimientoPaso.class))).thenReturn(pasos);
+        when(em.createNamedQuery(anyString(), eq(PersonaRol.class))).thenReturn(personas);
         UUID procedimiento = UUID.randomUUID(), clinica = UUID.randomUUID(), rol = UUID.randomUUID();
         ProcedimientoPaso inicio = new ProcedimientoPaso(UUID.randomUUID()); PersonaRol responsable = new PersonaRol(UUID.randomUUID());
         when(pasos.getResultList()).thenReturn(List.of(inicio)); when(personas.getResultList()).thenReturn(List.of(responsable));
         assertSame(inicio, new ProcedimientoPasoDAO(em).findPasoInicial(procedimiento));
-        ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class); verify(em).createQuery(sql.capture(), eq(ProcedimientoPaso.class));
-        assertTrue(sql.getValue().contains("NOT EXISTS")); assertTrue(sql.getValue().contains("s.idProcedimientoPasoReferencia = pp.idProcedimientoPaso"));
+        ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class); verify(em).createNamedQuery(sql.capture(), eq(ProcedimientoPaso.class));
+        assertTrue(consulta(ProcedimientoPaso.class, sql.getValue()).contains("NOT EXISTS")); assertTrue(consulta(ProcedimientoPaso.class, sql.getValue()).contains("s.idProcedimientoPasoReferencia = pp.idProcedimientoPaso"));
         verify(pasos).setParameter("idProc", procedimiento); verify(pasos).setMaxResults(1);
         assertSame(responsable, new PersonaRolDAO(em).findResponsable(clinica, rol));
         verify(personas).setParameter("clinica", clinica); verify(personas).setParameter("rol", rol); verify(personas).setMaxResults(1);

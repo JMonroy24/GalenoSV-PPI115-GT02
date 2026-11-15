@@ -37,11 +37,6 @@ public class OrdenExamenService extends DefaultService<OrdenExamen, UUID> implem
         ValidadorComun.requerido(r.getIdConsultaProcedimientoPaso(), "Seleccione un paso de la consulta.");
     }
 
-    @Override
-    public List<OrdenExamen> buscarParaAutocompletar(String filtro, int max) {
-        return ordenExamenDAO.buscarParaAutocompletar(filtro, max);
-    }
-
     public OrdenExamenDAO getOrdenExamenDAO() {
         return ordenExamenDAO;
     }

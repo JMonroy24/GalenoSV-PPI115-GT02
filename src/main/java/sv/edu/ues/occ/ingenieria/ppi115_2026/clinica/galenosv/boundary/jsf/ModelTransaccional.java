@@ -26,7 +26,7 @@ public abstract class ModelTransaccional<T, ID extends Serializable> extends Mod
      * Reemplaza la llamada a cargarDatos() que usan los modelos de catálogo.
      */
     protected void inicializarLazyModel() {
-        inicializarLazyModel(false);
+        inicializarLazyModel(true);
     }
 
     protected void inicializarLazyModel(boolean requiereFiltro) {

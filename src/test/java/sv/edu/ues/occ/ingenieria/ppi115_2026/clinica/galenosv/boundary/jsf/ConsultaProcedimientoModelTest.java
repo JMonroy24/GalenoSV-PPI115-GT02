@@ -120,17 +120,17 @@ public class ConsultaProcedimientoModelTest {
     @Test
     void completarConsultaDevuelveCoincidenciasDelFiltroNormalizado() {
         List<Consulta> esperadas = List.of(new Consulta(UUID.randomUUID()));
-        when(consultaService.buscarParaAutocompletar("Ana Pérez", 20)).thenReturn(esperadas);
+        when(consultaService.buscarParaAutocompletar("Ana Pérez", 20, configurarClinica())).thenReturn(esperadas);
 
         assertEquals(esperadas, consultaProcedimientoModel.completeConsulta("  Ana Pérez  "));
-        verify(consultaService).buscarParaAutocompletar("Ana Pérez", 20);
+        verify(consultaService).buscarParaAutocompletar("Ana Pérez", 20, consultaProcedimientoModel.sesionBean.getClinicaActual().getIdClinica());
     }
 
     @Test
     void completarConsultaSinCoincidenciasNoAgregaUnMensajeDeError() {
         FacesContext contexto = mock(FacesContext.class);
         faces.when(FacesContext::getCurrentInstance).thenReturn(contexto);
-        when(consultaService.buscarParaAutocompletar("zz", 20)).thenReturn(List.of());
+        when(consultaService.buscarParaAutocompletar("zz", 20, configurarClinica())).thenReturn(List.of());
 
         assertTrue(consultaProcedimientoModel.completeConsulta("zz").isEmpty());
         verify(contexto, never()).addMessage(any(), any());
@@ -140,8 +140,9 @@ public class ConsultaProcedimientoModelTest {
     void completarConsultaNotificaUnFalloDeConexionSinExponerDetalles() {
         FacesContext contexto = mock(FacesContext.class);
         faces.when(FacesContext::getCurrentInstance).thenReturn(contexto);
+        when(contexto.getAttributes()).thenReturn(new java.util.HashMap<>());
         var fallo = new PersistenceException(new SQLException("credencial privada", "28P01"));
-        when(consultaService.buscarParaAutocompletar("Ana", 20)).thenThrow(fallo);
+        when(consultaService.buscarParaAutocompletar("Ana", 20, configurarClinica())).thenThrow(fallo);
 
         assertTrue(consultaProcedimientoModel.completeConsulta("Ana").isEmpty());
         var mensaje = ArgumentCaptor.forClass(FacesMessage.class);
@@ -149,6 +150,28 @@ public class ConsultaProcedimientoModelTest {
         assertEquals(FacesMessage.SEVERITY_ERROR, mensaje.getValue().getSeverity());
         assertTrue(mensaje.getValue().getDetail().contains("conectar a la base de datos"));
         assertFalse(mensaje.getValue().getDetail().contains("credencial privada"));
+    }
+
+    private UUID configurarClinica() {
+        var clinica = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Clinica(UUID.randomUUID());
+        clinica.setActivo(true);
+        consultaProcedimientoModel.sesionBean = new SesionBean();
+        consultaProcedimientoModel.sesionBean.setClinicaActual(clinica);
+        return clinica.getIdClinica();
+    }
+
+    @Test
+    void completarSinClinicaNoConsultaServicios() {
+        assertTrue(consultaProcedimientoModel.completeConsulta("Ana").isEmpty());
+        verifyNoInteractions(consultaService);
+    }
+
+    @Test
+    void completarConClinicaInactivaNoConsultaServicios() {
+        configurarClinica();
+        consultaProcedimientoModel.sesionBean.getClinicaActual().setActivo(false);
+        assertTrue(consultaProcedimientoModel.completeConsulta("Ana").isEmpty());
+        verifyNoInteractions(consultaService);
     }
 
     @Test

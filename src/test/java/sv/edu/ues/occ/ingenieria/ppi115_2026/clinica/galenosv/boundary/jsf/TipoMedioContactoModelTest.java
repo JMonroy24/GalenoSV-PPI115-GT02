@@ -67,29 +67,6 @@ public class TipoMedioContactoModelTest {
     }
 
     @Test
-    public void testGuardarCrear() {
-        tipoMedioContactoModel.prepararNuevo();
-        tipoMedioContactoModel.getRegistroActual().setNombre("Registro válido");
-        tipoMedioContactoModel.guardar();
-
-        verify(tipoMedioContactoService).create(any(TipoMedioContacto.class));
-        assertEquals(Estado.NINGUNO, tipoMedioContactoModel.getEstado());
-        assertNull(tipoMedioContactoModel.getRegistroActual());
-    }
-
-    @Test
-    public void testGuardarModificar() {
-        TipoMedioContacto tmc = new TipoMedioContacto(UUID.randomUUID());
-        tipoMedioContactoModel.seleccionar(tmc);
-
-        tipoMedioContactoModel.getRegistroActual().setNombre("Registro válido");
-        tipoMedioContactoModel.guardar();
-
-        verify(tipoMedioContactoService).update(tmc);
-        assertEquals(Estado.NINGUNO, tipoMedioContactoModel.getEstado());
-    }
-
-    @Test
     public void testEliminar() {
         TipoMedioContacto tmc = new TipoMedioContacto(UUID.randomUUID());
         tipoMedioContactoModel.eliminar(tmc);

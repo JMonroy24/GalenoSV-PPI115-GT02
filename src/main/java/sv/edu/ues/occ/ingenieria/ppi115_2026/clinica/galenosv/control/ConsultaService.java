@@ -49,13 +49,14 @@ public class ConsultaService extends DefaultService<Consulta, UUID> implements S
         }
     }
 
-    @Override
-    public List<Consulta> buscarParaAutocompletar(String filtro, int max) {
-        return consultaDAO.buscarParaAutocompletar(filtro, max);
-    }
-
     public List<Consulta> findRangeFiltrado(int first, int max, UUID idClinica, Date desde, Date hasta) {
         return consultaDAO.findRangeFiltrado(first, max, idClinica, desde, hasta);
+    }
+
+    public List<Consulta> buscarParaAutocompletar(String filtro, int max, UUID idClinica) {
+        String texto = normalizarFiltro(filtro);
+        if (texto == null || texto.length() < 2 || idClinica == null) return List.of();
+        return consultaDAO.buscarParaAutocompletar(texto, max, idClinica);
     }
 
     public List<Consulta> findRangeFiltrado(int first, int max, UUID idClinica, Date desde, Date hasta, String filtro) {

@@ -21,6 +21,28 @@ class GenericLazyDataModelTest {
     private final GenericLazyDataModel<Persona> model = new GenericLazyDataModel<>(dao);
 
     @Test
+    void modeloDeVistaExigeFiltroAntesDeContarOCargar() {
+        ModelTransaccional<Persona, UUID> vista = new ModelTransaccional<>() {
+            @Override protected DAOInterface<Persona, UUID> getDAO() { return dao; }
+            @Override protected Persona crearNuevoRegistro() { return new Persona(UUID.randomUUID()); }
+        };
+        vista.inicializarLazyModel();
+        var lista = vista.getLazyModel();
+        for (String filtro : new String[]{null, "", "  ", "\u2003"}) {
+            lista.setFiltroGlobal(filtro);
+            assertTrue(lista.isEsperaFiltro());
+            assertEquals(0, lista.count(Map.of()));
+            assertTrue(lista.load(0, 20, Map.of(), Map.of()).isEmpty());
+        }
+        verifyNoInteractions(dao);
+        lista.setFiltroGlobal("  Ana  ");
+        lista.count(Map.of());
+        lista.load(0, 20, Map.of(), Map.of());
+        verify(dao).count("Ana", List.of());
+        verify(dao).findRange(0, 20, "Ana", List.of(), List.of());
+    }
+
+    @Test
     void cargaTraduceOrdenYFiltrosDeColumna() {
         SortMeta orden = mock(SortMeta.class);
         when(orden.getField()).thenReturn("nombres");

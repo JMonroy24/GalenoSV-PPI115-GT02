@@ -120,7 +120,9 @@ public abstract class DefaultService<T, ID extends Serializable> implements DAOI
     }
 
     public List<T> buscarParaAutocompletar(String filtro, int max) {
-        return getDAO().buscarParaAutocompletar(filtro, max);
+        String texto = normalizarFiltro(filtro);
+        if (texto == null) return List.of();
+        return getDAO().buscarParaAutocompletar(texto, max);
     }
 
     public static String normalizarFiltro(String valor) {

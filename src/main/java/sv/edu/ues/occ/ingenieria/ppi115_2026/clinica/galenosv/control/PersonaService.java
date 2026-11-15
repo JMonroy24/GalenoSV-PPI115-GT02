@@ -40,11 +40,6 @@ public class PersonaService extends DefaultService<Persona, UUID> implements Ser
         }
     }
 
-    @Override
-    public List<Persona> buscarParaAutocompletar(String filtro, int max) {
-        return personaDAO.buscarParaAutocompletar(filtro, max);
-    }
-
     public Date getHoy() {
         var zona = java.time.ZoneId.of("America/El_Salvador");
         return Date.from(java.time.LocalDate.now(zona).atStartOfDay(zona).toInstant());

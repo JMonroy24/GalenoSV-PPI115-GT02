@@ -152,7 +152,7 @@ class ExamenDAOTest {
 
     @Test
     void testFindAllActivos() {
-        when(em.createQuery(anyString(), eq(Examen.class))).thenReturn(query);
+        when(em.createNamedQuery(anyString(), eq(Examen.class))).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(new Examen(UUID.randomUUID())));
 
         List<Examen> result = dao.findAllActivos();

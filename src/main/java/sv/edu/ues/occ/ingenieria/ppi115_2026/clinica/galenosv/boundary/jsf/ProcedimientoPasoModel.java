@@ -193,7 +193,10 @@ public class ProcedimientoPasoModel extends Model<ProcedimientoPaso, UUID> imple
     public List<ProcedimientoPasoExamen> getExamenesAsignados() { return examenesAsignados; }
 
     public List<ProcedimientoPasoExamen> getExamenesVisibles() {
-        return filtrarPorNombre(examenesAsignados, filtroExamenes,
+        if (getRegistroActual() == null) return List.of();
+        List<ProcedimientoPasoExamen> delPaso = examenesAsignados.stream()
+                .filter(a -> getRegistroActual().equals(a.getIdProcedimientoPaso())).toList();
+        return filtrarPorNombre(delPaso, filtroExamenes,
                 asignacion -> asignacion.getIdExamen() == null ? null : asignacion.getIdExamen().getNombre());
     }
 

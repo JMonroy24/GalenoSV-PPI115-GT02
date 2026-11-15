@@ -9,10 +9,10 @@
                 <p:panel header="Procedimientos">
                     <p:toolbar id="accionesProcedimiento" styleClass="crud-toolbar">
                         <p:toolbarGroup>
-                            <p:commandButton value="Nuevo procedimiento" icon="pi pi-plus" styleClass="accion-nuevo"
+                            <p:commandButton value="Nuevo procedimiento" icon="pi pi-plus" styleClass="ui-button-info accion-nuevo"
                                              action="#{procedimientoModel.prepararNuevo()}"
                                              process="@this" update="@form :detalle" resetValues="true"/>
-                            <p:commandButton value="Editar" icon="pi pi-pencil" styleClass="ui-button-warning"
+                            <p:commandButton value="Editar" icon="pi pi-pencil" styleClass="ui-button-info"
                                              action="#{procedimientoModel.editarSeleccionado()}"
                                              disabled="#{empty procedimientoModel.procedimientoSeleccionado}"
                                              process="@this" update="@form :detalle" resetValues="true"/>
@@ -36,7 +36,7 @@
                     <p:dataTable id="tablaProcedimientos" value="#{procedimientoModel.lazyModel}" var="registro"
                                  lazy="true" reflow="true" paginator="true" paginatorAlwaysVisible="false" rows="15"
                                  selectionMode="single" selection="#{procedimientoModel.procedimientoSeleccionado}"
-                                 rowKey="#{registro.idProcedimiento}" emptyMessage="No se encontraron procedimientos.">
+                                 rowKey="#{registro.idProcedimiento}" emptyMessage="#{procedimientoModel.lazyModel.esperaFiltro ? 'Ingrese un filtro para buscar procedimientos.' : 'No se encontraron procedimientos.'}">
                         <p:ajax event="rowSelect" process="@this" update="accionesProcedimiento"/>
                         <p:ajax event="rowUnselect" process="@this" update="accionesProcedimiento"/>
                         <p:column headerText="Nombre" sortBy="#{registro.nombre}"><h:outputText value="#{registro.nombre}"/></p:column>
@@ -51,7 +51,7 @@
             <p:panel rendered="#{not procedimientoModel.estadoNinguno}"
                      header="#{procedimientoModel.estadoCrear ? 'Nuevo procedimiento' : procedimientoModel.registroActual.nombre}">
                 <h:form id="frmVolver" styleClass="crud-actions">
-                    <p:commandButton value="Volver a procedimientos" icon="pi pi-arrow-left" styleClass="ui-button-secondary"
+                    <p:commandButton value="Volver a procedimientos" icon="pi pi-arrow-left" styleClass="ui-button-info ui-button-outlined"
                                      action="#{procedimientoModel.cancelar()}"
                                      process="@this" update=":frmLista :detalle" resetValues="true"/>
                 </h:form>
@@ -84,7 +84,7 @@
 
         <p:confirmDialog global="true" responsive="true">
             <p:commandButton value="Eliminar" type="button" styleClass="ui-confirmdialog-yes ui-button-danger" icon="pi pi-trash"/>
-            <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
+            <p:commandButton value="Cancelar" type="button" styleClass="ui-confirmdialog-no ui-button-info ui-button-outlined" icon="pi pi-times"/>
         </p:confirmDialog>
     </ui:define>
 </ui:composition>

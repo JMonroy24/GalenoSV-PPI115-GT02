@@ -18,6 +18,22 @@ import java.util.UUID;
 @Entity
 @Table(name = "documento")
 @NamedQueries({
+    @NamedQuery(name = "Documento.existeTipoValor", query =
+        "SELECT COUNT(d) FROM Documento d"
+                + " WHERE d.idTipoDocumento.idTipoDocumento = :tipo AND LOWER(d.valor) = :valor"),
+    @NamedQuery(name = "Documento.existeTipoValorExcluyendo", query =
+        "SELECT COUNT(d) FROM Documento d"
+                + " WHERE d.idTipoDocumento.idTipoDocumento = :tipo AND LOWER(d.valor) = :valor"
+                + " AND d.idDocumento <> :excluir"),
+    @NamedQuery(name = "Documento.existePersonaTipoValor", query =
+        "SELECT COUNT(d) FROM Documento d"
+                + " WHERE d.idPersona.idPersona = :persona AND d.idTipoDocumento.idTipoDocumento = :tipo"
+                + " AND LOWER(d.valor) = :valor"),
+    @NamedQuery(name = "Documento.existePersonaTipoValorExcluyendo", query =
+        "SELECT COUNT(d) FROM Documento d"
+                + " WHERE d.idPersona.idPersona = :persona AND d.idTipoDocumento.idTipoDocumento = :tipo"
+                + " AND LOWER(d.valor) = :valor"
+                + " AND d.idDocumento <> :excluir"),
     @NamedQuery(name = "Documento.findAll", query = "SELECT d FROM Documento d"),
     @NamedQuery(name = "Documento.findByValor", query = "SELECT d FROM Documento d WHERE d.valor = :valor"),
     @NamedQuery(name = "Documento.findByRutaFisica", query = "SELECT d FROM Documento d WHERE d.rutaFisica = :rutaFisica")})

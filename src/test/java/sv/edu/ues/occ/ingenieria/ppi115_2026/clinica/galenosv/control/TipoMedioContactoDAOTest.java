@@ -146,7 +146,7 @@ class TipoMedioContactoDAOTest {
 
     @Test
     void testFindAllActivos() {
-        when(em.createQuery(anyString(), eq(TipoMedioContacto.class))).thenReturn(query);
+        when(em.createNamedQuery(anyString(), eq(TipoMedioContacto.class))).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(new TipoMedioContacto(UUID.randomUUID())));
 
         List<TipoMedioContacto> result = dao.findAllActivos();

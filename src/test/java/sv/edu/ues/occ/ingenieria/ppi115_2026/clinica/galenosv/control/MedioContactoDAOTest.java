@@ -148,7 +148,7 @@ class MedioContactoDAOTest {
     void testExistePersonaTipoValor() {
         UUID idPersona = UUID.randomUUID();
         UUID idTipo = UUID.randomUUID();
-        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
         when(queryLong.setParameter(eq("persona"), any())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("tipo"), any())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("valor"), anyString())).thenReturn(queryLong);
@@ -172,7 +172,7 @@ class MedioContactoDAOTest {
         UUID idPersona = UUID.randomUUID();
         UUID idTipo = UUID.randomUUID();
         UUID idExclude = UUID.randomUUID();
-        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
         when(queryLong.setParameter(eq("persona"), any())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("tipo"), any())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("valor"), anyString())).thenReturn(queryLong);

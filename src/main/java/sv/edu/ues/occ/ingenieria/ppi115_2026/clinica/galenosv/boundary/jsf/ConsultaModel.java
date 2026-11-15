@@ -21,6 +21,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaPr
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterface;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Documento;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimiento;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimientoPaso;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRol;
@@ -340,8 +341,12 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
         consultasFiltradas = new GenericLazyDataModel<>(consultaService) {
             private static final long serialVersionUID = 1L;
             @Override
+            public boolean isEsperaFiltro() {
+                return getFiltroGlobal() == null && fechaDesde == null && fechaHasta == null;
+            }
+            @Override
             public int count(java.util.Map<String, org.primefaces.model.FilterMeta> filtros) {
-                if (!rangoFiltroValido()) return 0;
+                if (isEsperaFiltro() || !rangoFiltroValido()) return 0;
                 return consultar("contar consultas", () -> Math.toIntExact(consultaService.countFiltrado(
                         idClinicaActual(), inicioDia(fechaDesde), finDia(fechaHasta), getFiltroGlobal())), 0);
             }
@@ -349,7 +354,7 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
             public List<Consulta> load(int first, int max,
                     java.util.Map<String, org.primefaces.model.SortMeta> orden,
                     java.util.Map<String, org.primefaces.model.FilterMeta> filtros) {
-                if (!rangoFiltroValido()) return List.of();
+                if (isEsperaFiltro() || !rangoFiltroValido()) return List.of();
                 return consultar("cargar consultas", () -> consultaService.findRangeFiltrado(first, max,
                         idClinicaActual(), inicioDia(fechaDesde), finDia(fechaHasta), getFiltroGlobal()), List.of());
             }
@@ -400,14 +405,24 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
     private final java.util.Map<UUID, String> documentosCache = new java.util.HashMap<>();
     public String getDocumentosPersona(UUID idPersona) {
         if (idPersona == null) return "";
-        return documentosCache.computeIfAbsent(idPersona, id -> documentoService.findByPersona(id).stream()
+        if (documentosCache.containsKey(idPersona)) return documentosCache.get(idPersona);
+        List<Documento> documentos = consultar("cargar documentos",
+                () -> documentoService.findByPersona(idPersona), null);
+        if (documentos == null) return ""; // Un fallo no se guarda en la caché de la vista.
+        String detalle = documentos.stream()
                 .map(d -> (d.getIdTipoDocumento() == null ? "Documento" : d.getIdTipoDocumento().getNombre())
-                        + ": " + d.getValor()).collect(java.util.stream.Collectors.joining(", ")));
+                        + ": " + d.getValor()).collect(java.util.stream.Collectors.joining(", "));
+        documentosCache.put(idPersona, detalle);
+        return detalle;
     }
+
     public String getEstadoPasoActual(ConsultaProcedimiento procedimiento) {
         if (procedimiento == null) return "";
-        return consultaProcedimientoPasoService.findByConsultaProcedimiento(procedimiento.getIdConsultaProcedimiento())
-                .stream().filter(p -> p.getFechaFin() == null)
+        List<ConsultaProcedimientoPaso> actuales = consultar("cargar estado del procedimiento",
+                () -> consultaProcedimientoPasoService.findByConsultaProcedimiento(
+                        procedimiento.getIdConsultaProcedimiento()), null);
+        if (actuales == null) return "No disponible";
+        return actuales.stream().filter(p -> p.getFechaFin() == null)
                 .map(p -> p.getEstado() == null ? "Sin estado" : p.getEstado()).findFirst().orElse("Finalizado");
     }
 
@@ -447,9 +462,10 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
 
     public String getDetallePrimerPaso(ConsultaProcedimiento procedimiento) {
         if (procedimiento == null || procedimiento.getIdProcedimiento() == null) return "Sin paso inicial";
-        var definicion = procedimientoPasoService.findPasoInicial(procedimiento.getIdProcedimiento().getIdProcedimiento());
-        var inicial = consultaProcedimientoPasoService.findByConsultaProcedimiento(procedimiento.getIdConsultaProcedimiento())
-                .stream().min(java.util.Comparator.comparing(ConsultaProcedimientoPaso::getFechaInicio,
+        var definicion = consultar("cargar el paso inicial", () -> procedimientoPasoService.findPasoInicial(
+                procedimiento.getIdProcedimiento().getIdProcedimiento()), null);
+        var inicial = consultar("cargar pasos del procedimiento", () -> consultaProcedimientoPasoService.findByConsultaProcedimiento(
+                procedimiento.getIdConsultaProcedimiento()), List.<ConsultaProcedimientoPaso>of()).stream().min(java.util.Comparator.comparing(ConsultaProcedimientoPaso::getFechaInicio,
                         java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder()))).orElse(null);
         return (definicion == null ? "Sin paso inicial definido" : definicion.getNombre())
                 + " | A cargo de: " + (inicial == null || inicial.getIdPersonaRol() == null

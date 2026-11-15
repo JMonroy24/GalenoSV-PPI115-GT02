@@ -18,6 +18,19 @@ import java.util.UUID;
 @Entity
 @Table(name = "procedimiento_paso_secuencia")
 @NamedQueries({
+    @NamedQuery(name = "ProcedimientoPasoSecuencia.findByProcedimiento", query =
+        "SELECT s FROM ProcedimientoPasoSecuencia s "
+                + "JOIN FETCH s.idProcedimientoPaso p "
+                + "WHERE p.idProcedimiento.idProcedimiento = :id"),
+    @NamedQuery(name = "ProcedimientoPasoSecuencia.existeSecuencia", query =
+        "SELECT COUNT(s) FROM ProcedimientoPasoSecuencia s"
+                + " WHERE s.idProcedimientoPaso.idProcedimientoPaso = :paso"
+                + " AND s.idProcedimientoPasoReferencia = :referencia AND LOWER(s.tipoSecuencia) = :tipo"),
+    @NamedQuery(name = "ProcedimientoPasoSecuencia.existeSecuenciaExcluyendo", query =
+        "SELECT COUNT(s) FROM ProcedimientoPasoSecuencia s"
+                + " WHERE s.idProcedimientoPaso.idProcedimientoPaso = :paso"
+                + " AND s.idProcedimientoPasoReferencia = :referencia AND LOWER(s.tipoSecuencia) = :tipo"
+                + " AND s.idProcedimientoPasoSecuencia <> :excluir"),
     @NamedQuery(name = "ProcedimientoPasoSecuencia.findAll", query = "SELECT p FROM ProcedimientoPasoSecuencia p"),
     @NamedQuery(name = "ProcedimientoPasoSecuencia.findByTipoSecuencia", query = "SELECT p FROM ProcedimientoPasoSecuencia p WHERE p.tipoSecuencia = :tipoSecuencia")})
 public class ProcedimientoPasoSecuencia implements IdentificableEntity {

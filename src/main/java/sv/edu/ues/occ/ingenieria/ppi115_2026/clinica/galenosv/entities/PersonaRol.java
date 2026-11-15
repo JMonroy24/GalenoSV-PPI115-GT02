@@ -22,6 +22,28 @@ import java.util.UUID;
 @Entity
 @Table(name = "persona_rol")
 @NamedQueries({
+    @NamedQuery(name = "PersonaRol.findByClinicaAndRol", query =
+        "SELECT pr FROM PersonaRol pr JOIN FETCH pr.idPersona p JOIN FETCH pr.idRol r JOIN FETCH pr.idClinica c "
+                + "WHERE c.idClinica = :clinica AND r.idRol = :rol AND c.activo = true AND r.activo = true "
+                + "ORDER BY p.apellidos, p.nombres"),
+    @NamedQuery(name = "PersonaRol.findResponsable", query =
+        "SELECT pr FROM PersonaRol pr JOIN FETCH pr.idPersona JOIN FETCH pr.idRol r"
+                + " JOIN FETCH pr.idClinica c WHERE c.idClinica = :clinica AND c.activo = true"
+                + " AND r.idRol = :rol AND r.activo = true ORDER BY pr.idPersonaRol"),
+    @NamedQuery(name = "PersonaRol.existeAsignacionSinClinica", query =
+        "SELECT COUNT(p) FROM PersonaRol p WHERE p.idPersona.idPersona = :persona AND p.idRol.idRol = :rol"
+        + " AND p.idClinica IS NULL"),
+    @NamedQuery(name = "PersonaRol.existeAsignacionSinClinicaExcluyendo", query =
+        "SELECT COUNT(p) FROM PersonaRol p WHERE p.idPersona.idPersona = :persona AND p.idRol.idRol = :rol"
+        + " AND p.idClinica IS NULL"
+        + " AND p.idPersonaRol <> :excluir"),
+    @NamedQuery(name = "PersonaRol.existeAsignacionConClinica", query =
+        "SELECT COUNT(p) FROM PersonaRol p WHERE p.idPersona.idPersona = :persona AND p.idRol.idRol = :rol"
+        + " AND p.idClinica.idClinica = :clinica"),
+    @NamedQuery(name = "PersonaRol.existeAsignacionConClinicaExcluyendo", query =
+        "SELECT COUNT(p) FROM PersonaRol p WHERE p.idPersona.idPersona = :persona AND p.idRol.idRol = :rol"
+        + " AND p.idClinica.idClinica = :clinica"
+        + " AND p.idPersonaRol <> :excluir"),
     @NamedQuery(name = "PersonaRol.buscarPacientes", query =
         "SELECT pr FROM PersonaRol pr JOIN FETCH pr.idPersona p"
         + " JOIN FETCH pr.idRol r JOIN FETCH pr.idClinica c"

@@ -21,6 +21,13 @@ import java.util.UUID;
 @Entity
 @Table(name = "procedimiento_paso_examen")
 @NamedQueries({
+    @NamedQuery(name = "ProcedimientoPasoExamen.existePasoExamen", query =
+        "SELECT COUNT(p) FROM ProcedimientoPasoExamen p"
+                + " WHERE p.idProcedimientoPaso.idProcedimientoPaso = :paso AND p.idExamen.idExamen = :examen"),
+    @NamedQuery(name = "ProcedimientoPasoExamen.existePasoExamenExcluyendo", query =
+        "SELECT COUNT(p) FROM ProcedimientoPasoExamen p"
+                + " WHERE p.idProcedimientoPaso.idProcedimientoPaso = :paso AND p.idExamen.idExamen = :examen"
+                + " AND p.idProcedimientoPasoExamen <> :excluir"),
     @NamedQuery(name = "ProcedimientoPasoExamen.findAll", query = "SELECT p FROM ProcedimientoPasoExamen p"),
     @NamedQuery(name = "ProcedimientoPasoExamen.findByFechaCreacion", query = "SELECT p FROM ProcedimientoPasoExamen p WHERE p.fechaCreacion = :fechaCreacion"),
     @NamedQuery(name = "ProcedimientoPasoExamen.findByActivo", query = "SELECT p FROM ProcedimientoPasoExamen p WHERE p.activo = :activo"),

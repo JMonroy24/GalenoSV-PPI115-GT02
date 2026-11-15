@@ -50,10 +50,8 @@ public class MedioContactoDAO extends DefaultDAO<MedioContacto, UUID> implements
 
     public boolean existePersonaTipoValor(UUID idPersona, UUID idTipo, String valor, UUID excluirId) {
         if (idPersona == null || idTipo == null || valor == null || valor.isBlank()) return false;
-        String jpql = "SELECT COUNT(m) FROM MedioContacto m"
-                + " WHERE m.idPersona.idPersona = :persona AND m.idTipoMedioContacto.idTipoMedioContacto = :tipo"
-                + " AND LOWER(m.valor) = :valor" + (excluirId == null ? "" : " AND m.idMedioContacto <> :excluir");
-        var query = getEntityManager().createQuery(jpql, Long.class).setParameter("persona", idPersona)
+        String consulta = excluirId == null ? "MedioContacto.existePersonaTipoValor" : "MedioContacto.existePersonaTipoValorExcluyendo";
+        var query = getEntityManager().createNamedQuery(consulta, Long.class).setParameter("persona", idPersona)
                 .setParameter("tipo", idTipo).setParameter("valor", valor.trim().toLowerCase(java.util.Locale.ROOT));
         if (excluirId != null) query.setParameter("excluir", excluirId);
         return query.getSingleResult() > 0;

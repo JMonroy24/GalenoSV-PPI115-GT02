@@ -42,52 +42,49 @@ public class UuidFieldSessionCustomizer implements SessionCustomizer {
                     if (mapping == null) {
                         continue;
                     }
-                    try {
-                        fixField(mapping.getField());
-                        List<DatabaseField> fields = mapping.getFields();
-                        if (fields != null) {
-                            for (DatabaseField f : fields) {
+                    fixField(mapping.getField());
+                    List<DatabaseField> fields = mapping.getFields();
+                    if (fields != null) {
+                        for (DatabaseField f : fields) {
+                            fixField(f);
+                        }
+                    }
+                    if (mapping instanceof ObjectReferenceMapping orm) {
+                        List<DatabaseField> fks = orm.getForeignKeyFields();
+                        if (fks != null) {
+                            for (DatabaseField f : fks) {
                                 fixField(f);
                             }
                         }
-                        if (mapping instanceof ObjectReferenceMapping orm) {
-                            List<DatabaseField> fks = orm.getForeignKeyFields();
-                            if (fks != null) {
-                                for (DatabaseField f : fks) {
-                                    fixField(f);
-                                }
+                    }
+                    if (mapping instanceof OneToOneMapping o2o) {
+                        Map<DatabaseField, DatabaseField> src = o2o.getSourceToTargetKeyFields();
+                        if (src != null) {
+                            for (Map.Entry<DatabaseField, DatabaseField> e : src.entrySet()) {
+                                fixField(e.getKey());
+                                fixField(e.getValue());
                             }
                         }
-                        if (mapping instanceof OneToOneMapping o2o) {
-                            Map<DatabaseField, DatabaseField> src = o2o.getSourceToTargetKeyFields();
-                            if (src != null) {
-                                for (Map.Entry<DatabaseField, DatabaseField> e : src.entrySet()) {
-                                    fixField(e.getKey());
-                                    fixField(e.getValue());
-                                }
+                    }
+                    if (mapping instanceof OneToManyMapping otom) {
+                        List<DatabaseField> fks = otom.getTargetForeignKeyFields();
+                        if (fks != null) {
+                            for (DatabaseField f : fks) {
+                                fixField(f);
                             }
                         }
-                        if (mapping instanceof OneToManyMapping otom) {
-                            List<DatabaseField> fks = otom.getTargetForeignKeyFields();
-                            if (fks != null) {
-                                for (DatabaseField f : fks) {
-                                    fixField(f);
-                                }
-                            }
-                            Map<DatabaseField, DatabaseField> src = otom.getSourceKeysToTargetForeignKeys();
-                            if (src != null) {
-                                for (Map.Entry<DatabaseField, DatabaseField> e : src.entrySet()) {
-                                    fixField(e.getKey());
-                                    fixField(e.getValue());
-                                }
+                        Map<DatabaseField, DatabaseField> src = otom.getSourceKeysToTargetForeignKeys();
+                        if (src != null) {
+                            for (Map.Entry<DatabaseField, DatabaseField> e : src.entrySet()) {
+                                fixField(e.getKey());
+                                fixField(e.getValue());
                             }
                         }
-                    } catch (RuntimeException ignored) {
-                        // mapping not fully initialized during customizer phase
                     }
                 }
-            } catch (RuntimeException ignored) {
-                // descriptor not fully initialized during customizer phase
+            } catch (RuntimeException error) {
+                throw new jakarta.persistence.PersistenceException(
+                        "No se pudo configurar el descriptor UUID de " + descriptor.getJavaClass().getName(), error);
             }
         }
     }

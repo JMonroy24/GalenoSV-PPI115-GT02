@@ -146,6 +146,14 @@ class PostgreSQLIT {
             assertEquals(List.of(pr), personas.buscarPacientes("50%_", clinica.getIdClinica(), 20));
             assertEquals(List.of(consulta), consultas.buscarParaAutocompletar("ana50%_ prueba", 20));
             assertTrue(consultas.buscarParaAutocompletar("51%_", 20).isEmpty());
+            assertEquals(List.of(consulta), consultas.buscarParaAutocompletar("50%_", 20, clinica.getIdClinica()));
+            assertTrue(consultas.buscarParaAutocompletar("50%_", 20, otra.getIdClinica()).isEmpty());
+            assertTrue(consultas.buscarParaAutocompletar(null, 20, clinica.getIdClinica()).isEmpty());
+            assertTrue(consultas.buscarParaAutocompletar("  ", 20, clinica.getIdClinica()).isEmpty());
+            assertTrue(personas.existeAsignacion(persona.getIdPersona(), paciente.getIdRol(), clinica.getIdClinica(), null));
+            assertFalse(personas.existeAsignacion(persona.getIdPersona(), paciente.getIdRol(), clinica.getIdClinica(), pr.getIdPersonaRol()));
+            assertFalse(personas.existeAsignacion(persona.getIdPersona(), paciente.getIdRol(), null, null));
+            assertFalse(personas.existeAsignacion(persona.getIdPersona(), paciente.getIdRol(), null, pr.getIdPersonaRol()));
             assertEquals(List.of(persona), new PersonaDAO(em).buscarParaAutocompletar("ANA50%_ Prueba", 20));
             assertEquals(List.of(responsable), personas.buscarParaAutocompletar("Prueba Doctor", 20));
             assertEquals(List.of(cp), new ConsultaProcedimientoDAO(em).buscarParaAutocompletar("Ana50%_ Prueba", 20));
@@ -160,6 +168,8 @@ class PostgreSQLIT {
             assertEquals(responsable, personas.findResponsable(clinica.getIdClinica(), doctor.getIdRol()));
             var pasos = new ProcedimientoPasoDAO(em);
             assertEquals(inicio, pasos.findPasoInicial(procedimiento.getIdProcedimiento()));
+            assertEquals(List.of(inicio), pasos.findRange(0, 20, "Z Inicio"));
+            assertEquals(List.of(secuencia), new ProcedimientoPasoSecuenciaDAO(em).findRange(0, 20, "Z Inicio"));
             var idProcedimiento = procedimiento.getIdProcedimiento();
             var idPaso = inicio.getIdProcedimientoPaso();
             var pasoSinExamenes = pasos.findByProcedimiento(idProcedimiento).stream()
@@ -177,6 +187,11 @@ class PostgreSQLIT {
             var pasoRefrescado = pasos.findByProcedimiento(idProcedimiento).stream()
                     .filter(inicio::equals).findFirst().orElseThrow();
             assertEquals(List.of(relacionExamen), pasoRefrescado.getProcedimientoPasoExamenList());
+            var asociaciones = new ProcedimientoPasoExamenDAO(em);
+            assertTrue(asociaciones.existePasoExamen(idPaso, examenActivo.getIdExamen()));
+            assertFalse(asociaciones.existePasoExamen(idPaso, examenActivo.getIdExamen(), relacionExamen.getIdProcedimientoPasoExamen()));
+            assertEquals(List.of(relacionExamen), asociaciones.findByPaso(idPaso));
+            assertTrue(asociaciones.findByPaso(siguiente.getIdProcedimientoPaso()).isEmpty());
 
             assertEquals(List.of(consulta), consultas.findRangeFiltrado(0, 10, clinica.getIdClinica(), fecha, fecha, "50%_"));
             assertEquals(1, consultas.countFiltrado(clinica.getIdClinica(), null, null));

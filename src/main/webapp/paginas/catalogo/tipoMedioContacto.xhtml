@@ -33,10 +33,11 @@
 
             <f:facet name="formulario">
                 <p:outputPanel styleClass="crud-fields">
+                    <p>Indique el nombre y, si aplica, el formato permitido. Use «Volver a la lista» para salir sin guardar.</p>
                     <p:outputLabel value="Nombre:" for="nombre"/>
                     <p:inputText id="nombre" value="#{tipoMedioContactoModel.registroActual.nombre}" required="true" label="Nombre" requiredMessage="Complete el campo nombre." maxlength="155"/>
                     <p:outputLabel value="Expresión Regular:" for="expresionRegular"/>
-                    <p:inputText id="expresionRegular" value="#{tipoMedioContactoModel.registroActual.expresionRegular}" label="Expresión Regular" maxlength="500"/>
+                    <p:inputText id="expresionRegular" styleClass="campo-regex" value="#{tipoMedioContactoModel.registroActual.expresionRegular}" label="Expresión Regular" maxlength="500"/>
                     <small>Opcional. Define el formato que se acepta. Ejemplo <code>\d{4}-\d{4}</code>.</small>
                     <p:outputLabel value="Observaciones:" for="indicaciones"/>
                     <p:inputTextarea id="indicaciones" value="#{tipoMedioContactoModel.registroActual.indicaciones}" label="Observaciones" maxlength="2000"/>

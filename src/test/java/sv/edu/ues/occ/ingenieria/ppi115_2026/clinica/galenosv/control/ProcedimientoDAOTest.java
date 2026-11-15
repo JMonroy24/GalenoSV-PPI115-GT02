@@ -152,7 +152,7 @@ class ProcedimientoDAOTest {
 
     @Test
     void testFindAllActivos() {
-        when(em.createQuery(anyString(), eq(Procedimiento.class))).thenReturn(query);
+        when(em.createNamedQuery(anyString(), eq(Procedimiento.class))).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(new Procedimiento(UUID.randomUUID())));
 
         List<Procedimiento> result = dao.findAllActivos();

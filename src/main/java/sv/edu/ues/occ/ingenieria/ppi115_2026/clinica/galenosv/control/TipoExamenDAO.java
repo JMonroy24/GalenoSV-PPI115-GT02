@@ -47,9 +47,7 @@ public class TipoExamenDAO extends DefaultDAO<TipoExamen, UUID> implements Seria
      * @return lista de TipoExamen con activo = true, ordenados por nombre
      */
     public java.util.List<TipoExamen> findAllActivos() {
-        return getEntityManager().createQuery(
-                "SELECT t FROM TipoExamen t WHERE t.activo = true ORDER BY t.nombre",
-                TipoExamen.class)
+        return getEntityManager().createNamedQuery("TipoExamen.findAllActivos", TipoExamen.class)
                 .getResultList();
     }
 

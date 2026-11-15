@@ -147,7 +147,7 @@ class DocumentoDAOTest {
     @Test
     void testExisteTipoValor() {
         UUID tipo = UUID.randomUUID();
-        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
         when(queryLong.setParameter(eq("tipo"), any())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("valor"), anyString())).thenReturn(queryLong);
         when(queryLong.getSingleResult()).thenReturn(1L);
@@ -168,7 +168,7 @@ class DocumentoDAOTest {
     void testExisteTipoValorWithExclude() {
         UUID tipo = UUID.randomUUID();
         UUID ex = UUID.randomUUID();
-        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
         when(queryLong.setParameter(eq("tipo"), any())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("valor"), anyString())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("excluir"), any())).thenReturn(queryLong);
@@ -183,7 +183,7 @@ class DocumentoDAOTest {
     void testExistePersonaTipoValor() {
         UUID per = UUID.randomUUID();
         UUID tipo = UUID.randomUUID();
-        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
         when(queryLong.setParameter(eq("persona"), any())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("tipo"), any())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("valor"), anyString())).thenReturn(queryLong);
@@ -207,7 +207,7 @@ class DocumentoDAOTest {
         UUID per = UUID.randomUUID();
         UUID tipo = UUID.randomUUID();
         UUID ex = UUID.randomUUID();
-        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
         when(queryLong.setParameter(eq("persona"), any())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("tipo"), any())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("valor"), anyString())).thenReturn(queryLong);

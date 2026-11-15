@@ -175,7 +175,7 @@ class ExamenTipoExamenDAOTest {
     void testExisteExamenTipo() {
         UUID idExamen = UUID.randomUUID();
         UUID idTipo = UUID.randomUUID();
-        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
         when(queryLong.setParameter(eq("examen"), any())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("tipo"), any())).thenReturn(queryLong);
         when(queryLong.getSingleResult()).thenReturn(1L);
@@ -196,7 +196,7 @@ class ExamenTipoExamenDAOTest {
         UUID idExamen = UUID.randomUUID();
         UUID idTipo = UUID.randomUUID();
         UUID idExclude = UUID.randomUUID();
-        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
         when(queryLong.setParameter(eq("examen"), any())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("tipo"), any())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("excluir"), any())).thenReturn(queryLong);

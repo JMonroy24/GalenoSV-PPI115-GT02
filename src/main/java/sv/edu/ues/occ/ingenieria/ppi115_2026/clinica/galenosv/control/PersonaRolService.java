@@ -48,11 +48,6 @@ public class PersonaRolService extends DefaultService<PersonaRol, UUID> implemen
         }
     }
 
-    @Override
-    public List<PersonaRol> buscarParaAutocompletar(String filtro, int max) {
-        return personaRolDAO.buscarParaAutocompletar(filtro, max);
-    }
-
     public List<PersonaRol> findByClinicaAndRol(UUID idClinica, UUID idRol) {
         if (idClinica == null || idRol == null) {
             return List.of();

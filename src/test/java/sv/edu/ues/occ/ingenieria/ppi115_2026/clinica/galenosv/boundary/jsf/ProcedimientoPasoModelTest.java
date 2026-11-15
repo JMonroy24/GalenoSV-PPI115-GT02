@@ -160,4 +160,24 @@ class ProcedimientoPasoModelTest {
         model.prepararNuevo();
         assertNull(model.getFiltroExamenes());
     }
+    @Test
+    void listaDeExamenesExigeTextoSiSuperaVeinteYRespetaElPasoActual() {
+        for (int i = 0; i < 21; i++) {
+            Examen examen = new Examen(UUID.randomUUID());
+            examen.setNombre(i == 0 ? "Hemograma" : "Glucosa " + i);
+            ProcedimientoPasoExamen asignacion = new ProcedimientoPasoExamen(UUID.randomUUID());
+            asignacion.setIdProcedimientoPaso(model.getRegistroActual());
+            asignacion.setIdExamen(examen);
+            model.getExamenesAsignados().add(asignacion);
+        }
+        ProcedimientoPasoExamen ajeno = new ProcedimientoPasoExamen(UUID.randomUUID());
+        ajeno.setIdProcedimientoPaso(new ProcedimientoPaso(UUID.randomUUID()));
+        Examen otro = new Examen(UUID.randomUUID()); otro.setNombre("Hemograma ajeno");
+        ajeno.setIdExamen(otro); model.getExamenesAsignados().add(ajeno);
+        assertTrue(model.getExamenesVisibles().isEmpty());
+        model.setFiltroExamenes("  hemo  ");
+        assertEquals(1, model.getExamenesVisibles().size());
+        assertEquals("Hemograma", model.getExamenesVisibles().get(0).getIdExamen().getNombre());
+    }
+
 }

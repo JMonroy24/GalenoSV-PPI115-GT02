@@ -16,6 +16,23 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class UuidFieldSessionCustomizerTest {
     @Test
+    void descriptorInvalidoDetieneElInicioYConservaLaCausa() {
+        var session = org.mockito.Mockito.mock(Session.class);
+        var project = org.mockito.Mockito.mock(Project.class);
+        var descriptor = org.mockito.Mockito.mock(ClassDescriptor.class);
+        var causa = new IllegalStateException("Mapeo incompleto");
+        org.mockito.Mockito.when(session.getProject()).thenReturn(project);
+        org.mockito.Mockito.when(project.getDescriptors()).thenReturn(Map.of(Persona.class, descriptor));
+        org.mockito.Mockito.doReturn(Persona.class).when(descriptor).getJavaClass();
+        org.mockito.Mockito.when(descriptor.getPrimaryKeyFields()).thenThrow(causa);
+
+        var error = assertThrows(jakarta.persistence.PersistenceException.class,
+                () -> new UuidFieldSessionCustomizer().customize(session));
+        assertSame(causa, error.getCause());
+        assertTrue(error.getMessage().contains(Persona.class.getName()));
+    }
+
+    @Test
     void normalizaPkYFkUuidSinCambiarCamposDeTexto() throws Exception {
         Project proyecto = new Project();
         ClassDescriptor descriptor = new ClassDescriptor();

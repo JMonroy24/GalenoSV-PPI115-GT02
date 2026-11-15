@@ -50,9 +50,7 @@ public class ExamenDAO extends DefaultDAO<Examen, UUID> implements Serializable 
      * @return lista de Examen con activo = true, ordenados por nombre
      */
     public java.util.List<Examen> findAllActivos() {
-        return getEntityManager().createQuery(
-                "SELECT e FROM Examen e WHERE e.activo = true ORDER BY e.nombre",
-                Examen.class)
+        return getEntityManager().createNamedQuery("Examen.findAllActivos", Examen.class)
                 .getResultList();
     }
 

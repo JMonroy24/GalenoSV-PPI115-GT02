@@ -2,6 +2,8 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.context.FacesContext;
+import jakarta.faces.application.FacesMessage;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DefaultService;
 import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -30,6 +32,8 @@ public class ConsultaProcedimientoModel extends ModelTransaccional<ConsultaProce
     @Inject
     protected ConsultaService consultaService;
 
+    @Inject protected SesionBean sesionBean;
+
     /**
      * Consulta recibida por URL (drill-down desde consulta.xhtml, parámetro
      * "idConsulta"). Cuando está presente, los registros nuevos que se
@@ -52,6 +56,8 @@ public class ConsultaProcedimientoModel extends ModelTransaccional<ConsultaProce
             consultaPreseleccionada = consultaService.findById(UUID.fromString(parametro.trim()));
         } catch (IllegalArgumentException ex) {
             consultaPreseleccionada = null;
+            agregarMensaje(FacesMessage.SEVERITY_WARN,
+                    "Consulta", "La referencia de consulta recibida no es válida.");
         }
     }
 
@@ -72,7 +78,16 @@ public class ConsultaProcedimientoModel extends ModelTransaccional<ConsultaProce
 
     /** Método para p:autoComplete. Busca consultas por persona o referencia. */
     public List<Consulta> completeConsulta(String query) {
-        return completar(query, texto -> consultaService.buscarParaAutocompletar(texto, 20));
+        // Validar antes de acceder incluso a la sesión o al servicio de consultas.
+        String texto = DefaultService.normalizarFiltro(query);
+        if (texto == null || texto.length() < 2) return List.of();
+        var clinica = sesionBean == null ? null : sesionBean.getClinicaActual();
+        if (clinica == null || clinica.getIdClinica() == null || !Boolean.TRUE.equals(clinica.getActivo())) {
+            agregarMensaje(FacesMessage.SEVERITY_WARN,
+                    "Consulta", "Seleccione una clínica activa antes de buscar consultas.");
+            return List.of();
+        }
+        return completar(texto, filtro -> consultaService.buscarParaAutocompletar(filtro, 20, clinica.getIdClinica()));
     }
 
     public ConsultaProcedimientoService getConsultaProcedimientoService() {

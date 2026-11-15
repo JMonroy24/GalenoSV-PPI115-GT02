@@ -41,8 +41,6 @@ public class TipoDocumentoDAO extends DefaultDAO<TipoDocumento, UUID> implements
 
     /** Catálogo activo, ordenado para los selectores de los formularios. */
     public java.util.List<TipoDocumento> findAllActivos() {
-        return getEntityManager().createQuery(
-                "SELECT e FROM TipoDocumento e WHERE e.activo = true ORDER BY e.nombre, e.idTipoDocumento",
-                TipoDocumento.class).getResultList();
+        return getEntityManager().createNamedQuery("TipoDocumento.findAllActivos", TipoDocumento.class).getResultList();
     }
 }

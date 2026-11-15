@@ -149,7 +149,7 @@ class ClinicaDAOTest {
 
     @Test
     void testFindAllActivos() {
-        when(em.createQuery(anyString(), eq(Clinica.class))).thenReturn(query);
+        when(em.createNamedQuery(anyString(), eq(Clinica.class))).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(new Clinica(UUID.randomUUID())));
 
         List<Clinica> result = dao.findAllActivos();

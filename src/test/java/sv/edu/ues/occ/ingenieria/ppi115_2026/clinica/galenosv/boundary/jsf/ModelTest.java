@@ -38,6 +38,7 @@ class ModelTest {
 
     @BeforeEach
     void prepararContexto() {
+        lenient().when(context.getAttributes()).thenReturn(new java.util.HashMap<>());
         ContextoAccesible.instalar(context);
         model = new ModeloPrueba(dao);
     }
@@ -90,12 +91,14 @@ class ModelTest {
         assertTrue(ultimoMensaje().getDetail().contains("Ya existe"));
     }
 
-    @Test
-    void guardarSinOperacionNoEscribeNiCierraSilenciosamenteElDialogo() {
+    @ParameterizedTest
+    @EnumSource(value = Estado.class, names = {"NINGUNO", "ELIMINAR"})
+    void guardarSinOperacionNoEscribeNiCierraSilenciosamenteElDialogo(Estado estado) {
+        model.setEstado(estado);
         model.guardar();
         verifyNoInteractions(dao);
         verify(context).validationFailed();
-        assertEquals(Estado.NINGUNO, model.getEstado());
+        assertEquals(estado, model.getEstado());
     }
 
     @ParameterizedTest
@@ -224,6 +227,24 @@ class ModelTest {
         assertTimeoutPreemptively(Duration.ofSeconds(1), () -> {
             assertTrue(model.clasificarError(primera).startsWith("No fue posible"));
         });
+    }
+
+    @Test
+    void falloDePersistenciaCortaLecturasEnTodosLosModelosDeLaPeticion() {
+        when(dao.count()).thenThrow(new PersistenceException(new SQLException("privado", "08001")));
+        ModeloPrueba otroModelo = new ModeloPrueba(dao);
+        assertEquals(0L, model.consultar("contar", () -> dao.count(), 0L));
+        for (int i = 0; i < 100; i++) {
+            assertEquals(0L, otroModelo.consultar("contar", () -> dao.count(), 0L));
+        }
+        verify(dao).count();
+        verify(context).addMessage(isNull(), any(FacesMessage.class));
+        // La siguiente petición puede intentar de nuevo: no se bloquea la vista indefinidamente.
+        FacesContext nuevaPeticion = mock(FacesContext.class);
+        when(nuevaPeticion.getAttributes()).thenReturn(new java.util.HashMap<>());
+        ContextoAccesible.instalar(nuevaPeticion);
+        doReturn(3L).when(dao).count();
+        assertEquals(3L, otroModelo.consultar("contar", () -> dao.count(), 0L));
     }
 
     private FacesMessage ultimoMensaje() {

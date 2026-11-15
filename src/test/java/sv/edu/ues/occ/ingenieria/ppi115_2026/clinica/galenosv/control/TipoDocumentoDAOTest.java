@@ -146,7 +146,7 @@ class TipoDocumentoDAOTest {
 
     @Test
     void testFindAllActivos() {
-        when(em.createQuery(anyString(), eq(TipoDocumento.class))).thenReturn(query);
+        when(em.createNamedQuery(anyString(), eq(TipoDocumento.class))).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(new TipoDocumento(UUID.randomUUID())));
 
         List<TipoDocumento> result = dao.findAllActivos();

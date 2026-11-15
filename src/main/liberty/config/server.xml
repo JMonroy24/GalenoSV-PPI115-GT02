@@ -8,6 +8,9 @@
         <feature>localConnector-1.0</feature>
     </featureManager>
 
+    <keyStore id="defaultKeyStore" password="${env.GALENOSV_KEYSTORE_PASSWORD}"/>
+    <ltpa keysPassword="${env.GALENOSV_LTPA_PASSWORD}"/>
+
     <basicRegistry id="basic" realm="GalenoSV">
         <user name="admin" password="${env.GALENO_ADMIN_PASSWORD}"/>
         <user name="clinico" password="${env.GALENO_CLINICO_PASSWORD}"/>

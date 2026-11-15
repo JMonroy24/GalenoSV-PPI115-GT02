@@ -26,6 +26,20 @@ public class ConsultaServiceTest {
         service = new ConsultaService(consultaDAO);
     }
 
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.NullAndEmptySource
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"  ", "a", "\u2003"})
+    void autocompletarClinicaRechazaTextoInsuficienteSinAccederAlDAO(String filtro) {
+        assertTrue(service.buscarParaAutocompletar(filtro, 20, UUID.randomUUID()).isEmpty());
+        verifyNoInteractions(consultaDAO);
+    }
+
+    @Test
+    void autocompletarClinicaRequiereClinica() {
+        assertTrue(service.buscarParaAutocompletar("Ana", 20, null).isEmpty());
+        verifyNoInteractions(consultaDAO);
+    }
+
     private Consulta consultaConRol(String nombreRol, Boolean activo) {
         Rol rol = new Rol(UUID.randomUUID());
         rol.setNombre(nombreRol);

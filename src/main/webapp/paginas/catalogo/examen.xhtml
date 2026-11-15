@@ -26,18 +26,35 @@
                 </p:column>
 
                 <f:facet name="formulario">
-                    <p:outputPanel styleClass="crud-fields">
-                        <p:outputLabel for="nombre" value="Nombre del examen"/>
-                        <p:inputText id="nombre" value="#{examenModel.registroActual.nombre}"
-                                     required="true" requiredMessage="Ingrese el nombre del examen." maxlength="255"/>
-
-                        <p:outputLabel for="observaciones" value="Observaciones del examen"/>
-                        <p:inputTextarea id="observaciones" value="#{examenModel.registroActual.observaciones}"
-                                         rows="3" autoResize="false" maxlength="2000"/>
-                        <p:selectBooleanCheckbox id="activo" value="#{examenModel.registroActual.activo}" itemLabel="Examen activo"/>
-
-                        <p:fieldset legend="Tipo inicial (opcional)" rendered="#{examenModel.estadoCrear}">
+                    <p:outputPanel styleClass="examen-editor">
+                        <p:fieldset legend="Datos del examen">
                             <p:outputPanel styleClass="crud-fields">
+                                <p:outputLabel for="nombre" value="Nombre del examen"/>
+                                <p:inputText id="nombre" value="#{examenModel.registroActual.nombre}"
+                                             required="true" requiredMessage="Ingrese el nombre del examen." maxlength="255"/>
+                                <p:outputLabel for="observaciones" value="Observaciones del examen"/>
+                                <p:inputTextarea id="observaciones" value="#{examenModel.registroActual.observaciones}"
+                                                 rows="4" autoResize="false" maxlength="2000"/>
+                                <p:selectBooleanCheckbox id="activo" value="#{examenModel.registroActual.activo}"
+                                                         itemLabel="Examen activo"/>
+                            </p:outputPanel>
+                        </p:fieldset>
+
+                        <p:outputPanel id="resumenTipo" styleClass="crud-secondary" rendered="#{examenModel.estadoCrear}">
+                            <h3>Tipo inicial (opcional)</h3>
+                            <p>Puede elegir un tipo ahora o asignarlo después de guardar el examen.</p>
+                            <h:outputText value="#{empty examenModel.tipoSeleccionado ? 'Sin tipo inicial' : examenModel.tipoSeleccionado.nombre}"/>
+                            <div class="crud-actions">
+                                <p:commandButton value="Elegir tipo inicial" icon="pi pi-list" type="button"
+                                                 styleClass="ui-button-info ui-button-outlined"
+                                                 onclick="PF('dlgTipoInicial').show()"/>
+                            </div>
+                        </p:outputPanel>
+
+                        <p:dialog id="tipoInicialDialogo" widgetVar="dlgTipoInicial" header="Tipo inicial del examen"
+                                  rendered="#{examenModel.estadoCrear}" modal="true" responsive="true"
+                                  fitViewport="true" blockScroll="true" width="560" styleClass="crud-dialog" appendTo="@form">
+                            <p:outputPanel id="datosTipoInicial" styleClass="crud-fields">
                                 <p:outputLabel for="tipoInicial" value="Tipo de examen"/>
                                 <p:autoComplete id="tipoInicial" value="#{examenModel.tipoSeleccionado}"
                                                 completeMethod="#{tipoExamenModel.completeTipoExamen}"
@@ -47,9 +64,15 @@
                                                 placeholder="Busque por nombre"/>
                                 <p:outputLabel for="obsTipoInicial" value="Observaciones de la asignación"/>
                                 <p:inputTextarea id="obsTipoInicial" value="#{examenModel.observacionesTipo}"
-                                                 rows="2" autoResize="false" maxlength="2000"/>
+                                                 rows="3" autoResize="false" maxlength="2000"/>
+                                <small>La asignación se guardará junto con el examen.</small>
                             </p:outputPanel>
-                        </p:fieldset>
+                            <div class="crud-actions">
+                                <p:commandButton value="Volver al examen" icon="pi pi-arrow-left" styleClass="ui-button-info"
+                                                 process="@this datosTipoInicial" update="resumenTipo"
+                                                 oncomplete="if (!args.validationFailed) PF('dlgTipoInicial').hide()"/>
+                            </div>
+                        </p:dialog>
                     </p:outputPanel>
                 </f:facet>
 
@@ -73,7 +96,7 @@
                                      selectionMode="single" selection="#{examenModel.asignacionTipoSeleccionada}"
                                      rowKey="#{asignacion.idExamenTipoExamen}" reflow="true" size="small"
                                      paginator="true" paginatorAlwaysVisible="false" rows="10"
-                                     emptyMessage="No hay tipos asignados que coincidan.">
+                                     emptyMessage="Filtre por nombre si hay más de 20 tipos asignados; no hay coincidencias para el filtro actual.">
                             <p:ajax event="rowSelect" process="@this" update="accionesTipo"/>
                             <p:ajax event="rowUnselect" process="@this" update="accionesTipo"/>
                             <p:column headerText="Tipo">
@@ -84,8 +107,14 @@
                             </p:column>
                         </p:dataTable>
 
-                        <p:fieldset legend="Asignar otro tipo" styleClass="crud-secondary">
-                            <p:outputPanel styleClass="crud-fields">
+                        <div class="crud-actions">
+                            <p:commandButton value="Asignar otro tipo" icon="pi pi-plus" type="button"
+                                             styleClass="ui-button-info" onclick="PF('dlgAsignarTipo').show()"/>
+                        </div>
+                        <p:dialog id="asignarTipoDialogo" widgetVar="dlgAsignarTipo" header="Asignar tipo al examen"
+                                  modal="true" responsive="true" fitViewport="true" blockScroll="true"
+                                  width="560" styleClass="crud-dialog" appendTo="@form">
+                            <p:outputPanel id="datosAsignacionTipo" styleClass="crud-fields">
                                 <p:outputLabel for="tipoSeleccionado" value="Tipo de examen"/>
                                 <p:autoComplete id="tipoSeleccionado" value="#{examenModel.tipoSeleccionado}"
                                                 completeMethod="#{tipoExamenModel.completeTipoExamen}"
@@ -98,9 +127,15 @@
                                                  rows="2" autoResize="false" maxlength="2000"/>
                                 <p:commandButton value="Asignar tipo" icon="pi pi-plus"
                                                  action="#{examenModel.agregarTipo()}" styleClass="ui-button-success"
-                                                 process="@this tipoSeleccionado observacionesTipo" update="tiposAsignados"/>
+                                                 process="@this datosAsignacionTipo" update="tiposAsignados"
+                                                 oncomplete="if (!args.validationFailed) PF('dlgAsignarTipo').hide()"/>
                             </p:outputPanel>
-                        </p:fieldset>
+                            <div class="crud-actions">
+                                <p:commandButton value="Volver al examen" type="button" icon="pi pi-arrow-left"
+                                                 styleClass="ui-button-info ui-button-outlined"
+                                                 onclick="PF('dlgAsignarTipo').hide()"/>
+                            </div>
+                        </p:dialog>
                     </p:outputPanel>
                 </f:facet>
             </crud:crudTransaccional>

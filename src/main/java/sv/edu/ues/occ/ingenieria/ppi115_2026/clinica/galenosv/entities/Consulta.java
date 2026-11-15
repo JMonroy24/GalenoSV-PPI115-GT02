@@ -23,6 +23,32 @@ import java.util.UUID;
 @Entity
 @Table(name = "consulta")
 @NamedQueries({
+    @NamedQuery(name = "Consulta.findRangeFiltrado", query =
+        "SELECT c FROM Consulta c JOIN FETCH c.idPersonaRol pr"
+        + " JOIN FETCH pr.idPersona JOIN FETCH pr.idRol JOIN FETCH pr.idClinica"
+        + " WHERE pr.idClinica.idClinica = :clinica"
+        + " AND (:filtrarDesde = false OR c.fechaInicio >= :desde)"
+        + " AND (:filtrarHasta = false OR c.fechaInicio <= :hasta)"
+        + " AND (:filtrarTexto = false OR LOWER(c.referenciaExterna) LIKE :patron ESCAPE '\\'"
+        + " OR LOWER(c.observaciones) LIKE :patron ESCAPE '\\')"
+        + " ORDER BY c.fechaInicio DESC, c.idConsulta"),
+    @NamedQuery(name = "Consulta.countFiltrado", query =
+        "SELECT COUNT(c) FROM Consulta c JOIN c.idPersonaRol pr"
+        + " WHERE pr.idClinica.idClinica = :clinica"
+        + " AND (:filtrarDesde = false OR c.fechaInicio >= :desde)"
+        + " AND (:filtrarHasta = false OR c.fechaInicio <= :hasta)"
+        + " AND (:filtrarTexto = false OR LOWER(c.referenciaExterna) LIKE :patron ESCAPE '\\'"
+        + " OR LOWER(c.observaciones) LIKE :patron ESCAPE '\\')"),
+    @NamedQuery(name = "Consulta.autocompletarPorClinica", query =
+        "SELECT c FROM Consulta c JOIN FETCH c.idPersonaRol pr JOIN FETCH pr.idPersona p"
+        + " JOIN FETCH pr.idRol r JOIN FETCH pr.idClinica cl"
+        + " WHERE cl.idClinica = :clinica AND cl.activo = true AND r.activo = true"
+        + " AND LOWER(r.nombre) LIKE :rolPaciente"
+        + " AND (LOWER(c.referenciaExterna) LIKE :patron ESCAPE '\\'"
+        + " OR LOWER(p.nombres) LIKE :patron ESCAPE '\\'"
+        + " OR LOWER(p.apellidos) LIKE :patron ESCAPE '\\'"
+        + " OR LOWER(CONCAT(p.nombres, ' ', p.apellidos)) LIKE :patron ESCAPE '\\')"
+        + " ORDER BY c.fechaInicio DESC, c.idConsulta"),
     @NamedQuery(name = "Consulta.buscarParaAutocompletar", query =
         "SELECT c FROM Consulta c"
         + " LEFT JOIN FETCH c.idPersonaRol pr"

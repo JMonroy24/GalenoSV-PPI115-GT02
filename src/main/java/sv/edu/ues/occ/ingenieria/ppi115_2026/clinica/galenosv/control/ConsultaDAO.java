@@ -77,24 +77,27 @@ public class ConsultaDAO extends DefaultDAO<Consulta, UUID> implements Serializa
         return consultaFiltrada(true, Long.class, idClinica, desde, hasta, filtro).getSingleResult();
     }
 
-    /** No enlaza parámetros nulos; el listado y el conteo comparten condiciones. */
+    /** Parámetros opcionales con valor tipado; nunca se enlazan UUID ni fechas nulos. */
     private <T> jakarta.persistence.TypedQuery<T> consultaFiltrada(boolean contar, Class<T> tipo,
             UUID idClinica, java.util.Date desde, java.util.Date hasta, String filtro) {
         String texto = normalizarFiltro(filtro);
-        String jpql = (contar ? "SELECT COUNT(c) FROM Consulta c JOIN c.idPersonaRol pr"
-                : "SELECT c FROM Consulta c JOIN FETCH c.idPersonaRol pr"
-                    + " JOIN FETCH pr.idPersona JOIN FETCH pr.idRol JOIN FETCH pr.idClinica")
-                + " WHERE pr.idClinica.idClinica = :clinica"
-                + (desde == null ? "" : " AND c.fechaInicio >= :desde")
-                + (hasta == null ? "" : " AND c.fechaInicio <= :hasta")
-                + (texto == null ? "" : " AND (LOWER(c.referenciaExterna) LIKE :patron ESCAPE '\\'"
-                    + " OR LOWER(c.observaciones) LIKE :patron ESCAPE '\\')")
-                + (contar ? "" : " ORDER BY c.fechaInicio DESC, c.idConsulta");
-        var query = getEntityManager().createQuery(jpql, tipo).setParameter("clinica", idClinica);
-        if (desde != null) query.setParameter("desde", desde);
-        if (hasta != null) query.setParameter("hasta", hasta);
-        if (texto != null) query.setParameter("patron", patronBusqueda(texto));
-        return query;
+        return getEntityManager().createNamedQuery(contar ? "Consulta.countFiltrado" : "Consulta.findRangeFiltrado", tipo)
+                .setParameter("clinica", idClinica)
+                .setParameter("filtrarDesde", desde != null)
+                .setParameter("desde", desde == null ? new java.util.Date(0) : desde)
+                .setParameter("filtrarHasta", hasta != null)
+                .setParameter("hasta", hasta == null ? new java.util.Date(0) : hasta)
+                .setParameter("filtrarTexto", texto != null)
+                .setParameter("patron", texto == null ? "%" : patronBusqueda(texto));
     }
 
+    /** Sugerencias limitadas a pacientes con rol y clínica activos de la sesión. */
+    public List<Consulta> buscarParaAutocompletar(String filtro, int max, UUID idClinica) {
+        String texto = normalizarFiltro(filtro);
+        if (texto == null || texto.length() < 2 || idClinica == null) return List.of();
+        return getEntityManager().createNamedQuery("Consulta.autocompletarPorClinica", Consulta.class)
+                .setParameter("clinica", idClinica).setParameter("rolPaciente", "%paciente%")
+                .setParameter("patron", patronBusqueda(texto))
+                .setMaxResults(limitarAutocompletado(max)).getResultList();
+    }
 }

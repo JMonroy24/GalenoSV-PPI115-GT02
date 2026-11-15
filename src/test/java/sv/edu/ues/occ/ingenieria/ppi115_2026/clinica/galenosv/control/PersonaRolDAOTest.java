@@ -199,7 +199,7 @@ class PersonaRolDAOTest {
     void testFindByClinicaAndRol() {
         UUID clinica = UUID.randomUUID();
         UUID rol = UUID.randomUUID();
-        when(em.createQuery(anyString(), eq(PersonaRol.class))).thenReturn(query);
+        when(em.createNamedQuery(anyString(), eq(PersonaRol.class))).thenReturn(query);
         when(query.setParameter(eq("clinica"), any())).thenReturn(query);
         when(query.setParameter(eq("rol"), any())).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(new PersonaRol(UUID.randomUUID())));
@@ -220,7 +220,7 @@ class PersonaRolDAOTest {
     void testExisteAsignacion() {
         UUID persona = UUID.randomUUID();
         UUID rol = UUID.randomUUID();
-        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
         when(queryLong.setParameter(eq("persona"), any())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("rol"), any())).thenReturn(queryLong);
         when(queryLong.getSingleResult()).thenReturn(1L);
@@ -236,7 +236,7 @@ class PersonaRolDAOTest {
         UUID rol = UUID.randomUUID();
         UUID clinica = UUID.randomUUID();
         UUID excluir = UUID.randomUUID();
-        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
         when(queryLong.setParameter(eq("persona"), any())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("rol"), any())).thenReturn(queryLong);
         when(queryLong.setParameter(eq("clinica"), any())).thenReturn(queryLong);
@@ -301,7 +301,7 @@ class PersonaRolDAOTest {
     void testFindResponsable() {
         UUID idClinica = UUID.randomUUID();
         UUID idRol = UUID.randomUUID();
-        when(em.createQuery(anyString(), eq(PersonaRol.class))).thenReturn(query);
+        when(em.createNamedQuery(anyString(), eq(PersonaRol.class))).thenReturn(query);
         when(query.setParameter(eq("clinica"), any())).thenReturn(query);
         when(query.setParameter(eq("rol"), any())).thenReturn(query);
         when(query.setMaxResults(1)).thenReturn(query);

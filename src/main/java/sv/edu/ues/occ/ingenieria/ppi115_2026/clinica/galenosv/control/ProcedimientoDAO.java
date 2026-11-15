@@ -51,9 +51,7 @@ public class ProcedimientoDAO
      * @return lista de Procedimiento ordenada por nombre
      */
     public java.util.List<Procedimiento> findAllActivos() {
-        return getEntityManager().createQuery(
-                "SELECT p FROM Procedimiento p WHERE p.activo = true ORDER BY p.nombre",
-                Procedimiento.class)
+        return getEntityManager().createNamedQuery("Procedimiento.findAllActivos", Procedimiento.class)
                 .getResultList();
     }
 

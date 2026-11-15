@@ -48,12 +48,12 @@
                 </p:dataTable>
             </p:panel>
 
-            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+            <p:confirmDialog global="true" responsive="true" styleClass="crud-dialog" showEffect="fade" hideEffect="fade">
                 <p:commandButton value="#{msg['btn.yes']}" type="button"
                                  styleClass="ui-confirmdialog-yes ui-button-danger"
                                  icon="pi pi-check"/>
                 <p:commandButton value="#{msg['btn.no']}" type="button"
-                                 styleClass="ui-confirmdialog-no ui-button-secondary"
+                                 styleClass="ui-confirmdialog-no ui-button-info ui-button-outlined"
                                  icon="pi pi-times"/>
             </p:confirmDialog>
         </p:outputPanel>
@@ -82,7 +82,7 @@
                                          update="crudContainer"/>
                         <p:commandButton id="btnCancelar"
                                          value="#{msg['btn.cancel']}" icon="pi pi-times"
-                                         styleClass="ui-button-secondary"
+                                         styleClass="ui-button-info ui-button-outlined"
                                          action="#{cc.attrs.model.cancelar()}"
                                          process="@this"
                                          update="crudContainer"

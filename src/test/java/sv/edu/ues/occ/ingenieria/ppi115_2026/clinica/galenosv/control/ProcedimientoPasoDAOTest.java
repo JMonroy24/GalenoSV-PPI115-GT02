@@ -165,7 +165,7 @@ class ProcedimientoPasoDAOTest {
     @Test
     void testTieneFin() {
         UUID id = UUID.randomUUID();
-        when(em.createQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
+        when(em.createNamedQuery(anyString(), eq(Long.class))).thenReturn(queryLong);
         when(queryLong.setParameter(eq("idProc"), any())).thenReturn(queryLong);
         when(queryLong.getSingleResult()).thenReturn(1L);
 
@@ -182,7 +182,7 @@ class ProcedimientoPasoDAOTest {
     @Test
     void testFindPasoInicial() {
         UUID id = UUID.randomUUID();
-        when(em.createQuery(anyString(), eq(ProcedimientoPaso.class))).thenReturn(query);
+        when(em.createNamedQuery(anyString(), eq(ProcedimientoPaso.class))).thenReturn(query);
         when(query.setParameter(eq("idProc"), any())).thenReturn(query);
         when(query.setMaxResults(1)).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(new ProcedimientoPaso(UUID.randomUUID())));

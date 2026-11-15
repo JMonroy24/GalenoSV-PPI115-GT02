@@ -93,11 +93,13 @@ public class ExamenModel extends ModelTransaccional<Examen, UUID> implements Ser
                 || tipoSeleccionado == null || tipoSeleccionado.getIdTipoExamen() == null) {
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Tipo de examen",
                     "Seleccione un tipo para un examen guardado.");
+            marcarValidacionFallida();
             return;
         }
 
         if (!Boolean.TRUE.equals(tipoSeleccionado.getActivo())) {
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Tipo de examen", "No se puede asignar un tipo de examen inactivo.");
+            marcarValidacionFallida();
             return;
         }
         ExamenTipoExamen asignacion = new ExamenTipoExamen(UUID.randomUUID());

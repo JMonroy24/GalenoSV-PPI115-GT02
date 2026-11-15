@@ -20,6 +20,21 @@ import java.util.UUID;
 @Entity
 @Table(name = "procedimiento_paso")
 @NamedQueries({
+    @NamedQuery(name = "ProcedimientoPaso.findByProcedimiento", query =
+        "SELECT DISTINCT p FROM ProcedimientoPaso p "
+                + "LEFT JOIN FETCH p.idProcedimiento LEFT JOIN FETCH p.idRol "
+                + "LEFT JOIN FETCH p.procedimientoPasoExamenList a "
+                + "LEFT JOIN FETCH a.idExamen "
+                + "WHERE p.idProcedimiento.idProcedimiento = :id"),
+    @NamedQuery(name = "ProcedimientoPaso.findPasoInicial", query =
+        "SELECT pp FROM ProcedimientoPaso pp LEFT JOIN FETCH pp.idRol"
+                + " WHERE pp.idProcedimiento.idProcedimiento = :idProc"
+                + " AND NOT EXISTS (SELECT s FROM ProcedimientoPasoSecuencia s"
+                + " WHERE s.idProcedimientoPaso.idProcedimiento.idProcedimiento = :idProc"
+                + " AND s.idProcedimientoPasoReferencia = pp.idProcedimientoPaso)"
+                + " ORDER BY pp.nombre, pp.idProcedimientoPaso"),
+    @NamedQuery(name = "ProcedimientoPaso.tieneFin", query =
+        "SELECT COUNT(p) FROM ProcedimientoPaso p WHERE p.idProcedimiento.idProcedimiento = :idProc AND p.indicaFin = true"),
     @NamedQuery(name = "ProcedimientoPaso.findAll", query = "SELECT p FROM ProcedimientoPaso p"),
     @NamedQuery(name = "ProcedimientoPaso.findByNombre", query = "SELECT p FROM ProcedimientoPaso p WHERE p.nombre = :nombre"),
     @NamedQuery(name = "ProcedimientoPaso.findByIndicaFin", query = "SELECT p FROM ProcedimientoPaso p WHERE p.indicaFin = :indicaFin")})

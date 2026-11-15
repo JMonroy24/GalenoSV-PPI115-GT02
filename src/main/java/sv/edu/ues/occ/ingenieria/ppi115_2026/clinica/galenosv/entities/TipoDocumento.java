@@ -18,6 +18,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "tipo_documento")
 @NamedQueries({
+    @NamedQuery(name = "TipoDocumento.findAllActivos", query =
+        "SELECT e FROM TipoDocumento e WHERE e.activo = true ORDER BY e.nombre, e.idTipoDocumento"),
     @NamedQuery(name = "TipoDocumento.findAll", query = "SELECT t FROM TipoDocumento t"),
     @NamedQuery(name = "TipoDocumento.findByNombre", query = "SELECT t FROM TipoDocumento t WHERE t.nombre = :nombre"),
     @NamedQuery(name = "TipoDocumento.findByIndicaciones", query = "SELECT t FROM TipoDocumento t WHERE t.indicaciones = :indicaciones"),

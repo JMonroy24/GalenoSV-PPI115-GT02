@@ -221,3 +221,35 @@ body .accion-nuevo.ui-button:not(:disabled):hover {
         max-width: 100%;
     }
 }
+
+/* Los diálogos secundarios tienen límites independientes del ancho del formulario. */
+body .crud-dialog.ui-dialog {
+    max-width: calc(100vw - 2rem);
+    box-sizing: border-box;
+}
+body .crud-dialog .ui-dialog-content {
+    max-height: 70dvh;
+    overflow-y: auto;
+}
+.examen-editor {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    max-width: 48rem;
+}
+.examen-editor .ui-fieldset,
+.examen-editor .crud-fields {
+    min-width: 0;
+    box-sizing: border-box;
+    width: 100%;
+}
+.crud-filter-help {
+    margin-block: 0.75rem;
+    color: var(--text-color-secondary, #5b6472);
+}
+.campo-regex { font-family: ui-monospace, monospace; }
+@media (max-width: 680px) {
+    body .crud-dialog.ui-dialog { max-width: calc(100vw - 1rem); }
+    .crud-dialog .crud-actions { flex-direction: column; align-items: stretch; }
+    .crud-dialog .ui-button { width: 100%; }
+}

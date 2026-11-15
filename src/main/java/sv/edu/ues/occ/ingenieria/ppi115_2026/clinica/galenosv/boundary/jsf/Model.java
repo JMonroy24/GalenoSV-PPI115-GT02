@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PersistenceException;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DefaultDAO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.persistence.ErroresConexion;
 
@@ -35,6 +36,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.persistence.Errore
 public abstract class Model<T, ID extends Serializable> implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    private static final String FALLO_PERSISTENCIA = Model.class.getName() + ".falloPersistencia";
     private static final Logger LOGGER = Logger.getLogger(Model.class.getName());
 
     /**
@@ -67,11 +69,7 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
      * Se invoca normalmente al inicializar la vista.
      */
     public void cargarDatos() {
-        try {
-            registros = getDAO().findAll();
-        } catch (Exception e) {
-            notificarError("cargar datos", e);
-        }
+        registros = consultar("cargar datos", () -> getDAO().findAll(), List.of());
     }
 
     /** Prepara un registro nuevo y cambia el estado a CREAR. */
@@ -215,6 +213,12 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
     }
 
     protected void notificarError(String operacion, Exception e) {
+        FacesContext contexto = FacesContext.getCurrentInstance();
+        boolean persistencia = esFalloPersistencia(e);
+        if (persistencia && lecturasBloqueadas()) return;
+        if (contexto != null && persistencia) {
+            contexto.getAttributes().put(FALLO_PERSISTENCIA, Boolean.TRUE);
+        }
         // Los mensajes de SQL pueden contener datos clínicos. Registrar tipos y estados, sin valores.
         String tipos = tiposDeError(e);
         LOGGER.log(Level.WARNING, "No se pudo {0}. Causas: {1}", new Object[]{operacion, tipos});
@@ -247,7 +251,7 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
     }
 
     protected <R> List<R> filtrarPorNombre(List<R> registros, String filtro, Function<R, String> nombre) {
-        if (filtro == null) return registros;
+        if (filtro == null) return registros.size() > 20 ? List.of() : registros;
         String texto = filtro.toLowerCase(java.util.Locale.ROOT);
         return registros.stream()
                 .filter(registro -> {
@@ -258,12 +262,28 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
     }
 
     protected <R> R consultar(String operacion, Supplier<R> consulta, R respaldo) {
+        if (lecturasBloqueadas()) return respaldo;
         try {
             return consulta.get();
         } catch (RuntimeException e) {
             notificarError(operacion, e);
             return respaldo;
         }
+    }
+
+    private boolean lecturasBloqueadas() {
+        FacesContext contexto = FacesContext.getCurrentInstance();
+        return contexto != null && Boolean.TRUE.equals(contexto.getAttributes().get(FALLO_PERSISTENCIA));
+    }
+
+    private boolean esFalloPersistencia(Throwable error) {
+        if (ErroresConexion.esConexion(error)) return true;
+        Set<Throwable> visitadas = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (Throwable causa = error; causa != null && visitadas.add(causa); causa = causa.getCause()) {
+            if (causa instanceof PersistenceException || causa instanceof SQLException
+                    || causa instanceof jakarta.transaction.TransactionalException) return true;
+        }
+        return false;
     }
 
     protected void marcarValidacionFallida() {

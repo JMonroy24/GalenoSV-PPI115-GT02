@@ -40,8 +40,6 @@ public class ClinicaDAO extends DefaultDAO<Clinica, UUID> implements Serializabl
 
     /** Catálogo activo, ordenado para los selectores de los formularios. */
     public java.util.List<Clinica> findAllActivos() {
-        return getEntityManager().createQuery(
-                "SELECT e FROM Clinica e WHERE e.activo = true ORDER BY e.nombre, e.idClinica",
-                Clinica.class).getResultList();
+        return getEntityManager().createNamedQuery("Clinica.findAllActivos", Clinica.class).getResultList();
     }
 }

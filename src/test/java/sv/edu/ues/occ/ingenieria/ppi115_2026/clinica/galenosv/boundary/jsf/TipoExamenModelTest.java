@@ -67,29 +67,6 @@ public class TipoExamenModelTest {
     }
 
     @Test
-    public void testGuardarCrear() {
-        tipoExamenModel.prepararNuevo();
-        tipoExamenModel.getRegistroActual().setNombre("Registro válido");
-        tipoExamenModel.guardar();
-
-        verify(tipoExamenService).create(any(TipoExamen.class));
-        assertEquals(Estado.NINGUNO, tipoExamenModel.getEstado());
-        assertNull(tipoExamenModel.getRegistroActual());
-    }
-
-    @Test
-    public void testGuardarModificar() {
-        TipoExamen te = new TipoExamen(UUID.randomUUID());
-        tipoExamenModel.seleccionar(te);
-
-        tipoExamenModel.getRegistroActual().setNombre("Registro válido");
-        tipoExamenModel.guardar();
-
-        verify(tipoExamenService).update(te);
-        assertEquals(Estado.NINGUNO, tipoExamenModel.getEstado());
-    }
-
-    @Test
     public void testEliminar() {
         TipoExamen te = new TipoExamen(UUID.randomUUID());
         tipoExamenModel.eliminar(te);

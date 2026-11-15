@@ -18,6 +18,8 @@ import java.util.UUID;
 @Entity
 @Table(name = "clinica")
 @NamedQueries({
+    @NamedQuery(name = "Clinica.findAllActivos", query =
+        "SELECT e FROM Clinica e WHERE e.activo = true ORDER BY e.nombre, e.idClinica"),
     @NamedQuery(name = "Clinica.findAll", query = "SELECT c FROM Clinica c"),
     @NamedQuery(name = "Clinica.findByNombre", query = "SELECT c FROM Clinica c WHERE c.nombre = :nombre"),
     @NamedQuery(name = "Clinica.findByActivo", query = "SELECT c FROM Clinica c WHERE c.activo = :activo"),

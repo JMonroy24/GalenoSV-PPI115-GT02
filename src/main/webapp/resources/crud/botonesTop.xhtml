@@ -12,14 +12,14 @@
 
     <cc:implementation>
         <p:commandButton id="btnNuevo" value="#{msg['btn.new']}" icon="pi pi-plus"
-                         styleClass="accion-nuevo"
+                         styleClass="ui-button-info accion-nuevo"
                          action="#{cc.attrs.model.prepararNuevo()}"
                          process="@this"
                          update="#{cc.attrs.update}" resetValues="true"
                          />
 
         <p:commandButton value="#{msg['btn.edit']}" icon="pi pi-pencil"
-                         styleClass="ui-button-warning"
+                         styleClass="ui-button-info"
                          action="#{cc.attrs.model.seleccionar(cc.attrs.model.seleccion)}"
                          process="@this"
                          update="#{cc.attrs.update}" resetValues="true"

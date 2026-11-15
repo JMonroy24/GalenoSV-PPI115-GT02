@@ -6,10 +6,10 @@
     <h:form id="frmPasos" rendered="#{procedimientoModel.estadoModificar}">
         <p:toolbar id="accionesPaso" styleClass="crud-toolbar">
             <p:toolbarGroup>
-                <p:commandButton value="Nuevo paso" icon="pi pi-plus" styleClass="accion-nuevo"
+                <p:commandButton value="Nuevo paso" icon="pi pi-plus" styleClass="ui-button-info accion-nuevo"
                                  action="#{procedimientoModel.nuevoPaso()}"
                                  process="@this" update="@form" resetValues="true"/>
-                <p:commandButton value="Editar paso" icon="pi pi-pencil" styleClass="ui-button-warning"
+                <p:commandButton value="Editar paso" icon="pi pi-pencil" styleClass="ui-button-info"
                                  action="#{procedimientoModel.editarPasoSeleccionado()}"
                                  disabled="#{empty procedimientoModel.nodoPasoSeleccionado}"
                                  process="@this" update="detallePaso" resetValues="true"/>
@@ -75,7 +75,7 @@
                         <p:outputLabel for="observacionesExamen" value="Observaciones de la asignación"/>
                         <p:inputTextarea id="observacionesExamen" value="#{procedimientoPasoModel.observacionesExamen}"
                                          rows="2" maxlength="2000"/>
-                        <p:commandButton value="Agregar a la lista" icon="pi pi-plus" styleClass="accion-nuevo"
+                        <p:commandButton value="Agregar a la lista" icon="pi pi-plus" styleClass="ui-button-info accion-nuevo"
                                          action="#{procedimientoPasoModel.agregarExamen()}"
                                          process="@this examenPaso observacionesExamen" update="panelExamenes"/>
                     </p:outputPanel>
@@ -96,7 +96,7 @@
                                  rowKey="#{asignacion.idProcedimientoPasoExamen}" selectionMode="single"
                                  selection="#{procedimientoPasoModel.examenAsignadoSeleccionado}"
                                  reflow="true" paginator="true" paginatorAlwaysVisible="false" rows="10"
-                                 emptyMessage="No hay exámenes asignados que coincidan.">
+                                 emptyMessage="Filtre por nombre si hay más de 20 exámenes asignados; no hay coincidencias para el filtro actual.">
                         <p:ajax event="rowSelect" process="@this" update="accionesExamen"/>
                         <p:ajax event="rowUnselect" process="@this" update="accionesExamen"/>
                         <p:column headerText="Examen">
@@ -110,7 +110,7 @@
                     <p:commandButton value="Guardar paso" icon="pi pi-check" styleClass="ui-button-success"
                                      action="#{procedimientoModel.guardarPaso()}"
                                      process="@this datosPaso" update="@form"/>
-                    <p:commandButton value="Cancelar edición del paso" styleClass="ui-button-secondary"
+                    <p:commandButton value="Cancelar edición del paso" styleClass="ui-button-info ui-button-outlined"
                                      action="#{procedimientoModel.cancelarPaso()}"
                                      process="@this" update="detallePaso" resetValues="true"/>
                 </div>

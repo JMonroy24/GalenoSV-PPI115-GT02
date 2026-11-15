@@ -21,6 +21,15 @@ import java.util.UUID;
 @Entity
 @Table(name = "medio_contacto")
 @NamedQueries({
+    @NamedQuery(name = "MedioContacto.existePersonaTipoValor", query =
+        "SELECT COUNT(m) FROM MedioContacto m"
+                + " WHERE m.idPersona.idPersona = :persona AND m.idTipoMedioContacto.idTipoMedioContacto = :tipo"
+                + " AND LOWER(m.valor) = :valor"),
+    @NamedQuery(name = "MedioContacto.existePersonaTipoValorExcluyendo", query =
+        "SELECT COUNT(m) FROM MedioContacto m"
+                + " WHERE m.idPersona.idPersona = :persona AND m.idTipoMedioContacto.idTipoMedioContacto = :tipo"
+                + " AND LOWER(m.valor) = :valor"
+                + " AND m.idMedioContacto <> :excluir"),
     @NamedQuery(name = "MedioContacto.findAll", query = "SELECT m FROM MedioContacto m"),
     @NamedQuery(name = "MedioContacto.findByValor", query = "SELECT m FROM MedioContacto m WHERE m.valor = :valor"),
     @NamedQuery(name = "MedioContacto.findByFechaCreacion", query = "SELECT m FROM MedioContacto m WHERE m.fechaCreacion = :fechaCreacion")})

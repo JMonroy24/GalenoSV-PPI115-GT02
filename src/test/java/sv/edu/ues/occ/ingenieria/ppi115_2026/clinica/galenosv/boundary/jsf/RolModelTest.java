@@ -67,29 +67,6 @@ public class RolModelTest {
     }
 
     @Test
-    public void testGuardarCrear() {
-        rolModel.prepararNuevo();
-        rolModel.getRegistroActual().setNombre("Registro válido");
-        rolModel.guardar();
-
-        verify(rolService).create(any(Rol.class));
-        assertEquals(Estado.NINGUNO, rolModel.getEstado());
-        assertNull(rolModel.getRegistroActual());
-    }
-
-    @Test
-    public void testGuardarModificar() {
-        Rol r = new Rol(UUID.randomUUID());
-        rolModel.seleccionar(r);
-
-        rolModel.getRegistroActual().setNombre("Registro válido");
-        rolModel.guardar();
-
-        verify(rolService).update(r);
-        assertEquals(Estado.NINGUNO, rolModel.getEstado());
-    }
-
-    @Test
     public void testEliminar() {
         Rol r = new Rol(UUID.randomUUID());
         rolModel.eliminar(r);

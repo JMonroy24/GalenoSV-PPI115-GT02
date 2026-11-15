@@ -146,7 +146,7 @@ class TipoExamenDAOTest {
 
     @Test
     void testFindAllActivos() {
-        when(em.createQuery(anyString(), eq(TipoExamen.class))).thenReturn(query);
+        when(em.createNamedQuery(anyString(), eq(TipoExamen.class))).thenReturn(query);
         when(query.getResultList()).thenReturn(List.of(new TipoExamen(UUID.randomUUID())));
 
         List<TipoExamen> result = dao.findAllActivos();

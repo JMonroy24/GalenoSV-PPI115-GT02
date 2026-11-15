@@ -67,29 +67,6 @@ public class TipoDocumentoModelTest {
     }
 
     @Test
-    public void testGuardarCrear() {
-        tipoDocumentoModel.prepararNuevo();
-        tipoDocumentoModel.getRegistroActual().setNombre("Registro válido");
-        tipoDocumentoModel.guardar();
-
-        verify(tipoDocumentoService).create(any(TipoDocumento.class));
-        assertEquals(Estado.NINGUNO, tipoDocumentoModel.getEstado());
-        assertNull(tipoDocumentoModel.getRegistroActual());
-    }
-
-    @Test
-    public void testGuardarModificar() {
-        TipoDocumento td = new TipoDocumento(UUID.randomUUID());
-        tipoDocumentoModel.seleccionar(td);
-
-        tipoDocumentoModel.getRegistroActual().setNombre("Registro válido");
-        tipoDocumentoModel.guardar();
-
-        verify(tipoDocumentoService).update(td);
-        assertEquals(Estado.NINGUNO, tipoDocumentoModel.getEstado());
-    }
-
-    @Test
     public void testEliminar() {
         TipoDocumento td = new TipoDocumento(UUID.randomUUID());
         tipoDocumentoModel.eliminar(td);

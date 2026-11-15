@@ -41,8 +41,6 @@ public class TipoMedioContactoDAO extends DefaultDAO<TipoMedioContacto, UUID> im
 
     /** Catálogo activo, ordenado para los selectores de los formularios. */
     public java.util.List<TipoMedioContacto> findAllActivos() {
-        return getEntityManager().createQuery(
-                "SELECT e FROM TipoMedioContacto e WHERE e.activo = true ORDER BY e.nombre, e.idTipoMedioContacto",
-                TipoMedioContacto.class).getResultList();
+        return getEntityManager().createNamedQuery("TipoMedioContacto.findAllActivos", TipoMedioContacto.class).getResultList();
     }
 }
