@@ -21,20 +21,27 @@ class GenericLazyDataModelTest {
     private final GenericLazyDataModel<Persona> model = new GenericLazyDataModel<>(dao);
 
     @Test
-    void modeloDeVistaExigeFiltroAntesDeContarOCargar() {
+    void modeloDeVistaCargaPaginasSinExigirFiltro() {
         ModelTransaccional<Persona, UUID> vista = new ModelTransaccional<>() {
             @Override protected DAOInterface<Persona, UUID> getDAO() { return dao; }
             @Override protected Persona crearNuevoRegistro() { return new Persona(UUID.randomUUID()); }
         };
         vista.inicializarLazyModel();
         var lista = vista.getLazyModel();
+        var registros = List.of(new Persona(UUID.randomUUID()));
+        when(dao.count(null, List.of())).thenReturn(21L);
+        when(dao.findRange(0, 20, null, List.of(), List.of())).thenReturn(registros);
         for (String filtro : new String[]{null, "", "  ", "\u2003"}) {
             lista.setFiltroGlobal(filtro);
-            assertTrue(lista.isEsperaFiltro());
-            assertEquals(0, lista.count(Map.of()));
-            assertTrue(lista.load(0, 20, Map.of(), Map.of()).isEmpty());
+            assertFalse(lista.isEsperaFiltro());
+            assertEquals(21, lista.count(Map.of()));
+            assertEquals(registros, lista.load(0, 20, Map.of(), Map.of()));
         }
-        verifyNoInteractions(dao);
+        var siguientePagina = List.of(new Persona(UUID.randomUUID()));
+        when(dao.findRange(20, 20, null, List.of(), List.of())).thenReturn(siguientePagina);
+        assertEquals(siguientePagina, lista.load(20, 20, Map.of(), Map.of()));
+        verify(dao).findRange(20, 20, null, List.of(), List.of());
+        verify(dao, never()).findAll();
         lista.setFiltroGlobal("  Ana  ");
         lista.count(Map.of());
         lista.load(0, 20, Map.of(), Map.of());

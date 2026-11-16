@@ -20,35 +20,27 @@ public class GenericLazyDataModel<T> extends LazyDataModel<T> {
     private static final long serialVersionUID = 1L;
     private final DAOInterface<T, ?> dao;
     private String filtroGlobal;
-    private final boolean requiereFiltro;
     private final Model<T, ?> modelo;
 
     public GenericLazyDataModel(DAOInterface<T, ?> dao) {
-        this(dao, false, null);
+        this(dao, null);
     }
 
-    GenericLazyDataModel(Model<T, ?> modelo, boolean requiereFiltro) {
-        this(modelo.getDAO(), requiereFiltro, modelo);
-    }
-
-    private GenericLazyDataModel(DAOInterface<T, ?> dao, boolean requiereFiltro, Model<T, ?> modelo) {
+    GenericLazyDataModel(DAOInterface<T, ?> dao, Model<T, ?> modelo) {
         if (dao == null) {
             throw new IllegalArgumentException("El DAO no puede ser null");
         }
         this.dao = dao;
-        this.requiereFiltro = requiereFiltro;
         this.modelo = modelo;
     }
 
     @Override
     public int count(Map<String, FilterMeta> filterBy) {
-        if (isEsperaFiltro()) return 0;
         return leerPagina(() -> Math.toIntExact(dao.count(filtroGlobal, filtros(filterBy))), 0);
     }
 
     @Override
     public List<T> load(int first, int pageSize, Map<String, SortMeta> sortBy, Map<String, FilterMeta> filterBy) {
-        if (isEsperaFiltro()) return List.of();
         List<OrdenConsulta> orden = sortBy == null ? List.of() : sortBy.values().stream()
                 .filter(meta -> meta.getField() != null && meta.getOrder() != SortOrder.UNSORTED)
                 .sorted(Comparator.comparingInt(SortMeta::getPriority))
@@ -93,8 +85,9 @@ public class GenericLazyDataModel<T> extends LazyDataModel<T> {
         return null;
     }
 
+    /** Compatibilidad con las vistas JSF: las tablas admiten filtros opcionales. */
     public boolean isEsperaFiltro() {
-        return requiereFiltro && filtroGlobal == null;
+        return false;
     }
 
     public String getFiltroGlobal() {

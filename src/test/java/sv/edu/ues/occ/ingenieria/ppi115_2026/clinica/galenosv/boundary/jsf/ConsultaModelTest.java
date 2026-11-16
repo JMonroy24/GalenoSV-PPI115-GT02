@@ -1,5 +1,7 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
 
+import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +46,34 @@ public class ConsultaModelTest {
         assertNotNull(consultaModel.getLazyModel());
         assertNull(consultaModel.getRegistros());
 
+    }
+
+    @Test
+    void cargaInicialSinFiltroMantieneLaClinicaYLaPaginacion() {
+        consultaModel.init();
+        UUID clinicaId = consultaModel.sesionBean.getClinicaActual().getIdClinica();
+        var registros = List.of(new Consulta(UUID.randomUUID()));
+        when(consultaService.countFiltrado(clinicaId, null, null, null)).thenReturn(11L);
+        when(consultaService.findRangeFiltrado(0, 10, clinicaId, null, null, null)).thenReturn(registros);
+
+        var lista = consultaModel.getLazyModel();
+        assertFalse(lista.isEsperaFiltro());
+        assertEquals(11, lista.count(null));
+        assertEquals(registros, lista.load(0, 10, null, null));
+        lista.load(10, 10, null, null);
+        verify(consultaService).findRangeFiltrado(10, 10, clinicaId, null, null, null);
+        verify(consultaService, never()).findAll();
+    }
+
+    @Test
+    void rangoDeFechasInvertidoNoConsultaLaBase() {
+        consultaModel.init();
+        consultaModel.setFechaDesde(new Date(172800000L));
+        consultaModel.setFechaHasta(new Date(0));
+
+        assertEquals(0, consultaModel.getLazyModel().count(null));
+        assertTrue(consultaModel.getLazyModel().load(0, 10, null, null).isEmpty());
+        verifyNoInteractions(consultaService);
     }
 
     @Test

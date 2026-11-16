@@ -25,7 +25,7 @@ public class RolModel extends ModelTransaccional<Rol, UUID> implements Serializa
 
     @PostConstruct
     public void init() {
-        inicializarLazyModel(true);
+        inicializarLazyModel();
     }
 
     @Override

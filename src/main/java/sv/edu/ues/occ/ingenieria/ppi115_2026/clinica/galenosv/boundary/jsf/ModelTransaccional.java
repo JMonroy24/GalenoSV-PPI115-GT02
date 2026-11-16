@@ -5,7 +5,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DAOInterfa
 
 /**
  * Backing bean abstracto para entidades transaccionales (alto volumen).
- * Extiende Model para integrar GenericLazyDataModel y anular la carga 
+ * Extiende Model para integrar GenericLazyDataModel y anular la carga
  * completa en memoria (findAll).
  *
  * @param <T>  tipo de la entidad JPA
@@ -26,11 +26,7 @@ public abstract class ModelTransaccional<T, ID extends Serializable> extends Mod
      * Reemplaza la llamada a cargarDatos() que usan los modelos de catálogo.
      */
     protected void inicializarLazyModel() {
-        inicializarLazyModel(true);
-    }
-
-    protected void inicializarLazyModel(boolean requiereFiltro) {
-        this.lazyModel = new GenericLazyDataModel<>(this, requiereFiltro);
+        this.lazyModel = new GenericLazyDataModel<>(getDAO(), this);
     }
 
     /**

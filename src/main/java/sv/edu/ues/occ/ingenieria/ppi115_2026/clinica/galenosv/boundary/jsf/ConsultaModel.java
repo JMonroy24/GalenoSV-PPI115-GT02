@@ -341,12 +341,8 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
         consultasFiltradas = new GenericLazyDataModel<>(consultaService) {
             private static final long serialVersionUID = 1L;
             @Override
-            public boolean isEsperaFiltro() {
-                return getFiltroGlobal() == null && fechaDesde == null && fechaHasta == null;
-            }
-            @Override
             public int count(java.util.Map<String, org.primefaces.model.FilterMeta> filtros) {
-                if (isEsperaFiltro() || !rangoFiltroValido()) return 0;
+                if (!rangoFiltroValido()) return 0;
                 return consultar("contar consultas", () -> Math.toIntExact(consultaService.countFiltrado(
                         idClinicaActual(), inicioDia(fechaDesde), finDia(fechaHasta), getFiltroGlobal())), 0);
             }
@@ -354,7 +350,7 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
             public List<Consulta> load(int first, int max,
                     java.util.Map<String, org.primefaces.model.SortMeta> orden,
                     java.util.Map<String, org.primefaces.model.FilterMeta> filtros) {
-                if (isEsperaFiltro() || !rangoFiltroValido()) return List.of();
+                if (!rangoFiltroValido()) return List.of();
                 return consultar("cargar consultas", () -> consultaService.findRangeFiltrado(first, max,
                         idClinicaActual(), inicioDia(fechaDesde), finDia(fechaHasta), getFiltroGlobal()), List.of());
             }

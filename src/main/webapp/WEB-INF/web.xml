@@ -63,6 +63,12 @@
         </web-resource-collection>
     </security-constraint>
 
+    <!-- Permite leer el 401 desde el frontend sin eliminar BASIC ni sus roles. -->
+    <error-page>
+        <error-code>401</error-code>
+        <location>/WEB-INF/api_unauthorized.jsp</location>
+    </error-page>
+
     <login-config>
         <auth-method>BASIC</auth-method>
         <realm-name>GalenoSV</realm-name>

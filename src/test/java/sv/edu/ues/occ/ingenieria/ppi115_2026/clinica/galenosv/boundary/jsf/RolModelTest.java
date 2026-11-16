@@ -91,17 +91,20 @@ public class RolModelTest {
     }
 
     @Test
-    void listadoNoConsultaHastaIngresarUnFiltro() {
+    void listadoCargaRegistrosSinFiltroYPermiteBuscar() {
         rolModel.init();
         var lista = rolModel.getLazyModel();
+        var registros = List.of(new Rol(UUID.randomUUID()));
+        when(rolService.count(null, List.of())).thenReturn(1L);
+        when(rolService.findRange(0, 10, null, List.of(), List.of())).thenReturn(registros);
 
         for (String filtro : new String[]{null, "   ", " "}) {
             lista.setFiltroGlobal(filtro);
-            assertTrue(lista.isEsperaFiltro());
-            assertEquals(0, lista.count(null));
-            assertTrue(lista.load(0, 10, null, null).isEmpty());
+            assertFalse(lista.isEsperaFiltro());
+            assertEquals(1, lista.count(null));
+            assertEquals(registros, lista.load(0, 10, null, null));
         }
-        verifyNoInteractions(rolService);
+        verify(rolService, never()).findAll();
 
         lista.setFiltroGlobal("  M  ");
         assertFalse(lista.isEsperaFiltro());
