@@ -56,6 +56,47 @@ class ConsultaResourceTest {
     }
 
     @Test
+    void listarFiltraRelacionYTotalConservandoBusquedaYPaginacion() {
+        UUID id = UUID.randomUUID();
+        consultaResource.pacienteId = id.toString();
+        Consulta entidad = new Consulta(UUID.randomUUID());
+        when(consultaService.findRange(5, 100, "texto", id)).thenReturn(List.of(entidad));
+        when(consultaService.count("texto", id)).thenReturn(7L);
+
+        var respuesta = consultaResource.listar(5, 1000, " texto ");
+
+        assertEquals(1, respuesta.items().size());
+        assertEquals(7L, respuesta.total());
+        assertEquals(5, respuesta.first());
+        assertEquals(100, respuesta.max());
+        verify(consultaService).findRange(5, 100, "texto", id);
+        verify(consultaService).count("texto", id);
+        verify(consultaService, never()).findRange(anyInt(), anyInt(), any());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"", " ", "invalido", "1-1-1-1-1"})
+    void listarRechazaUuidInvalidoSinConsultarServicio(String id) {
+        consultaResource.pacienteId = id;
+
+        var error = assertThrows(jakarta.ws.rs.BadRequestException.class,
+                () -> consultaResource.listar(0, 20, null));
+
+        assertEquals(400, error.getResponse().getStatus());
+        verifyNoInteractions(consultaService);
+    }
+
+    @Test
+    void listarConRelacionRechazaPaginacionInvalida() {
+        consultaResource.pacienteId = UUID.randomUUID().toString();
+        assertThrows(jakarta.ws.rs.BadRequestException.class,
+                () -> consultaResource.listar(-1, 20, null));
+        assertThrows(jakarta.ws.rs.BadRequestException.class,
+                () -> consultaResource.listar(0, 0, null));
+        verifyNoInteractions(consultaService);
+    }
+
+    @Test
     void postDevuelve201YHeaderLocation() {
         ConsultaDTO dto = new ConsultaDTO(null, null, null, "REF-001", null, UUID.randomUUID());
         Consulta entidad = new Consulta();

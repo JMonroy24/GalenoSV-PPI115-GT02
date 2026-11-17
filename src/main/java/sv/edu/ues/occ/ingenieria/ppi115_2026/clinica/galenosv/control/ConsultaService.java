@@ -29,6 +29,19 @@ public class ConsultaService extends DefaultService<Consulta, UUID> implements S
         return consultaDAO;
     }
 
+    public List<Consulta> findRange(int first, int max, String filtroGlobal, UUID pacienteId) {
+        return consultaDAO.findRange(first, max, filtroGlobal, List.of(), filtrosPorPaciente(pacienteId));
+    }
+
+    public long count(String filtroGlobal, UUID pacienteId) {
+        return consultaDAO.count(filtroGlobal, filtrosPorPaciente(pacienteId));
+    }
+
+    private List<FiltroConsulta> filtrosPorPaciente(UUID pacienteId) {
+        return pacienteId == null ? List.of()
+                : List.of(new FiltroConsulta("idPersonaRol.idPersonaRol", pacienteId, "EQUALS"));
+    }
+
     @Override
     protected void validar(Consulta r, boolean nuevo) {
         ValidadorComun.rangoFechas(r.getFechaInicio(), r.getFechaFin());

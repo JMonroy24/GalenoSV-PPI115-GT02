@@ -55,6 +55,47 @@ class PersonaRolResourceTest {
     }
 
     @Test
+    void listarFiltraRelacionYTotalConservandoBusquedaYPaginacion() {
+        UUID id = UUID.randomUUID();
+        personaRolResource.personaId = id.toString();
+        PersonaRol entidad = new PersonaRol(UUID.randomUUID());
+        when(personaRolService.findRange(5, 100, "texto", id)).thenReturn(List.of(entidad));
+        when(personaRolService.count("texto", id)).thenReturn(7L);
+
+        var respuesta = personaRolResource.listar(5, 1000, " texto ");
+
+        assertEquals(1, respuesta.items().size());
+        assertEquals(7L, respuesta.total());
+        assertEquals(5, respuesta.first());
+        assertEquals(100, respuesta.max());
+        verify(personaRolService).findRange(5, 100, "texto", id);
+        verify(personaRolService).count("texto", id);
+        verify(personaRolService, never()).findRange(anyInt(), anyInt(), any());
+    }
+
+    @org.junit.jupiter.params.ParameterizedTest
+    @org.junit.jupiter.params.provider.ValueSource(strings = {"", " ", "invalido", "1-1-1-1-1"})
+    void listarRechazaUuidInvalidoSinConsultarServicio(String id) {
+        personaRolResource.personaId = id;
+
+        var error = assertThrows(jakarta.ws.rs.BadRequestException.class,
+                () -> personaRolResource.listar(0, 20, null));
+
+        assertEquals(400, error.getResponse().getStatus());
+        verifyNoInteractions(personaRolService);
+    }
+
+    @Test
+    void listarConRelacionRechazaPaginacionInvalida() {
+        personaRolResource.personaId = UUID.randomUUID().toString();
+        assertThrows(jakarta.ws.rs.BadRequestException.class,
+                () -> personaRolResource.listar(-1, 20, null));
+        assertThrows(jakarta.ws.rs.BadRequestException.class,
+                () -> personaRolResource.listar(0, 0, null));
+        verifyNoInteractions(personaRolService);
+    }
+
+    @Test
     void postDevuelve201YHeaderLocation() {
         PersonaRolDTO dto = new PersonaRolDTO(null, null, UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
         PersonaRol entidad = new PersonaRol();

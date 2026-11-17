@@ -31,6 +31,18 @@ class PersonaRolServiceTest {
     }
 
     @Test
+    void listadoYTotalFiltranPorUuidDeRelacionConIgualdadExacta() {
+        UUID id = UUID.randomUUID();
+        var filtros = java.util.List.of(new FiltroConsulta("idPersona.idPersona", id, "EQUALS"));
+
+        personaRolService.findRange(5, 20, "texto", id);
+        personaRolService.count("texto", id);
+
+        verify(personaRolDAO).findRange(5, 20, "texto", java.util.List.of(), filtros);
+        verify(personaRolDAO).count("texto", filtros);
+    }
+
+    @Test
     void crearAsignaFechaDeCreacionCuandoNoViene() {
         PersonaRol nueva = nuevaAsignacion();
         when(personaRolDAO.existeAsignacion(any(), any(), any(), any())).thenReturn(false);

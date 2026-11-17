@@ -30,6 +30,19 @@ public class PersonaRolService extends DefaultService<PersonaRol, UUID> implemen
         return personaRolDAO;
     }
 
+    public List<PersonaRol> findRange(int first, int max, String filtroGlobal, UUID personaId) {
+        return personaRolDAO.findRange(first, max, filtroGlobal, List.of(), filtrosPorPersona(personaId));
+    }
+
+    public long count(String filtroGlobal, UUID personaId) {
+        return personaRolDAO.count(filtroGlobal, filtrosPorPersona(personaId));
+    }
+
+    private List<FiltroConsulta> filtrosPorPersona(UUID personaId) {
+        return personaId == null ? List.of()
+                : List.of(new FiltroConsulta("idPersona.idPersona", personaId, "EQUALS"));
+    }
+
     @Override
     protected void validar(PersonaRol r, boolean nuevo) {
         if (nuevo && r.getFechaCreacion() == null) {

@@ -26,6 +26,18 @@ public class ConsultaServiceTest {
         service = new ConsultaService(consultaDAO);
     }
 
+    @Test
+    void listadoYTotalFiltranPorUuidDeRelacionConIgualdadExacta() {
+        UUID id = UUID.randomUUID();
+        var filtros = java.util.List.of(new FiltroConsulta("idPersonaRol.idPersonaRol", id, "EQUALS"));
+
+        service.findRange(5, 20, "texto", id);
+        service.count("texto", id);
+
+        verify(consultaDAO).findRange(5, 20, "texto", java.util.List.of(), filtros);
+        verify(consultaDAO).count("texto", filtros);
+    }
+
     @org.junit.jupiter.params.ParameterizedTest
     @org.junit.jupiter.params.provider.NullAndEmptySource
     @org.junit.jupiter.params.provider.ValueSource(strings = {"  ", "a", "\u2003"})
