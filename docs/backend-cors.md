@@ -1,7 +1,7 @@
 # Fase 0: CORS del backend
 
 La URL base confirmada por `server.xml` y `RestApplication` es
-`https://localhost:9443/galenoSV/api/v1`. El origen permitido del frontend es
+`http://localhost:9080/galenoSV/api/v1`. El origen permitido del frontend es
 exactamente `http://localhost:3000` (sin barra final). Otros puertos, dominios y
 `127.0.0.1` son orígenes distintos y no reciben autorización CORS.
 
@@ -17,26 +17,26 @@ Se permiten GET, HEAD, POST, PUT, DELETE y OPTIONS, y los encabezados Accept,
 Content-Type, Authorization, If-Match e If-None-Match. JavaScript puede leer
 ETag y Location. El permiso del preflight se almacena hasta 600 segundos.
 Se conserva `Vary` y se añade `Origin` para separar las respuestas en cachés.
-No se habilitan cookies ni `credentials: 'include'`; la autenticación actual
-usa el encabezado Authorization.
+No se habilitan cookies ni `credentials: 'include'`. El frontend no necesita
+enviar Authorization ni credenciales BASIC. Permitir ese encabezado en CORS
+no obliga a utilizarlo.
 
 ## Seguridad actual
 
-En `web.xml`, únicamente OPTIONS queda exento de BASIC y del requisito de
-transporte HTTPS. Las operaciones conservan sus roles y `CONFIDENTIAL`.
-No se han cambiado usuarios, autenticación, esquema ni dependencias.
-La separación de métodos usa las reglas de
-[restricciones de seguridad de Jakarta Servlet](https://jakarta.ee/specifications/servlet/6.1/jakarta-servlet-spec-6.1.html#uncovered-http-protocol-methods).
+`web.xml` ya no declara restricciones de autenticación ni transporte para
+`/api/*`, ni configura BASIC. Se retiró la página de error que añadía el desafío
+`WWW-Authenticate: Basic` a las respuestas 401.
 
-Las operaciones HTTP en el puerto 9080 se redirigen a HTTPS. El futuro cliente
-debe usar directamente el puerto 9443 y el navegador debe confiar en el
-certificado local de Liberty. CORS no sustituye la autenticación: todavía se
-requieren las credenciales BASIC actuales hasta implementar el token en Fase 1.
+Las operaciones de `GenericResource` y los listados específicos de
+`PersonaResource`, `PersonaRolResource` y `ConsultaResource` usan `@PermitAll`.
+Esto incluye los métodos CRUD heredados por los catálogos y los filtros por
+documento y persona utilizados por el flujo de login. La validación del número
+de documento corresponde a la lógica de negocio; el contenedor permite acceso
+anónimo a estas operaciones.
 
-Un `ContainerResponseFilter` solo procesa respuestas que pasan por Jakarta REST.
-Los rechazos de autenticación o transporte producidos previamente por el
-contenedor pueden no incluir encabezados CORS. No se debe interpretar ese caso
-como un fallo del preflight ni desactivar la seguridad para resolverlo.
+`server.xml` ya expone HTTP en 9080. La API no exige redirigir a HTTPS ni validar
+el certificado local. La configuración TLS y el registro de usuarios de Liberty
+siguen disponibles, pero no imponen autenticación a la API.
 
 ## Pruebas
 
@@ -45,24 +45,32 @@ mvn '-Dtest=CorsFilterTest,CorsSecurityConfigTest' test
 mvn verify
 ```
 
-Validación realizada: 28 pruebas nuevas correctas; suite completa de 865 pruebas,
-sin fallos ni errores, con 12 omitidas. JaCoCo cubre el 100% de las líneas y ramas
-de `CorsFilter`; la cobertura global de líneas es 78.03%. El WAR se generó y
-superó el umbral existente de 65%; subirlo a 80% sigue pendiente para Fase 1.
-En este entorno aislado se cargó Mockito como agente al iniciar la JVM para
-evitar el bloqueo de Windows al adjuntarlo dinámicamente. No se modificó el POM.
+`CorsFilterTest` cubre el origen permitido, respuestas REST y preflight.
+`CorsSecurityConfigTest` verifica el puerto HTTP 9080, la ausencia de BASIC y
+restricciones de transporte, y el acceso anónimo a métodos heredados y listados
+específicos. Si Windows bloquea la conexión dinámica de Mockito, puede cargarse
+su JAR como agente al iniciar la JVM de pruebas.
 
 Con Liberty iniciado y la aplicación redesplegada, comprobar el preflight sin
 credenciales desde PowerShell:
 
 ```powershell
-curl.exe -i -X OPTIONS "http://localhost:9080/galenoSV/api/v1/clinicas" -H "Origin: http://localhost:3000" -H "Access-Control-Request-Method: PUT" -H "Access-Control-Request-Headers: authorization,content-type,if-match"
+curl.exe -i -X OPTIONS "http://localhost:9080/galenoSV/api/v1/clinicas" -H "Origin: http://localhost:3000" -H "Access-Control-Request-Method: PUT" -H "Access-Control-Request-Headers: content-type,if-match"
 ```
 
 La respuesta esperada es 204, sin redirección ni desafío BASIC, e incluye
 `Access-Control-Allow-Origin: http://localhost:3000`, los métodos y encabezados
 permitidos y `Access-Control-Max-Age: 600`. Para comprobar el rechazo, repetir
 con `Origin: https://example.com`: se espera 403 sin autorización CORS.
+
+Comprobar también una petición real sin Authorization:
+
+```powershell
+curl.exe -i "http://localhost:9080/galenoSV/api/v1/clinicas?first=0&max=20" -H "Origin: http://localhost:3000"
+```
+
+Con la base de datos disponible se espera 200 y el listado JSON, sin redirección
+a HTTPS ni desafío BASIC. La respuesta incluye el origen permitido.
 
 ## Siguiente paso
 

@@ -1,32 +1,55 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest;
 
+import jakarta.annotation.security.DenyAll;
+import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.ws.rs.HttpMethod;
 import java.nio.file.Path;
+import java.util.Arrays;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPathFactory;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 class CorsSecurityConfigTest {
 
     @Test
-    void permiteOptionsSinAutenticacionYConservaRolesYHttpsParaElResto() throws Exception {
+    void permiteApiSinBasicNiRedireccionAHttps() throws Exception {
         var document = DocumentBuilderFactory.newInstance().newDocumentBuilder()
                 .parse(Path.of("src/main/webapp/WEB-INF/web.xml").toFile());
         var xpath = XPathFactory.newInstance().newXPath();
-        String secured = "/web-app/security-constraint[web-resource-collection/web-resource-name='API REST']";
-        String preflight = "/web-app/security-constraint[web-resource-collection/web-resource-name='CORS preflight']";
+        assertEquals("0", xpath.evaluate("count(/web-app/security-constraint)", document));
+        assertEquals("0", xpath.evaluate("count(/web-app/login-config)", document));
+        assertEquals("0", xpath.evaluate("count(/web-app/error-page[error-code='401'])", document));
+    }
 
-        assertEquals("/api/*", xpath.evaluate(secured + "/web-resource-collection/url-pattern", document));
-        assertEquals("OPTIONS", xpath.evaluate(secured + "/web-resource-collection/http-method-omission", document));
-        assertEquals("2", xpath.evaluate("count(" + secured + "/auth-constraint/role-name)", document));
-        assertEquals("ADMINISTRADOR", xpath.evaluate(secured + "/auth-constraint/role-name[1]", document));
-        assertEquals("PERSONAL_CLINICO", xpath.evaluate(secured + "/auth-constraint/role-name[2]", document));
-        assertEquals("CONFIDENTIAL", xpath.evaluate(secured + "/user-data-constraint/transport-guarantee", document));
-        assertEquals("/api/*", xpath.evaluate(preflight + "/web-resource-collection/url-pattern", document));
-        assertEquals("OPTIONS", xpath.evaluate(preflight + "/web-resource-collection/http-method", document));
-        assertEquals("0", xpath.evaluate("count(" + preflight + "/auth-constraint)", document));
-        assertEquals("0", xpath.evaluate("count(" + preflight + "/user-data-constraint)", document));
-        assertEquals("BASIC", xpath.evaluate("/web-app/login-config/auth-method", document));
+    @Test
+    void libertyEscuchaEnHttp9080() throws Exception {
+        var document = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+                .parse(Path.of("src/main/liberty/config/server.xml").toFile());
+        var xpath = XPathFactory.newInstance().newXPath();
+
+        assertEquals("9080", xpath.evaluate("/server/httpEndpoint[@id='defaultHttpEndpoint']/@httpPort", document));
+    }
+
+    @Test
+    void permiteAccesoAnonimoAOperacionesHeredadasYFiltrosDelLogin() {
+        for (Class<?> resource : new Class<?>[] {GenericResource.class, PersonaResource.class,
+                PersonaRolResource.class, ConsultaResource.class, TipoDocumentoResource.class,
+                TipoExamenResource.class, TipoMedioContactoResource.class, RolResource.class}) {
+            assertFalse(resource.isAnnotationPresent(RolesAllowed.class), resource.getName());
+            assertFalse(resource.isAnnotationPresent(DenyAll.class), resource.getName());
+            var endpoints = Arrays.stream(resource.getMethods())
+                    .filter(method -> Arrays.stream(method.getAnnotations())
+                            .anyMatch(annotation -> annotation.annotationType().isAnnotationPresent(HttpMethod.class)))
+                    .toList();
+            assertFalse(endpoints.isEmpty(), resource.getName());
+            for (var endpoint : endpoints) {
+                assertTrue(endpoint.isAnnotationPresent(PermitAll.class), endpoint.toString());
+                assertFalse(endpoint.isAnnotationPresent(RolesAllowed.class), endpoint.toString());
+                assertFalse(endpoint.isAnnotationPresent(DenyAll.class), endpoint.toString());
+            }
+        }
     }
 }

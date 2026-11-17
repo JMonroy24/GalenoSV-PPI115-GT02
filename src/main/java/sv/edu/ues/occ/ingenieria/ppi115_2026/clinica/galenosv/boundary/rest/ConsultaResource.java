@@ -1,6 +1,6 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest;
 
-import jakarta.annotation.security.RolesAllowed;
+import jakarta.annotation.security.PermitAll;
 import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
@@ -31,7 +31,7 @@ public class ConsultaResource extends GenericResource<Consulta, ConsultaDTO, UUI
 
     @Override
     @GET
-    @RolesAllowed({"ADMINISTRADOR", "PERSONAL_CLINICO"})
+    @PermitAll
     @Operation(summary = "Lista los recursos de forma paginada con filtro opcional por pacienteId")
     public PageResponse<ConsultaDTO> listar(
             @QueryParam("first") @jakarta.ws.rs.DefaultValue("0") int first,

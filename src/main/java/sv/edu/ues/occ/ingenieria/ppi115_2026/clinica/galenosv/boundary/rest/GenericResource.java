@@ -1,6 +1,6 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest;
 
-import jakarta.annotation.security.RolesAllowed;
+import jakarta.annotation.security.PermitAll;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
@@ -51,7 +51,7 @@ public abstract class GenericResource<E, D, ID extends Serializable> {
     }
 
     @GET
-    @RolesAllowed({"ADMINISTRADOR", "PERSONAL_CLINICO"})
+    @PermitAll
     @Operation(summary = "Lista los recursos de forma paginada")
     @APIResponses({
         @APIResponse(responseCode = "200", description = "Listado paginado obtenido correctamente."),
@@ -81,7 +81,7 @@ public abstract class GenericResource<E, D, ID extends Serializable> {
 
     @GET
     @Path("/{id}")
-    @RolesAllowed({"ADMINISTRADOR", "PERSONAL_CLINICO"})
+    @PermitAll
     @Operation(summary = "Obtiene un recurso por su identificador")
     @APIResponses({
         @APIResponse(responseCode = "200", description = "Recurso encontrado; incluye el encabezado ETag."),
@@ -100,7 +100,7 @@ public abstract class GenericResource<E, D, ID extends Serializable> {
     }
 
     @POST
-    @RolesAllowed("ADMINISTRADOR")
+    @PermitAll
     @Operation(summary = "Crea un nuevo recurso")
     @APIResponses({
         @APIResponse(responseCode = "201", description = "Recurso creado; devuelve la ubicación en Location."),
@@ -122,7 +122,7 @@ public abstract class GenericResource<E, D, ID extends Serializable> {
 
     @PUT
     @Path("/{id}")
-    @RolesAllowed("ADMINISTRADOR")
+    @PermitAll
     @Operation(summary = "Actualiza un recurso existente usando If-Match")
     @APIResponses({
         @APIResponse(responseCode = "200", description = "Recurso actualizado correctamente; incluye el encabezado ETag."),
@@ -156,7 +156,7 @@ public abstract class GenericResource<E, D, ID extends Serializable> {
 
     @DELETE
     @Path("/{id}")
-    @RolesAllowed("ADMINISTRADOR")
+    @PermitAll
     @Operation(summary = "Elimina un recurso de forma física o lógica según el recurso")
     @APIResponses({
         @APIResponse(responseCode = "204", description = "Recurso eliminado correctamente."),

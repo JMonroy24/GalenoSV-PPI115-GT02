@@ -38,46 +38,6 @@
         <param-value>true</param-value>
     </context-param>
 
-    <security-constraint>
-        <web-resource-collection>
-            <web-resource-name>API REST</web-resource-name>
-            <url-pattern>/api/*</url-pattern>
-            <!-- El navegador envía el preflight sin credenciales. -->
-            <http-method-omission>OPTIONS</http-method-omission>
-        </web-resource-collection>
-        <auth-constraint>
-            <role-name>ADMINISTRADOR</role-name>
-            <role-name>PERSONAL_CLINICO</role-name>
-        </auth-constraint>
-        <user-data-constraint>
-            <transport-guarantee>CONFIDENTIAL</transport-guarantee>
-        </user-data-constraint>
-    </security-constraint>
-
-    <!-- Permitir únicamente OPTIONS sin BASIC ni redirección a HTTPS. -->
-    <security-constraint>
-        <web-resource-collection>
-            <web-resource-name>CORS preflight</web-resource-name>
-            <url-pattern>/api/*</url-pattern>
-            <http-method>OPTIONS</http-method>
-        </web-resource-collection>
-    </security-constraint>
-
-    <!-- Permite leer el 401 desde el frontend sin eliminar BASIC ni sus roles. -->
-    <error-page>
-        <error-code>401</error-code>
-        <location>/WEB-INF/api_unauthorized.jsp</location>
-    </error-page>
-
-    <login-config>
-        <auth-method>BASIC</auth-method>
-        <realm-name>GalenoSV</realm-name>
-    </login-config>
-
-    <security-role>
-        <role-name>ADMINISTRADOR</role-name>
-    </security-role>
-    <security-role>
-        <role-name>PERSONAL_CLINICO</role-name>
-    </security-role>
+    <!-- La API permite HTTP y acceso sin credenciales del contenedor.
+         La validación del documento corresponde a la lógica de negocio. -->
 </web-app>

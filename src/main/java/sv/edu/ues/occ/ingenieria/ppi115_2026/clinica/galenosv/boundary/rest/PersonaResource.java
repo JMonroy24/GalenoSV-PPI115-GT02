@@ -1,6 +1,6 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest;
 
-import jakarta.annotation.security.RolesAllowed;
+import jakarta.annotation.security.PermitAll;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
@@ -37,7 +37,7 @@ public class PersonaResource extends GenericResource<Persona, PersonaDTO, UUID> 
     }
 
     @GET
-    @RolesAllowed({"ADMINISTRADOR", "PERSONAL_CLINICO"})
+    @PermitAll
     @Operation(summary = "Lista personas con filtros opcionales por tipo y valor exacto del documento")
     public PageResponse<PersonaDTO> listar(
             @QueryParam("first") @DefaultValue("0") int first,

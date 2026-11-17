@@ -14,7 +14,7 @@ import jakarta.ws.rs.ext.Provider;
 import java.util.Arrays;
 import java.util.List;
 
-/** CORS para el frontend local; no sustituye la autenticación de la API. */
+/** CORS para el frontend local, sin requerir credenciales del contenedor. */
 @Provider
 @PreMatching
 @Priority(Priorities.AUTHENTICATION - 1)

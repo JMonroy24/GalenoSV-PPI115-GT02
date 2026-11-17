@@ -191,11 +191,12 @@ provoca `Connection refused` y respuestas `503` al consultar la API.
 
 ## API REST
 
-La API se publica bajo la base `https://localhost:9443/galenoSV/api/v1` y requiere
-autenticación BASIC. Los usuarios de demostración son `admin` (rol
-`ADMINISTRADOR`) y `clinico` (rol `PERSONAL_CLINICO`). Las lecturas (`GET`) están
-disponibles para ambos roles; las escrituras (`POST`, `PUT`, `DELETE`) requieren
-`ADMINISTRADOR`. El transporte debe ser HTTPS.
+La API se publica bajo la base `http://localhost:9080/galenoSV/api/v1`, sin
+autenticación BASIC ni redirección obligatoria a HTTPS. Los endpoints REST usan
+`@PermitAll`, incluidas las operaciones heredadas de los catálogos. La validación
+del número de documento corresponde a la lógica de negocio. El frontend de
+`http://localhost:3000` tiene acceso CORS y no debe enviar credenciales BASIC
+ni usar `credentials: 'include'`.
 
 Los errores usan este formato JSON:
 
@@ -226,29 +227,29 @@ Ejemplos con `/clinicas`:
 
 ```bash
 # GET: listado paginado
-curl -u admin:admin \
-  'https://localhost:9443/galenoSV/api/v1/clinicas?first=0&max=20'
+curl \
+  'http://localhost:9080/galenoSV/api/v1/clinicas?first=0&max=20'
 
 # GET: un recurso por id (la respuesta incluye el encabezado ETag)
-curl -i -u admin:admin \
-  'https://localhost:9443/galenoSV/api/v1/clinicas/00000000-0000-0000-0000-000000000000'
+curl -i \
+  'http://localhost:9080/galenoSV/api/v1/clinicas/00000000-0000-0000-0000-000000000000'
 
 # POST: crear un recurso
-curl -u admin:admin -X POST \
+curl -X POST \
   -H 'Content-Type: application/json' \
   -d '{"nombre":"Clínica Central","activo":true,"tipo":"PRIVADA","comentarios":"Sede principal"}' \
-  'https://localhost:9443/galenoSV/api/v1/clinicas'
+  'http://localhost:9080/galenoSV/api/v1/clinicas'
 
 # PUT: actualizar usando el ETag obtenido con GET
-curl -u admin:admin -X PUT \
+curl -X PUT \
   -H 'Content-Type: application/json' \
   -H 'If-Match: W/"<etag-obtenido-en-el-GET>"' \
   -d '{"nombre":"Clínica Central Actualizada","activo":true,"tipo":"PRIVADA","comentarios":"Sede principal"}' \
-  'https://localhost:9443/galenoSV/api/v1/clinicas/00000000-0000-0000-0000-000000000000'
+  'http://localhost:9080/galenoSV/api/v1/clinicas/00000000-0000-0000-0000-000000000000'
 
 # DELETE: elimina el recurso (borrado lógico en clínicas)
-curl -i -u admin:admin -X DELETE \
-  'https://localhost:9443/galenoSV/api/v1/clinicas/00000000-0000-0000-0000-000000000000'
+curl -i -X DELETE \
+  'http://localhost:9080/galenoSV/api/v1/clinicas/00000000-0000-0000-0000-000000000000'
 ```
 
 `PUT` exige el encabezado `If-Match`;
