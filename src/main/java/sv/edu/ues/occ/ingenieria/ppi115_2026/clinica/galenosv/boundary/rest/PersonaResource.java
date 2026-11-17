@@ -6,7 +6,9 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import java.util.UUID;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -27,8 +29,10 @@ public class PersonaResource extends GenericResource<Persona, PersonaDTO, UUID> 
     @Inject
     PersonaMapper personaMapper;
 
-    // Las anotaciones propias evitan heredar el GET genérico como una segunda ruta.
+    // Una anotación JAX-RS en el método evita heredar el @GET genérico.
+    // Las anotaciones de sus parámetros no impiden registrar una segunda ruta.
     @Override
+    @Produces(MediaType.APPLICATION_JSON)
     public PageResponse<PersonaDTO> listar(
             @QueryParam("first") @DefaultValue("0") int first,
             @QueryParam("max") @DefaultValue("20") int max,
