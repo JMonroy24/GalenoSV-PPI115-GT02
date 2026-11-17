@@ -64,6 +64,45 @@ class PostgreSQLIT {
     }
 
     @Test
+    void personasFiltraDocumentoExactoDelMismoTipoSinDuplicar() {
+        EntityManager em = factory.createEntityManager();
+        try {
+            em.getTransaction().begin();
+            var tipo = new TipoDocumento(UUID.randomUUID());
+            var otroTipo = new TipoDocumento(UUID.randomUUID());
+            var persona = new Persona(UUID.randomUUID());
+            persona.setNombres("Ana");
+            var otraPersona = new Persona(UUID.randomUUID());
+            for (Object entidad : List.of(tipo, otroTipo, persona, otraPersona)) em.persist(entidad);
+            // La otra persona tiene el valor buscado y el tipo buscado en documentos distintos.
+            for (var datos : List.of(
+                    List.of(persona, tipo, "12345678-9"),
+                    List.of(persona, otroTipo, "12345678-9"),
+                    List.of(otraPersona, tipo, "otro"),
+                    List.of(otraPersona, otroTipo, "12345678-9"))) {
+                var documento = new Documento(UUID.randomUUID());
+                documento.setIdPersona((Persona) datos.get(0));
+                documento.setIdTipoDocumento((TipoDocumento) datos.get(1));
+                documento.setValor((String) datos.get(2));
+                em.persist(documento);
+            }
+            em.flush();
+            var servicio = new PersonaService(new PersonaDAO(em));
+            assertEquals(List.of(persona), servicio.findRange(0, 20, null, tipo.getIdTipoDocumento(), "12345678-9"));
+            assertEquals(1L, servicio.count(null, tipo.getIdTipoDocumento(), "12345678-9"));
+            assertEquals(List.of(persona), servicio.findRange(0, 20, "Ana", null, "12345678-9"));
+            assertEquals(1L, servicio.count("Ana", null, "12345678-9"));
+            for (String valor : List.of("inexistente", "12345678", "", " 12345678-9 ", "%")) {
+                assertTrue(servicio.findRange(0, 20, null, tipo.getIdTipoDocumento(), valor).isEmpty());
+                assertEquals(0L, servicio.count(null, tipo.getIdTipoDocumento(), valor));
+            }
+        } finally {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            em.close();
+        }
+    }
+
+    @Test
     void todasLasEntidadesSeLeenSinColumnasAdicionales() throws SQLException {
         EntityManager em = factory.createEntityManager();
         try {

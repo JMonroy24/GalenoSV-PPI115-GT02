@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -44,6 +47,39 @@ class PersonaResourceTest {
         assertEquals(100, respuesta.max());
         verify(personaService).findRange(0, 100, null);
         verify(personaService).count(null);
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"12345678-9", " 12345678-9 "})
+    void getFiltradoConservaValorExactoYDevuelveSoloCoincidencia(String valor) {
+        UUID tipo = UUID.randomUUID();
+        Persona entidad = new Persona(UUID.randomUUID());
+        PersonaDTO dto = new PersonaDTO(entidad.getIdPersona(), "Ana", "Pérez", null, null);
+        when(personaService.findRange(0, 100, "Ana", tipo, valor)).thenReturn(List.of(entidad));
+        when(personaService.count("Ana", tipo, valor)).thenReturn(1L);
+        when(personaMapper.toDTO(entidad)).thenReturn(dto);
+
+        var respuesta = personaResource.listar(0, 1000, " Ana ", tipo, valor);
+
+        assertEquals(List.of(dto), respuesta.items());
+        assertEquals(1L, respuesta.total());
+        assertEquals(100, respuesta.max());
+        verify(personaService, never()).findRange(anyInt(), anyInt(), any());
+        verify(personaService, never()).count(any());
+    }
+
+    @Test
+    void getPorValorSinTipoNiCoincidenciasDevuelveListaVacia() {
+        when(personaService.findRange(0, 20, null, null, "inexistente")).thenReturn(List.of());
+        when(personaService.count(null, null, "inexistente")).thenReturn(0L);
+
+        var respuesta = personaResource.listar(0, 20, null, null, "inexistente");
+
+        assertTrue(respuesta.items().isEmpty());
+        assertEquals(0L, respuesta.total());
+        verifyNoInteractions(personaMapper);
+        verify(personaService, never()).findRange(anyInt(), anyInt(), any());
     }
 
     @Test

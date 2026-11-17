@@ -1,8 +1,14 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.QueryParam;
 import java.util.UUID;
+import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.PersonaDTO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.mapper.PersonaMapper;
@@ -20,6 +26,42 @@ public class PersonaResource extends GenericResource<Persona, PersonaDTO, UUID> 
 
     @Inject
     PersonaMapper personaMapper;
+
+    // Las anotaciones propias evitan heredar el GET genérico como una segunda ruta.
+    @Override
+    public PageResponse<PersonaDTO> listar(
+            @QueryParam("first") @DefaultValue("0") int first,
+            @QueryParam("max") @DefaultValue("20") int max,
+            @QueryParam("q") String q) {
+        return listar(first, max, q, null, null);
+    }
+
+    @GET
+    @RolesAllowed({"ADMINISTRADOR", "PERSONAL_CLINICO"})
+    @Operation(summary = "Lista personas con filtros opcionales por tipo y valor exacto del documento")
+    public PageResponse<PersonaDTO> listar(
+            @QueryParam("first") @DefaultValue("0") int first,
+            @QueryParam("max") @DefaultValue("20") int max,
+            @QueryParam("q") String q,
+            @QueryParam("tipoDocumentoId") UUID tipoDocumentoId,
+            @QueryParam("valor") String valor) {
+        if (first < 0) {
+            throw new BadRequestException("El parámetro first debe ser mayor o igual a 0.");
+        }
+        if (max < 1) {
+            throw new BadRequestException("El parámetro max debe ser mayor a 0.");
+        }
+        max = Math.min(max, 100);
+        if (tipoDocumentoId == null && valor == null) {
+            return super.listar(first, max, q);
+        }
+        String filtro = q == null || q.isBlank() ? null : q.trim();
+        var items = personaService.findRange(first, max, filtro, tipoDocumentoId, valor).stream()
+                .map(personaMapper::toDTO)
+                .toList();
+        long total = personaService.count(filtro, tipoDocumentoId, valor);
+        return new PageResponse<>(items, total, first, max);
+    }
 
     @Override
     protected DefaultService<Persona, UUID> getService() {
