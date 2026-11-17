@@ -60,6 +60,9 @@ public class ConsultaProcedimientoPaso implements IdentificableEntity {
     @Column(name = "estado")
     private String estado;
 
+    @Column(name = "valor", columnDefinition = "TEXT")
+    private String valor;
+
     @JoinColumn(name = "id_consulta_procedimiento", referencedColumnName = "id_consulta_procedimiento")
     @ManyToOne(fetch = FetchType.LAZY)
     private ConsultaProcedimiento idConsultaProcedimiento;
@@ -108,6 +111,14 @@ public class ConsultaProcedimientoPaso implements IdentificableEntity {
 
     public void setEstado(String estado) {
         this.estado = estado;
+    }
+
+    public String getValor() {
+        return valor;
+    }
+
+    public void setValor(String valor) {
+        this.valor = valor;
     }
 
     public ConsultaProcedimiento getIdConsultaProcedimiento() {

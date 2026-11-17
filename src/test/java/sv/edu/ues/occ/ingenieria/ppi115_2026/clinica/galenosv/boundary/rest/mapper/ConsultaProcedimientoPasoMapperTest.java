@@ -42,6 +42,8 @@ class ConsultaProcedimientoPasoMapperTest {
         entidad.setFechaInicio(inicio);
         entidad.setFechaFin(fin);
         entidad.setEstado("COMPLETADO");
+        String valor = "{\"observaciones\":\"Presión arterial\",\"detalle\":\"" + "a".repeat(5000) + "\"}";
+        entidad.setValor(valor);
         entidad.setIdConsultaProcedimiento(consultaProcedimiento);
         entidad.setIdPersonaRol(personaRol);
 
@@ -50,6 +52,7 @@ class ConsultaProcedimientoPasoMapperTest {
         assertEquals(inicio, dto.fechaInicio());
         assertEquals(fin, dto.fechaFin());
         assertEquals("COMPLETADO", dto.estado());
+        assertEquals(valor, dto.valor());
         assertEquals(consultaProcedimiento.getIdConsultaProcedimiento(), dto.idConsultaProcedimiento());
         assertEquals(personaRol.getIdPersonaRol(), dto.idPersonaRol());
 
@@ -62,6 +65,7 @@ class ConsultaProcedimientoPasoMapperTest {
         assertEquals(dto.fechaInicio(), vuelta.getFechaInicio());
         assertEquals(dto.fechaFin(), vuelta.getFechaFin());
         assertEquals(dto.estado(), vuelta.getEstado());
+        assertEquals(valor, vuelta.getValor());
         assertSame(consultaProcedimiento, vuelta.getIdConsultaProcedimiento());
         assertSame(personaRol, vuelta.getIdPersonaRol());
     }
@@ -73,7 +77,8 @@ class ConsultaProcedimientoPasoMapperTest {
         ConsultaProcedimiento consultaProcedimiento = new ConsultaProcedimiento(UUID.randomUUID());
         PersonaRol personaRol = new PersonaRol(UUID.randomUUID());
         ConsultaProcedimientoPasoDTO dto = new ConsultaProcedimientoPasoDTO(UUID.randomUUID(), null, null,
-                "EN_PROCESO", consultaProcedimiento.getIdConsultaProcedimiento(), personaRol.getIdPersonaRol());
+                "EN_PROCESO", consultaProcedimiento.getIdConsultaProcedimiento(), personaRol.getIdPersonaRol(),
+                "{\"temperatura\":37.5}");
         when(consultaProcedimientoService.findById(consultaProcedimiento.getIdConsultaProcedimiento()))
                 .thenReturn(consultaProcedimiento);
         when(personaRolService.findById(personaRol.getIdPersonaRol())).thenReturn(personaRol);
@@ -82,6 +87,7 @@ class ConsultaProcedimientoPasoMapperTest {
 
         assertEquals(idDestino, destino.getIdConsultaProcedimientoPaso());
         assertEquals("EN_PROCESO", destino.getEstado());
+        assertEquals(dto.valor(), destino.getValor());
         assertSame(consultaProcedimiento, destino.getIdConsultaProcedimiento());
         assertSame(personaRol, destino.getIdPersonaRol());
     }
@@ -91,7 +97,7 @@ class ConsultaProcedimientoPasoMapperTest {
         ConsultaProcedimiento consultaProcedimiento = new ConsultaProcedimiento(UUID.randomUUID());
         UUID idPersonaRol = UUID.randomUUID();
         ConsultaProcedimientoPasoDTO dto = new ConsultaProcedimientoPasoDTO(null, null, null, "COMPLETADO",
-                consultaProcedimiento.getIdConsultaProcedimiento(), idPersonaRol);
+                consultaProcedimiento.getIdConsultaProcedimiento(), idPersonaRol, null);
         when(consultaProcedimientoService.findById(consultaProcedimiento.getIdConsultaProcedimiento()))
                 .thenReturn(consultaProcedimiento);
         when(personaRolService.findById(idPersonaRol)).thenReturn(null);

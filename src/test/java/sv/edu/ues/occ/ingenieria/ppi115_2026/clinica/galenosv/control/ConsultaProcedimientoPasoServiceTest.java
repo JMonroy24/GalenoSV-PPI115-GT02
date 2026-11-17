@@ -74,4 +74,42 @@ class ConsultaProcedimientoPasoServiceTest {
         assertEquals("EN_CURSO", cpp.getEstado());
         verify(consultaProcedimientoPasoDAO).create(cpp);
     }
+
+    @Test
+    void actualizarFormularioGuardaEstadoYJsonSinModificarRelaciones() {
+        UUID id = UUID.randomUUID();
+        ConsultaProcedimientoPaso paso = new ConsultaProcedimientoPaso(id);
+        paso.setEstado("PENDIENTE");
+        paso.setFechaInicio(hace(0));
+        var procedimiento = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimiento(UUID.randomUUID());
+        var personaRol = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRol(UUID.randomUUID());
+        paso.setIdConsultaProcedimiento(procedimiento);
+        paso.setIdPersonaRol(personaRol);
+        String valor = "{\"observaciones\":\"  Sin cambios  \",\"detalle\":\"" + "a".repeat(5000) + "\"}";
+        when(consultaProcedimientoPasoDAO.findByIdBloqueando(id)).thenReturn(paso);
+
+        assertSame(paso, service.actualizarFormulario(id, p -> true, " COMPLETADO ", valor));
+
+        assertEquals("COMPLETADO", paso.getEstado());
+        assertEquals(valor, paso.getValor());
+        assertSame(procedimiento, paso.getIdConsultaProcedimiento());
+        assertSame(personaRol, paso.getIdPersonaRol());
+        verify(consultaProcedimientoPasoDAO).update(paso);
+    }
+
+    @Test
+    void actualizarFormularioConPrecondicionFallidaNoModificaElPaso() {
+        UUID id = UUID.randomUUID();
+        ConsultaProcedimientoPaso paso = new ConsultaProcedimientoPaso(id);
+        paso.setEstado("PENDIENTE");
+        paso.setValor("{}");
+        when(consultaProcedimientoPasoDAO.findByIdBloqueando(id)).thenReturn(paso);
+
+        assertThrows(sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionFailedException.class,
+                () -> service.actualizarFormulario(id, p -> false, "COMPLETADO", "{\"nuevo\":true}"));
+
+        assertEquals("PENDIENTE", paso.getEstado());
+        assertEquals("{}", paso.getValor());
+        verify(consultaProcedimientoPasoDAO, never()).update(any());
+    }
 }

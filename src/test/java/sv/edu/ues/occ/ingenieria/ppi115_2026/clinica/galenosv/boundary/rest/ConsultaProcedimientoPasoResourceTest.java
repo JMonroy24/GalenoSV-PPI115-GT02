@@ -10,6 +10,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.ConsultaProcedimientoPasoDTO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.ConsultaProcedimientoPasoActualizacionDTO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionRequiredException;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.mapper.ConsultaProcedimientoPasoMapper;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoPasoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimientoPaso;
@@ -33,7 +35,7 @@ class ConsultaProcedimientoPasoResourceTest {
     void getListaDevuelveTotalYLimitaMaxA100() {
         ConsultaProcedimientoPaso entidad = new ConsultaProcedimientoPaso(UUID.randomUUID());
         ConsultaProcedimientoPasoDTO dto = new ConsultaProcedimientoPasoDTO(entidad.getIdConsultaProcedimientoPaso(),
-                null, null, "COMPLETADO", UUID.randomUUID(), UUID.randomUUID());
+                null, null, "COMPLETADO", UUID.randomUUID(), UUID.randomUUID(), null);
         when(consultaProcedimientoPasoService.findRange(0, 100, null)).thenReturn(List.of(entidad));
         when(consultaProcedimientoPasoService.count(null)).thenReturn(1L);
         when(consultaProcedimientoPasoMapper.toDTO(entidad)).thenReturn(dto);
@@ -58,10 +60,10 @@ class ConsultaProcedimientoPasoResourceTest {
     @Test
     void postDevuelve201YHeaderLocation() {
         ConsultaProcedimientoPasoDTO dto = new ConsultaProcedimientoPasoDTO(null, null, null, "COMPLETADO",
-                UUID.randomUUID(), UUID.randomUUID());
+                UUID.randomUUID(), UUID.randomUUID(), "{\"temperatura\":37.5}");
         ConsultaProcedimientoPaso entidad = new ConsultaProcedimientoPaso();
         ConsultaProcedimientoPasoDTO creada = new ConsultaProcedimientoPasoDTO(UUID.randomUUID(),
-                dto.fechaInicio(), dto.fechaFin(), dto.estado(), dto.idConsultaProcedimiento(), dto.idPersonaRol());
+                dto.fechaInicio(), dto.fechaFin(), dto.estado(), dto.idConsultaProcedimiento(), dto.idPersonaRol(), dto.valor());
         when(consultaProcedimientoPasoMapper.toEntity(dto)).thenReturn(entidad);
         when(consultaProcedimientoPasoMapper.toDTO(entidad)).thenReturn(creada);
 
@@ -78,9 +80,9 @@ class ConsultaProcedimientoPasoResourceTest {
         UUID id = UUID.randomUUID();
         ConsultaProcedimientoPaso entidad = new ConsultaProcedimientoPaso(id);
         ConsultaProcedimientoPasoDTO dto = new ConsultaProcedimientoPasoDTO(null, null, null, "COMPLETADO",
-                UUID.randomUUID(), UUID.randomUUID());
+                UUID.randomUUID(), UUID.randomUUID(), "{\"temperatura\":36.5}");
         ConsultaProcedimientoPasoDTO esperada = new ConsultaProcedimientoPasoDTO(id,
-                dto.fechaInicio(), dto.fechaFin(), dto.estado(), dto.idConsultaProcedimiento(), dto.idPersonaRol());
+                dto.fechaInicio(), dto.fechaFin(), dto.estado(), dto.idConsultaProcedimiento(), dto.idPersonaRol(), dto.valor());
         when(consultaProcedimientoPasoMapper.toDTO(entidad)).thenReturn(esperada);
         when(consultaProcedimientoPasoService.actualizarSi(any(), any(), any())).thenAnswer(inv -> {
             java.util.function.Predicate<Object> precondicion = inv.getArgument(1);
@@ -110,5 +112,37 @@ class ConsultaProcedimientoPasoResourceTest {
 
         assertEquals(204, respuesta.getStatus());
         verify(consultaProcedimientoPasoService).eliminar(entidad);
+    }
+
+    @Test
+    void patchActualizaFormularioYDevuelveNuevoETag() {
+        UUID id = UUID.randomUUID();
+        ConsultaProcedimientoPaso entidad = new ConsultaProcedimientoPaso(id);
+        var cambios = new ConsultaProcedimientoPasoActualizacionDTO("COMPLETADO", "{\"temperatura\":36.5}");
+        var anterior = new ConsultaProcedimientoPasoDTO(id, null, null, "PENDIENTE", null, null, null);
+        var actualizada = new ConsultaProcedimientoPasoDTO(id, null, null, cambios.estadoPaso(), null, null, cambios.valor());
+        when(consultaProcedimientoPasoMapper.toDTO(entidad)).thenReturn(anterior, actualizada);
+        when(consultaProcedimientoPasoService.actualizarFormulario(eq(id), any(),
+                eq(cambios.estadoPaso()), eq(cambios.valor()))).thenAnswer(inv -> {
+            java.util.function.Predicate<ConsultaProcedimientoPaso> precondicion = inv.getArgument(1);
+            assertTrue(precondicion.test(entidad));
+            return entidad;
+        });
+
+        Response respuesta = consultaProcedimientoPasoResource.actualizarFormulario(
+                id.toString(), ETagUtils.calcularFuerte(anterior), cambios);
+
+        assertEquals(200, respuesta.getStatus());
+        assertEquals(actualizada, respuesta.getEntity());
+        assertEquals(ETagUtils.calcularFuerte(actualizada), respuesta.getHeaderString("ETag"));
+        assertNotEquals(ETagUtils.calcularFuerte(anterior), respuesta.getHeaderString("ETag"));
+    }
+
+    @Test
+    void patchSinIfMatchNoActualiza() {
+        var cambios = new ConsultaProcedimientoPasoActualizacionDTO("COMPLETADO", "{}");
+        assertThrows(PreconditionRequiredException.class, () ->
+                consultaProcedimientoPasoResource.actualizarFormulario(UUID.randomUUID().toString(), null, cambios));
+        verifyNoInteractions(consultaProcedimientoPasoService);
     }
 }

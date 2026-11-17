@@ -36,7 +36,8 @@ public class ConsultaProcedimientoPasoMapper
                 entidad.getIdConsultaProcedimiento() == null
                         ? null
                         : entidad.getIdConsultaProcedimiento().getIdConsultaProcedimiento(),
-                entidad.getIdPersonaRol() == null ? null : entidad.getIdPersonaRol().getIdPersonaRol());
+                entidad.getIdPersonaRol() == null ? null : entidad.getIdPersonaRol().getIdPersonaRol(),
+                entidad.getValor());
     }
 
     @Override
@@ -58,6 +59,7 @@ public class ConsultaProcedimientoPasoMapper
         destino.setFechaInicio(dto.fechaInicio());
         destino.setFechaFin(dto.fechaFin());
         destino.setEstado(dto.estado());
+        destino.setValor(dto.valor());
         destino.setIdConsultaProcedimiento(resolverConsultaProcedimiento(dto.idConsultaProcedimiento()));
         destino.setIdPersonaRol(resolverPersonaRol(dto.idPersonaRol()));
     }

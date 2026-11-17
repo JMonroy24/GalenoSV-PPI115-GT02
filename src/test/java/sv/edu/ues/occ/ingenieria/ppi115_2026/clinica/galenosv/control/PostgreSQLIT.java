@@ -46,6 +46,10 @@ class PostgreSQLIT {
                 s.execute(new String(java.util.Objects.requireNonNull(recurso).readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
             }
         }
+        try (var c = DriverManager.getConnection(url, usuario, password); var s = c.createStatement()) {
+            s.execute(java.nio.file.Files.readString(java.nio.file.Path.of(
+                    "src/main/db/migration/V4__consulta_procedimiento_paso_valor.sql")));
+        }
         factory = Persistence.createEntityManagerFactory("GalenoSV_TEST", Map.of(
                 "jakarta.persistence.jdbc.url", url,
                 "jakarta.persistence.jdbc.user", usuario,
@@ -61,6 +65,35 @@ class PostgreSQLIT {
 
     private Connection conexion() throws SQLException {
         return DriverManager.getConnection(url, usuario, password);
+    }
+
+    @Test
+    void formularioJsonAmplioSePersisteYActualizaSinTruncar() {
+        EntityManager em = factory.createEntityManager();
+        try {
+            var paso = new ConsultaProcedimientoPaso(UUID.randomUUID());
+            paso.setEstado("PENDIENTE");
+            String valor = "{\"observaciones\":\"Presión arterial\",\"detalle\":\"" + "a".repeat(5000) + "\"}";
+            paso.setValor(valor);
+            em.getTransaction().begin();
+            em.persist(paso);
+            em.getTransaction().commit();
+            em.clear();
+            assertEquals(valor, em.find(ConsultaProcedimientoPaso.class, paso.getIdConsultaProcedimientoPaso()).getValor());
+
+            String actualizado = "{\"observaciones\":\"  Sin cambios  \",\"detalle\":\"" + "b".repeat(6000) + "\"}";
+            em.getTransaction().begin();
+            new ConsultaProcedimientoPasoService(new ConsultaProcedimientoPasoDAO(em))
+                    .actualizarFormulario(paso.getIdConsultaProcedimientoPaso(), p -> true, "COMPLETADO", actualizado);
+            em.getTransaction().commit();
+            em.clear();
+            var guardado = em.find(ConsultaProcedimientoPaso.class, paso.getIdConsultaProcedimientoPaso());
+            assertEquals("COMPLETADO", guardado.getEstado());
+            assertEquals(actualizado, guardado.getValor());
+        } finally {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            em.close();
+        }
     }
 
     @Test

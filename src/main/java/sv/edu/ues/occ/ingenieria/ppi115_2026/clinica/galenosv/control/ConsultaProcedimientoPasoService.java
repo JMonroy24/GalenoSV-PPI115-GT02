@@ -1,10 +1,12 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 import jakarta.inject.Inject;
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Predicate;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimientoPaso;
 
 @ApplicationScoped
@@ -39,6 +41,15 @@ public class ConsultaProcedimientoPasoService extends DefaultService<ConsultaPro
             return List.of();
         }
         return consultaProcedimientoPasoDAO.findByConsultaProcedimiento(idConsultaProcedimiento);
+    }
+
+    @Transactional
+    public ConsultaProcedimientoPaso actualizarFormulario(UUID id,
+            Predicate<ConsultaProcedimientoPaso> precondicion, String estadoPaso, String valor) {
+        return actualizarSi(id, precondicion, paso -> {
+            paso.setEstado(estadoPaso);
+            paso.setValor(valor);
+        });
     }
 
     public ConsultaProcedimientoPasoDAO getConsultaProcedimientoPasoDAO() {

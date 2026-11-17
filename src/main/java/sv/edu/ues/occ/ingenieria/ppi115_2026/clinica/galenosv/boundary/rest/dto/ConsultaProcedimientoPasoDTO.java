@@ -13,5 +13,6 @@ public record ConsultaProcedimientoPasoDTO(
         @Size(max = 20)
         String estado,
         UUID idConsultaProcedimiento,
-        UUID idPersonaRol) {
+        UUID idPersonaRol,
+        String valor) {
 }

@@ -288,6 +288,27 @@ Scripts de evolución del esquema, que deben ejecutarse **manualmente y en orden
 | `src/main/resources/db/migration/V1__esquema_inicial.sql` | Esquema inicial (20 tablas). |
 | `src/main/db/migration/V2__validaciones_integridad_y_version.sql` | Columna `version`, restricciones `NOT NULL` y validaciones de integridad (secuencias de pasos sin ciclos ni cruces entre procedimientos). |
 | `src/main/db/migration/V3__fecha_nacimiento_sin_hora.sql` | `persona.fecha_nacimiento` pasa a tipo `date`. |
+| `src/main/db/migration/V4__consulta_procedimiento_paso_valor.sql` | Agrega o amplía `consulta_procedimiento_paso.valor` como `TEXT` para el formulario médico JSON (micro-tarea 6.1.3). |
+
+Para la micro-tarea 6.1.3, ejecute V4 sobre la base existente antes de desplegar
+el WAR actualizado. El script es idempotente y también se puede aplicar sobre
+el esquema original del profesor sin ejecutar V2 ni V3.
+
+`PUT /consultas-procedimientos-pasos/{id}` incluye ahora `valor` en el DTO completo
+y conserva el nombre `estado`. Para guardar únicamente el estado y el formulario,
+use `PATCH /consultas-procedimientos-pasos/{id}` con `Content-Type: application/json`
+y el encabezado `If-Match` obtenido del `ETag` de un GET del mismo recurso:
+
+```json
+{
+  "estadoPaso": "COMPLETADO",
+  "valor": "{\"temperatura\":36.5,\"observaciones\":\"Sin novedades\"}"
+}
+```
+
+El PATCH requiere ambos campos y conserva las fechas y relaciones del paso.
+`valor` es una cadena con el JSON serializado. La respuesta devuelve el DTO completo
+con `estado`, `valor` y el nuevo encabezado `ETag`.
 
 > **Antes de migrar:** haga un respaldo, detenga la aplicación y ejecute
 > `scripts/auditar-datos.sql`, que es de solo lectura y reporta conteos de registros

@@ -2,8 +2,18 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.annotation.security.PermitAll;
+import jakarta.validation.Valid;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.PATCH;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.core.Response;
 import java.util.UUID;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.ConsultaProcedimientoPasoActualizacionDTO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionRequiredException;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.ConsultaProcedimientoPasoDTO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.mapper.ConsultaProcedimientoPasoMapper;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoPasoService;
@@ -21,6 +31,27 @@ public class ConsultaProcedimientoPasoResource
 
     @Inject
     ConsultaProcedimientoPasoMapper consultaProcedimientoPasoMapper;
+
+    @PATCH
+    @Path("/{id}")
+    @PermitAll
+    @Operation(summary = "Actualiza estadoPaso y valor del formulario usando If-Match")
+    public Response actualizarFormulario(@PathParam("id") String id,
+            @HeaderParam("If-Match") String ifMatch,
+            @Valid ConsultaProcedimientoPasoActualizacionDTO dto) {
+        if (ifMatch == null || ifMatch.isBlank()) {
+            throw new PreconditionRequiredException(
+                    "Debe enviar el encabezado If-Match con el ETag actual del recurso.");
+        }
+        ConsultaProcedimientoPaso entidad = consultaProcedimientoPasoService.actualizarFormulario(
+                parseId(id),
+                paso -> ETagUtils.coincide(ifMatch, ETagUtils.calcular(getMapper().toDTO(paso))),
+                dto.estadoPaso(), dto.valor());
+        ConsultaProcedimientoPasoDTO actualizada = getMapper().toDTO(entidad);
+        return Response.ok(actualizada)
+                .header("ETag", ETagUtils.calcularFuerte(actualizada))
+                .build();
+    }
 
     @Override
     protected DefaultService<ConsultaProcedimientoPaso, UUID> getService() {

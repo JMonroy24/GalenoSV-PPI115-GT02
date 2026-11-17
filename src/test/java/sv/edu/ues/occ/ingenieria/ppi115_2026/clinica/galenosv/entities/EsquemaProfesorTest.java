@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EsquemaProfesorTest {
     @Test
-    void todosLosCamposJpaExistenEnElSqlOriginalSinVersion() throws Exception {
+    void todosLosCamposJpaExistenEnElEsquemaConMigracionValorSinVersion() throws Exception {
         String sql;
         try (var recurso = getClass().getResourceAsStream("/db/clinica_ppi115_2026_08_20.sql")) {
             sql = new String(java.util.Objects.requireNonNull(recurso).readAllBytes(), StandardCharsets.UTF_8);
@@ -29,6 +29,14 @@ class EsquemaProfesorTest {
         while (matcher.find()) {
             Set<String> columnas = new HashSet<>(); var campos = Pattern.compile("^    (\\w+) ", Pattern.MULTILINE).matcher(matcher.group(2));
             while (campos.find()) columnas.add(campos.group(1)); tablas.put(matcher.group(1), columnas);
+        }
+        String migracion = Files.readString(Path.of(
+                "src/main/db/migration/V4__consulta_procedimiento_paso_valor.sql"));
+        var columnasNuevas = Pattern.compile(
+                "ALTER TABLE public\\.(\\w+)\\s+ADD COLUMN IF NOT EXISTS (\\w+) TEXT;",
+                Pattern.CASE_INSENSITIVE).matcher(migracion);
+        while (columnasNuevas.find()) {
+            tablas.get(columnasNuevas.group(1)).add(columnasNuevas.group(2));
         }
         String persistence = Files.readString(Path.of("src/main/resources/META-INF/persistence.xml"));
         var clases = Pattern.compile("<class>(.*?)</class>").matcher(persistence); int revisadas = 0;
@@ -53,6 +61,7 @@ class EsquemaProfesorTest {
     void migracionesNoSeEmpaquetanConLaAplicacion() {
         assertNull(getClass().getResource("/db/migration/V2__validaciones_integridad_y_version.sql"));
         assertNull(getClass().getResource("/db/migration/V3__fecha_nacimiento_sin_hora.sql"));
+        assertNull(getClass().getResource("/db/migration/V4__consulta_procedimiento_paso_valor.sql"));
     }
 
     @Test
