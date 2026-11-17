@@ -194,9 +194,11 @@ provoca `Connection refused` y respuestas `503` al consultar la API.
 La API se publica bajo la base `http://localhost:9080/galenoSV/api/v1`, sin
 autenticación BASIC ni redirección obligatoria a HTTPS. Los endpoints REST usan
 `@PermitAll`, incluidas las operaciones heredadas de los catálogos. La validación
-del número de documento corresponde a la lógica de negocio. El frontend de
-`http://localhost:3000` tiene acceso CORS y no debe enviar credenciales BASIC
-ni usar `credentials: 'include'`.
+del número de documento corresponde a la lógica de negocio. CORS permite cualquier
+origen mediante `Access-Control-Allow-Origin: *`; el frontend no debe enviar
+credenciales BASIC ni usar `credentials: 'include'`. Las peticiones `OPTIONS`
+responden inmediatamente con `200 OK`. Los listados paginados incluyen
+`total-registros`, expuesto al frontend junto con `ETag` y `Location`.
 
 Los errores usan este formato JSON:
 

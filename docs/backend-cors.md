@@ -1,22 +1,28 @@
-# Fase 0: CORS del backend
+# Tarea 2.2: configuración CORS del backend
 
 La URL base confirmada por `server.xml` y `RestApplication` es
-`http://localhost:9080/galenoSV/api/v1`. El origen permitido del frontend es
-exactamente `http://localhost:3000` (sin barra final). Otros puertos, dominios y
-`127.0.0.1` son orígenes distintos y no reciben autorización CORS.
+`http://localhost:9080/galenoSV/api/v1`. Todas las respuestas REST incluyen
+`Access-Control-Allow-Origin: *`, por lo que se admiten peticiones desde cualquier
+origen, incluidos otros puertos de desarrollo y `127.0.0.1`.
 
 `CorsFilter` se registra automáticamente con `@Provider`. Implementa
 `ContainerResponseFilter` para añadir los encabezados a las respuestas REST y
-`ContainerRequestFilter` con `@PreMatching` para responder al preflight con 204
-antes de seleccionar un recurso. Un preflight de otro origen recibe 403.
+`ContainerRequestFilter` con `@PreMatching` y prioridad anterior a
+`Priorities.AUTHENTICATION` para responder a cualquier petición `OPTIONS` con
+`200 OK`, sin cuerpo y antes de seleccionar un recurso. No exige Origin,
+Access-Control-Request-Method, tokens ni credenciales para responder a OPTIONS.
 El navegador solo autoriza los métodos y encabezados anunciados por el filtro.
 El registro y el procesamiento previo al recurso siguen la
 [especificación de Jakarta REST 4.0](https://jakarta.ee/specifications/restful-ws/4.0/jakarta-restful-ws-spec-4.0.html#filters).
 
-Se permiten GET, HEAD, POST, PUT, DELETE y OPTIONS, y los encabezados Accept,
-Content-Type, Authorization, If-Match e If-None-Match. JavaScript puede leer
-ETag y Location. El permiso del preflight se almacena hasta 600 segundos.
-Se conserva `Vary` y se añade `Origin` para separar las respuestas en cachés.
+Todas las respuestas incluyen los métodos GET, POST, PUT, DELETE, OPTIONS, HEAD
+y PATCH, y los encabezados origin, content-type, accept, authorization, if-match
+e if-none-match. PATCH e If-Match mantienen la actualización de formularios
+médicos. JavaScript puede leer `total-registros`, ETag y Location.
+Para respuestas `PageResponse`, el filtro añade `total-registros` con el total
+de elementos del conjunto, incluso cuando la página está vacía. El cuerpo JSON
+de paginación se conserva. El permiso del preflight se almacena hasta 600 segundos.
+Los encabezados `Vary` existentes se conservan.
 No se habilitan cookies ni `credentials: 'include'`. El frontend no necesita
 enviar Authorization ni credenciales BASIC. Permitir ese encabezado en CORS
 no obliga a utilizarlo.
@@ -45,7 +51,8 @@ mvn '-Dtest=CorsFilterTest,CorsSecurityConfigTest' test
 mvn verify
 ```
 
-`CorsFilterTest` cubre el origen permitido, respuestas REST y preflight.
+`CorsFilterTest` cubre cualquier origen, respuestas REST y de error, OPTIONS sin
+tokens, la exposición del total paginado y el registro previo a autenticación.
 `CorsSecurityConfigTest` verifica el puerto HTTP 9080, la ausencia de BASIC y
 restricciones de transporte, y el acceso anónimo a métodos heredados y listados
 específicos. Si Windows bloquea la conexión dinámica de Mockito, puede cargarse
@@ -58,10 +65,11 @@ credenciales desde PowerShell:
 curl.exe -i -X OPTIONS "http://localhost:9080/galenoSV/api/v1/clinicas" -H "Origin: http://localhost:3000" -H "Access-Control-Request-Method: PUT" -H "Access-Control-Request-Headers: content-type,if-match"
 ```
 
-La respuesta esperada es 204, sin redirección ni desafío BASIC, e incluye
-`Access-Control-Allow-Origin: http://localhost:3000`, los métodos y encabezados
-permitidos y `Access-Control-Max-Age: 600`. Para comprobar el rechazo, repetir
-con `Origin: https://example.com`: se espera 403 sin autorización CORS.
+La respuesta esperada es 200, sin redirección ni desafío BASIC, e incluye
+`Access-Control-Allow-Origin: *`, los métodos y encabezados permitidos,
+`Access-Control-Expose-Headers: total-registros, ETag, Location` y
+`Access-Control-Max-Age: 600`. Con `Origin: https://example.com` también se espera
+200. OPTIONS sin encabezados de preflight también responde 200.
 
 Comprobar también una petición real sin Authorization:
 
@@ -70,7 +78,8 @@ curl.exe -i "http://localhost:9080/galenoSV/api/v1/clinicas?first=0&max=20" -H "
 ```
 
 Con la base de datos disponible se espera 200 y el listado JSON, sin redirección
-a HTTPS ni desafío BASIC. La respuesta incluye el origen permitido.
+a HTTPS ni desafío BASIC. La respuesta incluye el origen `*` y el encabezado
+`total-registros`, cuyo valor coincide con `total` en el cuerpo JSON.
 
 ## Siguiente paso
 
