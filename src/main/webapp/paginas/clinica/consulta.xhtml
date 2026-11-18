@@ -127,6 +127,9 @@
                 </p:outputPanel>
 
                 <p:outputPanel rendered="#{consultaModel.estadoModificar}">
+                    <p:button value="Descargar Ticket PDF" icon="pi pi-file-pdf"
+                              href="#{request.contextPath}/api/v1/consultas/#{consultaModel.registroActual.idConsulta}/ticket"
+                              style="margin-bottom:1rem"/>
                     <p:outputPanel id="pnlRelConsulta">
 
                         <p:panel header="Procedimientos de la consulta">

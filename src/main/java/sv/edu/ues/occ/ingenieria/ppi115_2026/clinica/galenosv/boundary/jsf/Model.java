@@ -128,7 +128,7 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Validación", e.getMessage());
             marcarValidacionFallida();
         } catch (Exception e) {
-            notificarError("guardar registro", e);
+            notificarErrorEscritura("guardar registro", e);
             marcarValidacionFallida();
         }
     }
@@ -212,14 +212,35 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
         };
     }
 
+    protected boolean mostrarDetalleError() { return false; }
+
     protected void notificarError(String operacion, Exception e) {
+        informarError(operacion, e, false);
+    }
+
+    protected void notificarErrorEscritura(String operacion, Exception e) {
+        informarError(operacion, e, mostrarDetalleError());
+    }
+
+    private void informarError(String operacion, Exception e, boolean detallar) {
         FacesContext contexto = FacesContext.getCurrentInstance();
         boolean persistencia = esFalloPersistencia(e);
         if (persistencia && lecturasBloqueadas()) return;
         if (contexto != null && persistencia) {
             contexto.getAttributes().put(FALLO_PERSISTENCIA, Boolean.TRUE);
         }
-        // Los mensajes de SQL pueden contener datos clínicos. Registrar tipos y estados, sin valores.
+        if (detallar) {
+            e.printStackTrace();
+            Set<Throwable> visitadas = Collections.newSetFromMap(new IdentityHashMap<>());
+            Throwable causa = e;
+            while (causa.getCause() != null && visitadas.add(causa.getCause())) {
+                causa = causa.getCause();
+            }
+            agregarMensaje(FacesMessage.SEVERITY_ERROR, "Error",
+                    causa.getMessage() != null ? causa.getMessage() : causa.toString());
+            return;
+        }
+        // Los demás modelos conservan los mensajes clasificados.
         String tipos = tiposDeError(e);
         LOGGER.log(Level.WARNING, "No se pudo {0}. Causas: {1}", new Object[]{operacion, tipos});
         agregarMensaje(FacesMessage.SEVERITY_ERROR, "Error", clasificarError(e));
@@ -313,7 +334,7 @@ public abstract class Model<T, ID extends Serializable> implements Serializable 
             accion.run();
             agregarMensaje(FacesMessage.SEVERITY_INFO, titulo, mensajeOk);
         } catch (Exception e) {
-            notificarError(titulo, e);
+            notificarErrorEscritura(titulo, e);
             marcarValidacionFallida();
         }
     }

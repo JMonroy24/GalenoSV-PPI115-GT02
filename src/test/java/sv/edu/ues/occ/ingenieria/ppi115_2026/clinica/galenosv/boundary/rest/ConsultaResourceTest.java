@@ -26,8 +26,35 @@ class ConsultaResourceTest {
     @Mock
     ConsultaMapper consultaMapper;
 
+    @Mock
+    sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaTicketService consultaTicketService;
+
     @InjectMocks
     ConsultaResource consultaResource;
+
+    @Test
+    void ticketDevuelvePdfComoArchivoAdjuntoSinCache() {
+        UUID id = UUID.randomUUID();
+        byte[] pdf = "%PDF-1.7".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        when(consultaTicketService.generar(id)).thenReturn(pdf);
+        try (var respuesta = consultaResource.descargarTicket(id.toString())) {
+            assertEquals(200, respuesta.getStatus());
+            assertEquals("application/pdf", respuesta.getMediaType().toString());
+            assertSame(pdf, respuesta.getEntity());
+            assertEquals("attachment; filename=\"ticket-cita-" + id + ".pdf\"",
+                    respuesta.getHeaderString("Content-Disposition"));
+            assertEquals("no-store", respuesta.getHeaderString("Cache-Control"));
+        }
+    }
+
+    @Test
+    void ticketRechazaUuidInvalidoYPropagaConsultaInexistente() {
+        assertThrows(jakarta.ws.rs.BadRequestException.class, () -> consultaResource.descargarTicket("1-1-1-1-1"));
+        verifyNoInteractions(consultaTicketService);
+        UUID id = UUID.randomUUID();
+        when(consultaTicketService.generar(id)).thenThrow(new NotFoundException());
+        assertThrows(NotFoundException.class, () -> consultaResource.descargarTicket(id.toString()));
+    }
 
     @Test
     void getListaDevuelveTotalYLimitaMaxA100() {

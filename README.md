@@ -296,6 +296,27 @@ Para la micro-tarea 6.1.3, ejecute V4 sobre la base existente antes de desplegar
 el WAR actualizado. El script es idempotente y también se puede aplicar sobre
 el esquema original del profesor sin ejecutar V2 ni V3.
 
+Si al editar una consulta o agregar un procedimiento aparece el SQLState `42703`
+con `column valor does not exist`, falta aplicar V4. Recompilar no modifica la base:
+
+```sql
+ALTER TABLE public.consulta_procedimiento_paso ADD COLUMN IF NOT EXISTS valor TEXT;
+ALTER TABLE public.consulta_procedimiento_paso ALTER COLUMN valor TYPE TEXT;
+```
+
+Los modelos JSF de consultas y procedimientos imprimen el stacktrace completo y
+muestran la causa original del error. `fechaFin` permanece opcional en las entidades
+y en el esquema; una consulta abierta no necesita fecha de cierre.
+
+### Ticket PDF de consulta
+
+`GET /galenoSV/api/v1/consultas/{id}/ticket` devuelve `application/pdf` con
+`Content-Disposition: attachment`. Es la ruta que utiliza el botón del frontend
+**Descargar Ticket PDF**; también está disponible al editar una consulta en JSF.
+Incluye paciente, documentos, clínica, fechas en `America/El_Salvador`, observaciones,
+procedimientos y estados de sus pasos. Retorna 400 para un UUID inválido y 404 si la
+consulta no existe. Requiere desplegar el WAR actualizado y aplicar V4.
+
 `PUT /consultas-procedimientos-pasos/{id}` incluye ahora `valor` en el DTO completo
 y conserva el nombre `estado`. Para guardar únicamente el estado y el formulario,
 use `PATCH /consultas-procedimientos-pasos/{id}` con `Content-Type: application/json`

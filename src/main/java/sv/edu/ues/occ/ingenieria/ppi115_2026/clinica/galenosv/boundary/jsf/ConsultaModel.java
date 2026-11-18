@@ -38,6 +38,9 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
 
     private static final long serialVersionUID = 1L;
 
+    @Override
+    protected boolean mostrarDetalleError() { return true; }
+
     @Inject
     protected ConsultaService consultaService;
     @Inject protected SesionBean sesionBean;
@@ -186,6 +189,10 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
                     "No hay una persona con el rol requerido en la clínica actual.");
         } catch (ValidacionNegocioException e) {
             agregarMensaje(FacesMessage.SEVERITY_ERROR, "Procedimiento", e.getMessage());
+            return;
+        } catch (Exception e) {
+            notificarErrorEscritura("validar el procedimiento", e);
+            marcarValidacionFallida();
             return;
         }
         procedimientoNuevo.setIdConsulta(getRegistroActual());

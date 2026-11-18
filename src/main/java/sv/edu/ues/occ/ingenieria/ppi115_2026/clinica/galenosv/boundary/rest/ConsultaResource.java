@@ -5,13 +5,18 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Response;
 import java.util.UUID;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.ConsultaDTO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.mapper.ConsultaMapper;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaTicketService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DefaultService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta;
 
@@ -25,6 +30,28 @@ public class ConsultaResource extends GenericResource<Consulta, ConsultaDTO, UUI
 
     @Inject
     ConsultaMapper consultaMapper;
+
+    @Inject
+    ConsultaTicketService consultaTicketService;
+
+    @GET
+    @Path("/{id}/ticket")
+    @Produces("application/pdf")
+    @PermitAll
+    @Operation(summary = "Descarga el ticket PDF de una consulta con procedimientos y pasos")
+    public Response descargarTicket(@PathParam("id") String id) {
+        final UUID clave;
+        try {
+            clave = UUID.fromString(id);
+            if (!clave.toString().equalsIgnoreCase(id)) throw new IllegalArgumentException();
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("El identificador de consulta debe ser un UUID válido.", e);
+        }
+        return Response.ok(consultaTicketService.generar(clave), "application/pdf")
+                .header("Content-Disposition", "attachment; filename=\"ticket-cita-" + clave + ".pdf\"")
+                .header("Cache-Control", "no-store")
+                .build();
+    }
 
     @QueryParam("pacienteId")
     String pacienteId;

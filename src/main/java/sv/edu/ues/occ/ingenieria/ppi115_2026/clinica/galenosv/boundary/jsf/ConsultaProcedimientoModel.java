@@ -26,6 +26,9 @@ public class ConsultaProcedimientoModel extends ModelTransaccional<ConsultaProce
 
     private static final long serialVersionUID = 1L;
 
+    @Override
+    protected boolean mostrarDetalleError() { return true; }
+
     @Inject
     protected ConsultaProcedimientoService consultaProcedimientoService;
 

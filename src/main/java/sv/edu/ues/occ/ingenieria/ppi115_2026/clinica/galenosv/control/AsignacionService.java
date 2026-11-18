@@ -137,7 +137,25 @@ public class AsignacionService {
     /** Padre e inicio se confirman juntos: un fallo del paso revierte ambos. */
     @Transactional
     public void crearProcedimientoConPaso(ConsultaProcedimiento procedimiento, ConsultaProcedimientoPaso paso) {
+        var consulta = ValidadorComun.requerido(procedimiento.getIdConsulta(), "Seleccione una consulta.");
+        consulta = existente(Consulta.class, consulta.getIdConsulta(), "La consulta ya no existe.");
+        var definicion = ValidadorComun.requerido(procedimiento.getIdProcedimiento(), "Seleccione un procedimiento.");
+        definicion = existente(Procedimiento.class, definicion.getIdProcedimiento(), "El procedimiento ya no existe.");
+        var responsable = ValidadorComun.requerido(paso.getIdPersonaRol(), "Seleccione un responsable.");
+        responsable = existente(PersonaRol.class, responsable.getIdPersonaRol(), "El responsable ya no existe.");
+        ValidadorComun.activo(definicion.getActivo(), "El procedimiento");
+        ValidadorComun.rangoFechas(procedimiento.getFechaInicio(), procedimiento.getFechaFin());
+        ValidadorComun.dentroDelPeriodo(procedimiento.getFechaInicio(), procedimiento.getFechaFin(),
+                consulta.getFechaInicio(), consulta.getFechaFin());
+        procedimiento.setIdConsulta(consulta);
+        procedimiento.setIdProcedimiento(definicion);
+        paso.setIdPersonaRol(responsable);
         paso.setIdConsultaProcedimiento(procedimiento);
+        if (consulta.getConsultaProcedimientoList() == null) {
+            consulta.setConsultaProcedimientoList(new ArrayList<>());
+        }
+        consulta.getConsultaProcedimientoList().add(procedimiento);
+        procedimiento.setConsultaProcedimientoPasoList(new ArrayList<>(List.of(paso)));
         em.persist(procedimiento);
         em.persist(paso);
         em.flush();

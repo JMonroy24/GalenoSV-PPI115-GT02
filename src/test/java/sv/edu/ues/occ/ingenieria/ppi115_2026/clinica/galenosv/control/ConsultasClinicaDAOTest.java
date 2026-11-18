@@ -109,7 +109,18 @@ class ConsultasClinicaDAOTest {
     void creacionesCompuestasPersistenElPadreAntesDelHijoEnLaMismaTransaccion() throws Exception {
         AsignacionService servicio = new AsignacionService(); servicio.em = mock(EntityManager.class);
         ConsultaProcedimiento cp = new ConsultaProcedimiento(UUID.randomUUID()); ConsultaProcedimientoPaso paso = new ConsultaProcedimientoPaso(UUID.randomUUID());
+        Consulta consultaSeparada = new Consulta(UUID.randomUUID());
+        Consulta consultaAdministrada = new Consulta(consultaSeparada.getIdConsulta());
+        Procedimiento definicion = new Procedimiento(UUID.randomUUID()); definicion.setActivo(true);
+        PersonaRol responsable = new PersonaRol(UUID.randomUUID());
+        cp.setIdConsulta(consultaSeparada); cp.setIdProcedimiento(definicion); paso.setIdPersonaRol(responsable);
+        when(servicio.em.find(Consulta.class, consultaSeparada.getIdConsulta())).thenReturn(consultaAdministrada);
+        when(servicio.em.find(Procedimiento.class, definicion.getIdProcedimiento())).thenReturn(definicion);
+        when(servicio.em.find(PersonaRol.class, responsable.getIdPersonaRol())).thenReturn(responsable);
         servicio.crearProcedimientoConPaso(cp, paso); assertSame(cp, paso.getIdConsultaProcedimiento());
+        assertSame(consultaAdministrada, cp.getIdConsulta());
+        assertEquals(List.of(cp), consultaAdministrada.getConsultaProcedimientoList());
+        assertEquals(List.of(paso), cp.getConsultaProcedimientoPasoList());
         var orden = inOrder(servicio.em); orden.verify(servicio.em).persist(cp); orden.verify(servicio.em).persist(paso); orden.verify(servicio.em).flush();
         Examen examen = new Examen(UUID.randomUUID()); ExamenTipoExamen tipo = new ExamenTipoExamen(UUID.randomUUID());
         servicio.crearExamenConTipo(examen, tipo); assertSame(examen, tipo.getIdExamen());
