@@ -59,6 +59,10 @@ public class OrdenExamen implements IdentificableEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private ConsultaProcedimientoPaso idConsultaProcedimientoPaso;
 
+    @JoinColumn(name = "id_examen", referencedColumnName = "id_examen")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Examen idExamen;
+
     public OrdenExamen() {
     }
 
@@ -104,6 +108,14 @@ public class OrdenExamen implements IdentificableEntity {
 
     public void setIdConsultaProcedimientoPaso(ConsultaProcedimientoPaso idConsultaProcedimientoPaso) {
         this.idConsultaProcedimientoPaso = idConsultaProcedimientoPaso;
+    }
+
+    public Examen getIdExamen() {
+        return idExamen;
+    }
+
+    public void setIdExamen(Examen idExamen) {
+        this.idExamen = idExamen;
     }
 
     @Override

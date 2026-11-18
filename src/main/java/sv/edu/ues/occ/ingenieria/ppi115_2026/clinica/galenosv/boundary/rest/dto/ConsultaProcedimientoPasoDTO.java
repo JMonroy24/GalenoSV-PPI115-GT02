@@ -14,5 +14,11 @@ public record ConsultaProcedimientoPasoDTO(
         String estado,
         UUID idConsultaProcedimiento,
         UUID idPersonaRol,
-        String valor) {
+        String valor,
+        UUID idProcedimientoPaso) {
+
+    public ConsultaProcedimientoPasoDTO(UUID id, Date fechaInicio, Date fechaFin, String estado,
+            UUID idConsultaProcedimiento, UUID idPersonaRol, String valor) {
+        this(id, fechaInicio, fechaFin, estado, idConsultaProcedimiento, idPersonaRol, valor, null);
+    }
 }

@@ -41,6 +41,22 @@ class OrdenExamenServiceTest {
     }
 
     @Test
+    void indicacionesVaciasSeNormalizanACadenaVacia() {
+        OrdenExamen sinIndicaciones = new OrdenExamen(UUID.randomUUID());
+        sinIndicaciones.setIdConsultaProcedimientoPaso(new ConsultaProcedimientoPaso(UUID.randomUUID()));
+        OrdenExamen conEspacios = new OrdenExamen(UUID.randomUUID());
+        conEspacios.setIndicaciones("   ");
+        conEspacios.setIdConsultaProcedimientoPaso(new ConsultaProcedimientoPaso(UUID.randomUUID()));
+
+        ordenExamenService.crear(sinIndicaciones);
+        ordenExamenService.crear(conEspacios);
+
+        assertEquals("", sinIndicaciones.getIndicaciones());
+        assertEquals("", conEspacios.getIndicaciones());
+        verify(ordenExamenDAO, times(2)).create(any(OrdenExamen.class));
+    }
+
+    @Test
     void actualizarNoModificaFechaDeCreacion() {
         Date fechaOriginal = new Date(1600000000000L);
         OrdenExamen existente = new OrdenExamen(UUID.randomUUID());

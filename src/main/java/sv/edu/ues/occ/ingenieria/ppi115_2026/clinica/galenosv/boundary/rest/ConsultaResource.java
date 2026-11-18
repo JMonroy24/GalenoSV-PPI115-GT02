@@ -5,6 +5,7 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -14,6 +15,8 @@ import java.util.UUID;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.ConsultaDTO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.ConsultaDetalleDTO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.mapper.ConsultaDetalleMapper;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.mapper.ConsultaMapper;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaTicketService;
@@ -34,6 +37,12 @@ public class ConsultaResource extends GenericResource<Consulta, ConsultaDTO, UUI
     @Inject
     ConsultaTicketService consultaTicketService;
 
+    @Inject
+    ConsultaDetalleMapper consultaDetalleMapper;
+
+    @QueryParam("pacienteId")
+    String pacienteId;
+
     @GET
     @Path("/{id}/ticket")
     @Produces("application/pdf")
@@ -53,8 +62,21 @@ public class ConsultaResource extends GenericResource<Consulta, ConsultaDTO, UUI
                 .build();
     }
 
-    @QueryParam("pacienteId")
-    String pacienteId;
+    @Override
+    @GET
+    @Path("/{id}")
+    @PermitAll
+    @Operation(summary = "Obtiene una consulta con sus pasos ejecutados")
+    public Response obtener(@PathParam("id") String id) {
+        Consulta entidad = consultaService.findById(parseId(id));
+        if (entidad == null) {
+            throw new NotFoundException("No existe el recurso solicitado.");
+        }
+        ConsultaDetalleDTO dto = consultaDetalleMapper.toDTO(entidad);
+        return Response.ok(dto)
+                .header("ETag", ETagUtils.calcular(dto))
+                .build();
+    }
 
     @Override
     @GET

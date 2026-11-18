@@ -99,6 +99,14 @@ public abstract class GenericResource<E, D, ID extends Serializable> {
                 .build();
     }
 
+    protected Class<?> getResourceClass() {
+        Class<?> clazz = getClass();
+        while (clazz != null && !clazz.isAnnotationPresent(Path.class) && clazz.getSuperclass() != null) {
+            clazz = clazz.getSuperclass();
+        }
+        return clazz != null ? clazz : getClass();
+    }
+
     @POST
     @PermitAll
     @Operation(summary = "Crea un nuevo recurso")
@@ -114,7 +122,7 @@ public abstract class GenericResource<E, D, ID extends Serializable> {
         asignarNuevoId(entidad);
         getService().crear(entidad);
         D creada = getMapper().toDTO(entidad);
-        URI ubicacion = UriBuilder.fromResource(getClass())
+        URI ubicacion = UriBuilder.fromResource(getResourceClass())
                 .path("{id}")
                 .build(getId(creada));
         return Response.created(ubicacion).entity(creada).build();

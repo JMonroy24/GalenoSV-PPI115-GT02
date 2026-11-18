@@ -10,6 +10,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.ConsultaDTO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.ConsultaDetalleDTO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.ConsultaPasoDTO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.mapper.ConsultaDetalleMapper;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.mapper.ConsultaMapper;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta;
@@ -28,6 +31,9 @@ class ConsultaResourceTest {
 
     @Mock
     sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaTicketService consultaTicketService;
+
+    @Mock
+    ConsultaDetalleMapper consultaDetalleMapper;
 
     @InjectMocks
     ConsultaResource consultaResource;
@@ -80,6 +86,24 @@ class ConsultaResourceTest {
         when(consultaService.findById(id)).thenReturn(null);
 
         assertThrows(NotFoundException.class, () -> consultaResource.obtener(id.toString()));
+    }
+
+    @Test
+    void getPorIdIncluyePasosYETag() {
+        UUID id = UUID.randomUUID();
+        UUID idPaso = UUID.randomUUID();
+        Consulta entidad = new Consulta(id);
+        ConsultaDetalleDTO dto = new ConsultaDetalleDTO(id, null, null, "REF-002", null, null,
+                List.of(new ConsultaPasoDTO(UUID.randomUUID(), "Toma de muestra", 1, "EJECUTADO", "7.5", idPaso)));
+        when(consultaService.findById(id)).thenReturn(entidad);
+        when(consultaDetalleMapper.toDTO(entidad)).thenReturn(dto);
+
+        Response respuesta = consultaResource.obtener(id.toString());
+
+        assertEquals(dto, respuesta.getEntity());
+        assertEquals(ETagUtils.calcular(dto), respuesta.getHeaderString("ETag"));
+        assertEquals(1, ((ConsultaDetalleDTO) respuesta.getEntity()).pasos().size());
+        verify(consultaDetalleMapper).toDTO(entidad);
     }
 
     @Test

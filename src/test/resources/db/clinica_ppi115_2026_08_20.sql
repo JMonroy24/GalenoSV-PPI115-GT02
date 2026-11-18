@@ -49,7 +49,8 @@ CREATE TABLE public.consulta_procedimiento_paso (
     id_persona_rol uuid,
     fecha_inicio timestamp with time zone DEFAULT now(),
     fecha_fin timestamp with time zone,
-    estado character varying(20)
+    estado character varying(20),
+    id_procedimiento_paso uuid
 );
 
 
@@ -132,7 +133,8 @@ CREATE TABLE public.orden_examen (
     id_orden_examen uuid NOT NULL,
     id_consulta_procedimiento_paso uuid,
     fecha_creacion timestamp with time zone DEFAULT now(),
-    indicaciones text
+    indicaciones text,
+    id_examen uuid
 );
 
 

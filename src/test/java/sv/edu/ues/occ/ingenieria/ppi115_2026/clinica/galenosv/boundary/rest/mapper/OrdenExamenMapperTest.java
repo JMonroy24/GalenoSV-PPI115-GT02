@@ -10,7 +10,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.OrdenExamenDTO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoPasoService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ExamenService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimientoPaso;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Examen;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.OrdenExamen;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -21,6 +23,9 @@ class OrdenExamenMapperTest {
 
     @Mock
     ConsultaProcedimientoPasoService consultaProcedimientoPasoService;
+
+    @Mock
+    ExamenService examenService;
 
     @InjectMocks
     OrdenExamenMapper mapper;
@@ -67,6 +72,30 @@ class OrdenExamenMapperTest {
         assertEquals(fechaOriginal, destino.getFechaCreacion());
         assertEquals("Nuevas indicaciones", destino.getIndicaciones());
         assertSame(paso, destino.getIdConsultaProcedimientoPaso());
+    }
+
+    @Test
+    void idExamenSeConservaYSeResuelve() {
+        UUID idExamen = UUID.randomUUID();
+        Examen examen = new Examen(idExamen);
+        OrdenExamen entidad = new OrdenExamen(UUID.randomUUID());
+        entidad.setIdExamen(examen);
+
+        OrdenExamenDTO dto = mapper.toDTO(entidad);
+        assertEquals(idExamen, dto.idExamen());
+
+        when(examenService.findById(idExamen)).thenReturn(examen);
+        OrdenExamen vuelta = mapper.toEntity(dto);
+        assertSame(examen, vuelta.getIdExamen());
+    }
+
+    @Test
+    void examenInexistenteLanzaNotFound() {
+        UUID idExamen = UUID.randomUUID();
+        OrdenExamenDTO dto = new OrdenExamenDTO(null, null, "Indicaciones", null, idExamen);
+        when(examenService.findById(idExamen)).thenReturn(null);
+
+        assertThrows(NotFoundException.class, () -> mapper.toEntity(dto));
     }
 
     @Test

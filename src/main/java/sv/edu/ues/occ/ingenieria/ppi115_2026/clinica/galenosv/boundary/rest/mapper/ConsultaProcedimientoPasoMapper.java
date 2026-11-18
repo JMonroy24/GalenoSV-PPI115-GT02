@@ -9,9 +9,11 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoPasoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.PersonaRolService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimiento;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimientoPaso;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRol;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPaso;
 
 @ApplicationScoped
 public class ConsultaProcedimientoPasoMapper
@@ -22,6 +24,9 @@ public class ConsultaProcedimientoPasoMapper
 
     @Inject
     PersonaRolService personaRolService;
+
+    @Inject
+    ProcedimientoPasoService procedimientoPasoService;
 
     @Override
     public ConsultaProcedimientoPasoDTO toDTO(ConsultaProcedimientoPaso entidad) {
@@ -37,7 +42,10 @@ public class ConsultaProcedimientoPasoMapper
                         ? null
                         : entidad.getIdConsultaProcedimiento().getIdConsultaProcedimiento(),
                 entidad.getIdPersonaRol() == null ? null : entidad.getIdPersonaRol().getIdPersonaRol(),
-                entidad.getValor());
+                entidad.getValor(),
+                entidad.getIdProcedimientoPaso() == null
+                        ? null
+                        : entidad.getIdProcedimientoPaso().getIdProcedimientoPaso());
     }
 
     @Override
@@ -62,6 +70,18 @@ public class ConsultaProcedimientoPasoMapper
         destino.setValor(dto.valor());
         destino.setIdConsultaProcedimiento(resolverConsultaProcedimiento(dto.idConsultaProcedimiento()));
         destino.setIdPersonaRol(resolverPersonaRol(dto.idPersonaRol()));
+        destino.setIdProcedimientoPaso(resolverProcedimientoPaso(dto.idProcedimientoPaso()));
+    }
+
+    private ProcedimientoPaso resolverProcedimientoPaso(UUID id) {
+        if (id == null) {
+            return null;
+        }
+        ProcedimientoPaso paso = procedimientoPasoService.findById(id);
+        if (paso == null) {
+            throw new NotFoundException("No existe el paso de procedimiento solicitado.");
+        }
+        return paso;
     }
 
     private ConsultaProcedimiento resolverConsultaProcedimiento(UUID id) {

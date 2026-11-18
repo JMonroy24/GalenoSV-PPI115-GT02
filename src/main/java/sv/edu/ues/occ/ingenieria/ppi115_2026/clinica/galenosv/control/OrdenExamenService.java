@@ -33,7 +33,8 @@ public class OrdenExamenService extends DefaultService<OrdenExamen, UUID> implem
         if (nuevo && r.getFechaCreacion() == null) {
             r.setFechaCreacion(new Date());
         }
-        r.setIndicaciones(ValidadorComun.textoObligatorio(r.getIndicaciones(), "Las indicaciones"));
+        r.setIndicaciones(r.getIndicaciones() == null || r.getIndicaciones().isBlank()
+                ? "" : r.getIndicaciones().trim());
         ValidadorComun.requerido(r.getIdConsultaProcedimientoPaso(), "Seleccione un paso de la consulta.");
     }
 

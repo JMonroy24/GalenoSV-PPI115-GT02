@@ -33,7 +33,8 @@ CREATE TABLE consulta_procedimiento_paso (
     fecha_fin timestamp without time zone,
     estado varchar(20),
     id_consulta_procedimiento uuid,
-    id_persona_rol uuid
+    id_persona_rol uuid,
+    id_procedimiento_paso uuid
 );
 
 CREATE TABLE documento (
@@ -80,7 +81,8 @@ CREATE TABLE orden_examen (
     id_orden_examen uuid PRIMARY KEY,
     fecha_creacion timestamp without time zone,
     indicaciones varchar(2000),
-    id_consulta_procedimiento_paso uuid
+    id_consulta_procedimiento_paso uuid,
+    id_examen uuid
 );
 
 CREATE TABLE persona (
@@ -165,6 +167,7 @@ ALTER TABLE consulta_procedimiento ADD CONSTRAINT fk_consulta_procedimiento_cons
 ALTER TABLE consulta_procedimiento ADD CONSTRAINT fk_consulta_procedimiento_procedimiento FOREIGN KEY (id_procedimiento) REFERENCES procedimiento (id_procedimiento);
 ALTER TABLE consulta_procedimiento_paso ADD CONSTRAINT fk_consulta_procedimiento_paso_consulta_procedimiento FOREIGN KEY (id_consulta_procedimiento) REFERENCES consulta_procedimiento (id_consulta_procedimiento);
 ALTER TABLE consulta_procedimiento_paso ADD CONSTRAINT fk_consulta_procedimiento_paso_persona_rol FOREIGN KEY (id_persona_rol) REFERENCES persona_rol (id_persona_rol);
+ALTER TABLE consulta_procedimiento_paso ADD CONSTRAINT fk_consulta_procedimiento_paso_procedimiento_paso FOREIGN KEY (id_procedimiento_paso) REFERENCES procedimiento_paso (id_procedimiento_paso);
 ALTER TABLE documento ADD CONSTRAINT fk_documento_persona FOREIGN KEY (id_persona) REFERENCES persona (id_persona);
 ALTER TABLE documento ADD CONSTRAINT fk_documento_tipo_documento FOREIGN KEY (id_tipo_documento) REFERENCES tipo_documento (id_tipo_documento);
 ALTER TABLE examen_resultado ADD CONSTRAINT fk_examen_resultado_orden_examen FOREIGN KEY (id_orden_examen) REFERENCES orden_examen (id_orden_examen);
@@ -173,6 +176,7 @@ ALTER TABLE examen_tipo_examen ADD CONSTRAINT fk_examen_tipo_examen_tipo_examen 
 ALTER TABLE medio_contacto ADD CONSTRAINT fk_medio_contacto_persona FOREIGN KEY (id_persona) REFERENCES persona (id_persona);
 ALTER TABLE medio_contacto ADD CONSTRAINT fk_medio_contacto_tipo_medio_contacto FOREIGN KEY (id_tipo_medio_contacto) REFERENCES tipo_medio_contacto (id_tipo_medio_contacto);
 ALTER TABLE orden_examen ADD CONSTRAINT fk_orden_examen_consulta_procedimiento_paso FOREIGN KEY (id_consulta_procedimiento_paso) REFERENCES consulta_procedimiento_paso (id_consulta_procedimiento_paso);
+ALTER TABLE orden_examen ADD CONSTRAINT fk_orden_examen_examen FOREIGN KEY (id_examen) REFERENCES examen (id_examen);
 ALTER TABLE persona_rol ADD CONSTRAINT fk_persona_rol_clinica FOREIGN KEY (id_clinica) REFERENCES clinica (id_clinica);
 ALTER TABLE persona_rol ADD CONSTRAINT fk_persona_rol_persona FOREIGN KEY (id_persona) REFERENCES persona (id_persona);
 ALTER TABLE persona_rol ADD CONSTRAINT fk_persona_rol_rol FOREIGN KEY (id_rol) REFERENCES rol (id_rol);

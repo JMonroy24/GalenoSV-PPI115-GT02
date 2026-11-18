@@ -9,7 +9,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.ExamenAsignableDTO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.ProcedimientoPasoExamenDTO;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.mapper.ExamenAsignableMapper;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.mapper.ProcedimientoPasoExamenMapper;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoExamenService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPasoExamen;
@@ -25,6 +27,9 @@ class ProcedimientoPasoExamenResourceTest {
 
     @Mock
     ProcedimientoPasoExamenMapper procedimientoPasoExamenMapper;
+
+    @Mock
+    ExamenAsignableMapper examenAsignableMapper;
 
     @InjectMocks
     ProcedimientoPasoExamenResource procedimientoPasoExamenResource;
@@ -98,6 +103,28 @@ class ProcedimientoPasoExamenResourceTest {
         assertEquals(sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcularFuerte(esperada), respuesta.getHeaderString("ETag"));
         verify(procedimientoPasoExamenMapper).copiar(dto, entidad);
         verify(procedimientoPasoExamenService).actualizarSi(any(), any(), any());
+    }
+
+    @Test
+    void asignablesPorPasoFiltraYPagina() {
+        UUID idPaso = UUID.randomUUID();
+        ProcedimientoPasoExamen relacion1 = new ProcedimientoPasoExamen(UUID.randomUUID());
+        ProcedimientoPasoExamen relacion2 = new ProcedimientoPasoExamen(UUID.randomUUID());
+        ExamenAsignableDTO dto1 = new ExamenAsignableDTO(UUID.randomUUID(), UUID.randomUUID(), "Hemograma",
+                Boolean.TRUE, idPaso, UUID.randomUUID(), "Laboratorio");
+        ExamenAsignableDTO dto2 = new ExamenAsignableDTO(UUID.randomUUID(), UUID.randomUUID(), "Rayos X",
+                Boolean.TRUE, idPaso, UUID.randomUUID(), "Imagenología");
+        when(procedimientoPasoExamenService.findByPaso(idPaso)).thenReturn(List.of(relacion1, relacion2));
+        when(examenAsignableMapper.toDTO(relacion1)).thenReturn(dto1);
+        when(examenAsignableMapper.toDTO(relacion2)).thenReturn(dto2);
+
+        PageResponse<ExamenAsignableDTO> respuesta =
+                procedimientoPasoExamenResource.asignablesPorPaso(idPaso, 0, 1, "hemo");
+
+        assertEquals(1L, respuesta.total());
+        assertEquals(1, respuesta.items().size());
+        assertEquals("Hemograma", respuesta.items().get(0).nombre());
+        verify(procedimientoPasoExamenService).findByPaso(idPaso);
     }
 
     @Test

@@ -71,6 +71,10 @@ public class ConsultaProcedimientoPaso implements IdentificableEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     private PersonaRol idPersonaRol;
 
+    @JoinColumn(name = "id_procedimiento_paso", referencedColumnName = "id_procedimiento_paso")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ProcedimientoPaso idProcedimientoPaso;
+
     @OneToMany(mappedBy = "idConsultaProcedimientoPaso", fetch = FetchType.LAZY)
     private List<OrdenExamen> ordenExamenList;
 
@@ -135,6 +139,14 @@ public class ConsultaProcedimientoPaso implements IdentificableEntity {
 
     public void setIdPersonaRol(PersonaRol idPersonaRol) {
         this.idPersonaRol = idPersonaRol;
+    }
+
+    public ProcedimientoPaso getIdProcedimientoPaso() {
+        return idProcedimientoPaso;
+    }
+
+    public void setIdProcedimientoPaso(ProcedimientoPaso idProcedimientoPaso) {
+        this.idProcedimientoPaso = idProcedimientoPaso;
     }
 
     public List<OrdenExamen> getOrdenExamenList() {
