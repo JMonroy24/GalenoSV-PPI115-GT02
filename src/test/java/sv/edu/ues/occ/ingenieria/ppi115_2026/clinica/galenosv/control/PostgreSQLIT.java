@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
@@ -51,12 +52,22 @@ class PostgreSQLIT {
                     "src/main/db/migration/V4__consulta_procedimiento_paso_valor.sql")));
             s.execute(java.nio.file.Files.readString(java.nio.file.Path.of(
                     "src/main/db/migration/V5__hu4_orden_examen_y_pasos.sql")));
+            s.execute(java.nio.file.Files.readString(java.nio.file.Path.of(
+                    "src/main/db/migration/V6__hu3_hu4_regularizar_pasos.sql")));
         }
         factory = Persistence.createEntityManagerFactory("GalenoSV_TEST", Map.of(
                 "jakarta.persistence.jdbc.url", url,
                 "jakarta.persistence.jdbc.user", usuario,
                 "jakarta.persistence.jdbc.password", password,
                 "jakarta.persistence.jdbc.driver", "org.postgresql.Driver"));
+    }
+
+    @org.junit.jupiter.api.BeforeEach
+    void aislarDatosDeCadaPrueba() throws SQLException {
+        try (var c = DriverManager.getConnection(url, usuario, password); var sentencia = c.createStatement()) {
+            sentencia.execute("TRUNCATE TABLE public.persona, public.rol, public.clinica, public.procedimiento, "
+                    + "public.examen, public.tipo_examen, public.tipo_documento CASCADE");
+        }
     }
 
     @AfterAll
@@ -67,6 +78,12 @@ class PostgreSQLIT {
 
     private Connection conexion() throws SQLException {
         return DriverManager.getConnection(url, usuario, password);
+    }
+
+    private static void persistirFixture(EntityManager em, ConsultaProcedimientoPaso paso) {
+        var pr = paso.getIdPersonaRol(); var cp = paso.getIdConsultaProcedimiento();
+        for (Object entidad : List.of(pr.getIdClinica(), pr.getIdRol(), pr.getIdPersona(), pr,
+                cp.getIdConsulta(), cp.getIdProcedimiento(), paso.getIdProcedimientoPaso(), cp, paso)) em.persist(entidad);
     }
 
     @Test
@@ -88,10 +105,7 @@ class PostgreSQLIT {
             registrado.setIdProcedimientoPaso(definicion);
             registrado.setEstado("PENDIENTE");
             registrado.setValor("{\"temperatura\":36.5}");
-            var anteriorAV5 = new ConsultaProcedimientoPaso(UUID.randomUUID());
-            anteriorAV5.setIdConsultaProcedimiento(asignado);
-            anteriorAV5.setEstado("COMPLETADO");
-            for (Object entidad : List.of(consulta, procedimiento, definicion, asignado, registrado, anteriorAV5)) {
+            for (Object entidad : List.of(consulta, procedimiento, definicion, asignado, registrado)) {
                 em.persist(entidad);
             }
             em.flush();
@@ -104,11 +118,11 @@ class PostgreSQLIT {
             assertEquals(List.of(asignado), procedimientos);
             var pasos = new ConsultaProcedimientoPasoService(new ConsultaProcedimientoPasoDAO(em))
                     .findByConsultaProcedimiento(procedimientos.getFirst().getIdConsultaProcedimiento());
-            assertEquals(2, pasos.size());
+            assertEquals(1, pasos.size());
             var paso = pasos.stream().filter(registrado::equals).findFirst().orElseThrow();
             assertEquals("Triaje", paso.getIdProcedimientoPaso().getNombre());
             assertEquals(registrado.getValor(), paso.getValor());
-            assertNull(pasos.stream().filter(anteriorAV5::equals).findFirst().orElseThrow().getIdProcedimientoPaso());
+            assertNotNull(paso.getIdProcedimientoPaso());
         } finally {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             em.close();
@@ -119,12 +133,12 @@ class PostgreSQLIT {
     void formularioJsonAmplioSePersisteYActualizaSinTruncar() {
         EntityManager em = factory.createEntityManager();
         try {
-            var paso = new ConsultaProcedimientoPaso(UUID.randomUUID());
+            var paso = FixturesClinicos.pasoValido();
             paso.setEstado("PENDIENTE");
             String valor = "{\"observaciones\":\"Presión arterial\",\"detalle\":\"" + "a".repeat(5000) + "\"}";
             paso.setValor(valor);
             em.getTransaction().begin();
-            em.persist(paso);
+            persistirFixture(em, paso);
             em.getTransaction().commit();
             em.clear();
             assertEquals(valor, em.find(ConsultaProcedimientoPaso.class, paso.getIdConsultaProcedimientoPaso()).getValor());
@@ -239,6 +253,7 @@ class PostgreSQLIT {
             em.persist(cp);
             var cpp = new ConsultaProcedimientoPaso(UUID.randomUUID());
             cpp.setIdConsultaProcedimiento(cp);
+            cpp.setIdProcedimientoPaso(inicio);
             cpp.setIdPersonaRol(responsable);
             cpp.setFechaInicio(fecha);
             cpp.setEstado("PENDIENTE");
@@ -447,4 +462,189 @@ class PostgreSQLIT {
             primero.close(); segundo.close();
         }
     }
+    private record Flujo(UUID consulta, UUID inicial, UUID segundo, UUID ultimo, UUID clinica,
+            UUID rolInicial, UUID rolSegundo, UUID rolUltimo, String referencia) { }
+
+    private Flujo crearFlujo(EntityManager em) {
+        var primero = FixturesClinicos.pasoValido();
+        var cp = primero.getIdConsultaProcedimiento();
+        String referencia = "HU34-" + UUID.randomUUID();
+        cp.getIdConsulta().setReferenciaExterna(referencia);
+        var inicio = primero.getIdProcedimientoPaso(); inicio.setIndicaFin(false); inicio.setNombre("Recepción");
+        persistirFixture(em, primero);
+        var definiciones = new java.util.ArrayList<ProcedimientoPaso>(); definiciones.add(inicio);
+        for (String nombre : List.of("Enfermería", "Doctor")) {
+            var rol = new Rol(UUID.randomUUID()); rol.setNombre(nombre); rol.setActivo(true); em.persist(rol);
+            var pr = new PersonaRol(UUID.randomUUID()); pr.setIdRol(rol); pr.setIdClinica(primero.getIdPersonaRol().getIdClinica());
+            pr.setIdPersona(primero.getIdPersonaRol().getIdPersona()); em.persist(pr);
+            var definicion = new ProcedimientoPaso(UUID.randomUUID()); definicion.setNombre(nombre);
+            definicion.setIdRol(rol); definicion.setIdProcedimiento(cp.getIdProcedimiento());
+            definicion.setIndicaFin("Doctor".equals(nombre)); em.persist(definicion);
+            var secuencia = new ProcedimientoPasoSecuencia(UUID.randomUUID());
+            secuencia.setIdProcedimientoPaso(definiciones.getLast()); secuencia.setIdProcedimientoPasoReferencia(definicion.getIdProcedimientoPaso());
+            secuencia.setTipoSecuencia("SIGUIENTE"); em.persist(secuencia); definiciones.add(definicion);
+        }
+        em.flush();
+        return new Flujo(cp.getIdConsulta().getIdConsulta(), primero.getIdConsultaProcedimientoPaso(),
+                definiciones.get(1).getIdProcedimientoPaso(), definiciones.get(2).getIdProcedimientoPaso(),
+                primero.getIdPersonaRol().getIdClinica().getIdClinica(), inicio.getIdRol().getIdRol(),
+                definiciones.get(1).getIdRol().getIdRol(), definiciones.get(2).getIdRol().getIdRol(), referencia);
+    }
+
+    private ConsultaProcedimientoPaso registro(EntityManager em, UUID consulta, UUID definicion) {
+        return em.createQuery("SELECT p FROM ConsultaProcedimientoPaso p WHERE p.idConsultaProcedimiento.idConsulta.idConsulta = :consulta"
+                + " AND p.idProcedimientoPaso.idProcedimientoPaso = :definicion", ConsultaProcedimientoPaso.class)
+                .setParameter("consulta", consulta).setParameter("definicion", definicion).getSingleResult();
+    }
+
+    @Test void flujoCompletoRetrocedeReactivaSinDuplicarYCierraConsulta() {
+        EntityManager em = factory.createEntityManager();
+        try {
+            em.getTransaction().begin(); var flujo = crearFlujo(em); em.getTransaction().commit(); em.clear();
+            var servicio = new ConsultaProcedimientoPasoService(new ConsultaProcedimientoPasoDAO(em));
+            em.getTransaction().begin();
+            var inicio = servicio.actualizarFormulario(flujo.inicial(), p -> true, "COMPLETADO", "recepción");
+            Date finInicial = inicio.getFechaFin(); assertNotNull(finInicial);
+            var enfermeria = registro(em, flujo.consulta(), flujo.segundo());
+            assertEquals("EN_CURSO", enfermeria.getEstado()); assertEquals(flujo.rolSegundo(), enfermeria.getIdPersonaRol().getIdRol().getIdRol());
+            servicio.actualizarFormulario(flujo.inicial(), p -> true, "COMPLETADO", "corregido");
+            assertEquals(finInicial, inicio.getFechaFin());
+            servicio.retroceder(enfermeria.getIdConsultaProcedimientoPaso(), p -> true, "formulario conservado");
+            assertEquals("EN_CURSO", inicio.getEstado()); assertEquals("PENDIENTE", enfermeria.getEstado());
+            servicio.actualizarFormulario(flujo.inicial(), p -> true, "COMPLETADO", "recepción revisada");
+            assertEquals(finInicial, inicio.getFechaFin());
+            assertEquals(enfermeria.getIdConsultaProcedimientoPaso(), registro(em, flujo.consulta(), flujo.segundo()).getIdConsultaProcedimientoPaso());
+            servicio.actualizarFormulario(enfermeria.getIdConsultaProcedimientoPaso(), p -> true, "COMPLETADO", "triaje");
+            var doctor = registro(em, flujo.consulta(), flujo.ultimo());
+            servicio.actualizarFormulario(doctor.getIdConsultaProcedimientoPaso(), p -> true, "COMPLETADO", "diagnóstico");
+            em.getTransaction().commit(); em.clear();
+            var consulta = em.find(Consulta.class, flujo.consulta()); assertNotNull(consulta.getFechaFin());
+            assertNotNull(em.find(ConsultaProcedimientoPaso.class, doctor.getIdConsultaProcedimientoPaso()).getFechaFin());
+            assertEquals(3L, em.createQuery("SELECT COUNT(p) FROM ConsultaProcedimientoPaso p WHERE p.idConsultaProcedimiento.idConsulta = :consulta", Long.class)
+                    .setParameter("consulta", consulta).getSingleResult());
+            em.getTransaction().begin();
+            servicio.retroceder(doctor.getIdConsultaProcedimientoPaso(), p -> true, "volver");
+            em.getTransaction().commit(); em.clear();
+            assertNull(em.find(Consulta.class, flujo.consulta()).getFechaFin());
+            assertEquals("EN_CURSO", registro(em, flujo.consulta(), flujo.segundo()).getEstado());
+        } finally { if (em.getTransaction().isActive()) em.getTransaction().rollback(); em.close(); }
+    }
+
+    @Test void filtrosCombinadosPaginanYConteoNoDuplicaPorProcedimientos() {
+        EntityManager em = factory.createEntityManager();
+        try {
+            em.getTransaction().begin(); var flujo = crearFlujo(em);
+            var original = em.find(ConsultaProcedimientoPaso.class, flujo.inicial());
+            var segundoProcedimiento = new ConsultaProcedimiento(UUID.randomUUID());
+            segundoProcedimiento.setIdConsulta(original.getIdConsultaProcedimiento().getIdConsulta());
+            segundoProcedimiento.setIdProcedimiento(original.getIdConsultaProcedimiento().getIdProcedimiento()); em.persist(segundoProcedimiento);
+            var repetido = new ConsultaProcedimientoPaso(UUID.randomUUID()); repetido.setIdConsultaProcedimiento(segundoProcedimiento);
+            repetido.setIdProcedimientoPaso(original.getIdProcedimientoPaso()); repetido.setIdPersonaRol(original.getIdPersonaRol());
+            repetido.setEstado("PENDIENTE"); repetido.setFechaInicio(new Date(200)); em.persist(repetido);
+            em.flush();
+            var dao = new ConsultaDAO(em);
+            var filtro = new FiltroConsultasRest(original.getIdConsultaProcedimiento().getIdConsulta().getIdPersonaRol().getIdPersonaRol(),
+                    flujo.clinica(), flujo.rolInicial(), new Date(100), new Date(100), flujo.referencia());
+            assertEquals(1, dao.countRest(filtro)); assertEquals(1, dao.findRangeRest(0, 1, filtro).size());
+            assertTrue(dao.findRangeRest(1, 1, filtro).isEmpty());
+            assertEquals(0, dao.countRest(new FiltroConsultasRest(null, UUID.randomUUID(), null, null, null, flujo.referencia())));
+            assertEquals(0, dao.countRest(new FiltroConsultasRest(null, flujo.clinica(), flujo.rolSegundo(), null, null, flujo.referencia())));
+            assertEquals(0, dao.countRest(new FiltroConsultasRest(null, flujo.clinica(), null, new Date(101), null, flujo.referencia())));
+            assertEquals(0, dao.countRest(new FiltroConsultasRest(null, flujo.clinica(), null, null, new Date(99), flujo.referencia())));
+            assertEquals(0, dao.countRest(new FiltroConsultasRest(null, flujo.clinica(), null, null, null, "inexistente")));
+            var servicio = new ConsultaProcedimientoPasoService(new ConsultaProcedimientoPasoDAO(em));
+            servicio.actualizarFormulario(flujo.inicial(), p -> true, "COMPLETADO", "");
+            assertEquals(1, dao.countRest(new FiltroConsultasRest(null, flujo.clinica(), flujo.rolSegundo(), null, null, flujo.referencia())));
+            assertEquals(1, dao.findRangeRest(0, 1, new FiltroConsultasRest(null, flujo.clinica(), flujo.rolSegundo(), null, null, flujo.referencia())).size());
+        } finally { if (em.getTransaction().isActive()) em.getTransaction().rollback(); em.close(); }
+    }
+
+    @Test void dosPatchesConMismoEtagSoloConfirmanUnaTransicion() throws Exception {
+        Flujo flujo;
+        String etag;
+        try (var em = factory.createEntityManager()) {
+            em.getTransaction().begin(); flujo = crearFlujo(em); em.getTransaction().commit();
+            etag = sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcular(
+                    new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.mapper.ConsultaProcedimientoPasoMapper()
+                            .toDTO(em.find(ConsultaProcedimientoPaso.class, flujo.inicial())));
+        }
+        var barrera = new java.util.concurrent.CyclicBarrier(2);
+        try (var executor = java.util.concurrent.Executors.newFixedThreadPool(2)) {
+            var tareas = new java.util.ArrayList<java.util.concurrent.Future<Boolean>>();
+            for (int i = 0; i < 2; i++) tareas.add(executor.submit(() -> {
+                try (var em = factory.createEntityManager()) {
+                    em.getTransaction().begin(); barrera.await(10, java.util.concurrent.TimeUnit.SECONDS);
+                    try {
+                        new ConsultaProcedimientoPasoService(new ConsultaProcedimientoPasoDAO(em)).actualizarFormulario(flujo.inicial(),
+                                p -> sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.coincide(etag,
+                                        sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.ETagUtils.calcular(
+                                                new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.mapper.ConsultaProcedimientoPasoMapper().toDTO(p))),
+                                "COMPLETADO", "concurrente");
+                        em.getTransaction().commit(); return true;
+                    } catch (sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error.PreconditionFailedException e) {
+                        em.getTransaction().rollback(); return false;
+                    }
+                }
+            }));
+            int confirmadas = 0;
+            for (var tarea : tareas) if (tarea.get(20, java.util.concurrent.TimeUnit.SECONDS)) confirmadas++;
+            assertEquals(1, confirmadas);
+        }
+        try (var em = factory.createEntityManager()) {
+            assertNotNull(registro(em, flujo.consulta(), flujo.segundo()));
+            assertEquals(2L, em.createQuery("SELECT COUNT(p) FROM ConsultaProcedimientoPaso p WHERE p.idConsultaProcedimiento.idConsulta.idConsulta = :id", Long.class)
+                    .setParameter("id", flujo.consulta()).getSingleResult());
+        }
+    }
+
+    @Test void faltaDeResponsableActivoRevierteCompletarYNoCreaSucesor() {
+        EntityManager em = factory.createEntityManager();
+        try {
+            em.getTransaction().begin(); var flujo = crearFlujo(em);
+            em.find(Rol.class, flujo.rolSegundo()).setActivo(false);
+            em.getTransaction().commit(); em.clear();
+            em.getTransaction().begin();
+            assertThrows(ValidacionNegocioException.class, () -> new ConsultaProcedimientoPasoService(new ConsultaProcedimientoPasoDAO(em))
+                    .actualizarFormulario(flujo.inicial(), p -> true, "COMPLETADO", ""));
+            em.getTransaction().rollback(); em.clear();
+            assertEquals("PENDIENTE", em.find(ConsultaProcedimientoPaso.class, flujo.inicial()).getEstado());
+            assertNull(em.find(ConsultaProcedimientoPaso.class, flujo.inicial()).getFechaFin());
+            assertTrue(em.createQuery("SELECT p FROM ConsultaProcedimientoPaso p WHERE p.idProcedimientoPaso.idProcedimientoPaso = :id", ConsultaProcedimientoPaso.class)
+                    .setParameter("id", flujo.segundo()).getResultList().isEmpty());
+        } finally { if (em.getTransaction().isActive()) em.getTransaction().rollback(); em.close(); }
+    }
+
+    @Test void editarEjecucionHistoricaNoAdelantaLaEjecucionActiva() {
+        try (var em = factory.createEntityManager()) {
+            em.getTransaction().begin(); var flujo = crearFlujo(em);
+            var activo = em.find(ConsultaProcedimientoPaso.class, flujo.inicial());
+            var historico = new ConsultaProcedimientoPaso(UUID.randomUUID());
+            historico.setIdConsultaProcedimiento(activo.getIdConsultaProcedimiento());
+            historico.setIdProcedimientoPaso(activo.getIdProcedimientoPaso()); historico.setIdPersonaRol(activo.getIdPersonaRol());
+            historico.setFechaInicio(new Date(100)); historico.setFechaFin(new Date(150)); historico.setEstado("COMPLETADO");
+            em.persist(historico); em.getTransaction().commit(); em.clear();
+            em.getTransaction().begin();
+            new ConsultaProcedimientoPasoService(new ConsultaProcedimientoPasoDAO(em))
+                    .actualizarFormulario(historico.getIdConsultaProcedimientoPaso(), p -> true, "COMPLETADO", "nota histórica");
+            em.getTransaction().commit(); em.clear();
+            assertEquals("PENDIENTE", em.find(ConsultaProcedimientoPaso.class, flujo.inicial()).getEstado());
+            assertTrue(em.createQuery("SELECT p FROM ConsultaProcedimientoPaso p WHERE p.idProcedimientoPaso.idProcedimientoPaso = :id", ConsultaProcedimientoPaso.class)
+                    .setParameter("id", flujo.segundo()).getResultList().isEmpty());
+        }
+    }
+
+    @Test void altaAdjuntaRelacionesSeparadasAntesDeBloquearConsulta() {
+        try (var em = factory.createEntityManager()) {
+            var paso = FixturesClinicos.pasoValido();
+            em.getTransaction().begin(); persistirFixture(em, paso); em.remove(paso); em.getTransaction().commit(); em.clear();
+            var nuevo = new ConsultaProcedimientoPaso(UUID.randomUUID());
+            nuevo.setIdConsultaProcedimiento(paso.getIdConsultaProcedimiento()); nuevo.setIdProcedimientoPaso(paso.getIdProcedimientoPaso());
+            nuevo.setIdPersonaRol(paso.getIdPersonaRol()); nuevo.setEstado("PENDIENTE");
+            em.getTransaction().begin();
+            new ConsultaProcedimientoPasoService(new ConsultaProcedimientoPasoDAO(em)).crear(nuevo);
+            em.getTransaction().commit(); em.clear();
+            assertEquals(paso.getIdProcedimientoPaso(), em.find(ConsultaProcedimientoPaso.class, nuevo.getIdConsultaProcedimientoPaso()).getIdProcedimientoPaso());
+        }
+    }
+
 }

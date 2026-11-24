@@ -28,6 +28,8 @@ class ConsultaProcedimientoPasoMapperTest {
     @Mock
     PersonaRolService personaRolService;
 
+    @Mock sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ProcedimientoPasoService procedimientoPasoService;
+
     @InjectMocks
     ConsultaProcedimientoPasoMapper mapper;
 
@@ -46,6 +48,9 @@ class ConsultaProcedimientoPasoMapperTest {
         entidad.setValor(valor);
         entidad.setIdConsultaProcedimiento(consultaProcedimiento);
         entidad.setIdPersonaRol(personaRol);
+        var definicion = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPaso(UUID.randomUUID());
+        entidad.setIdProcedimientoPaso(definicion);
+        when(procedimientoPasoService.findById(definicion.getIdProcedimientoPaso())).thenReturn(definicion);
 
         ConsultaProcedimientoPasoDTO dto = mapper.toDTO(entidad);
         assertEquals(id, dto.id());
@@ -68,6 +73,8 @@ class ConsultaProcedimientoPasoMapperTest {
         assertEquals(valor, vuelta.getValor());
         assertSame(consultaProcedimiento, vuelta.getIdConsultaProcedimiento());
         assertSame(personaRol, vuelta.getIdPersonaRol());
+        assertSame(definicion, vuelta.getIdProcedimientoPaso());
+        assertEquals(definicion.getIdProcedimientoPaso(), dto.idProcedimientoPaso());
     }
 
     @Test
@@ -76,9 +83,11 @@ class ConsultaProcedimientoPasoMapperTest {
         ConsultaProcedimientoPaso destino = new ConsultaProcedimientoPaso(idDestino);
         ConsultaProcedimiento consultaProcedimiento = new ConsultaProcedimiento(UUID.randomUUID());
         PersonaRol personaRol = new PersonaRol(UUID.randomUUID());
+        var definicion = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPaso(UUID.randomUUID());
+        when(procedimientoPasoService.findById(definicion.getIdProcedimientoPaso())).thenReturn(definicion);
         ConsultaProcedimientoPasoDTO dto = new ConsultaProcedimientoPasoDTO(UUID.randomUUID(), null, null,
                 "EN_PROCESO", consultaProcedimiento.getIdConsultaProcedimiento(), personaRol.getIdPersonaRol(),
-                "{\"temperatura\":37.5}");
+                "{\"temperatura\":37.5}", definicion.getIdProcedimientoPaso());
         when(consultaProcedimientoService.findById(consultaProcedimiento.getIdConsultaProcedimiento()))
                 .thenReturn(consultaProcedimiento);
         when(personaRolService.findById(personaRol.getIdPersonaRol())).thenReturn(personaRol);

@@ -7,7 +7,8 @@ package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.jsf;
  * <pre>
  *   PENDIENTE → EN_CURSO → COMPLETADO
  * </pre>
- * Cualquier otro salto es inválido y debe rechazarse en el Model.
+ * También admite completar un pendiente y guardar sin cambiar el estado.
+ * El retroceso se ejecuta sobre el flujo completo desde el servicio.
  */
 public enum EstadoPaso {
 
@@ -36,11 +37,17 @@ public enum EstadoPaso {
             // Al crear un paso nuevo solo se puede arrancar en PENDIENTE
             return destino == PENDIENTE;
         }
+        if (origen == destino) return true;
         return switch (origen) {
-            case PENDIENTE   -> destino == EN_CURSO;
+            case PENDIENTE   -> destino == EN_CURSO || destino == COMPLETADO;
             case EN_CURSO    -> destino == COMPLETADO;
             case COMPLETADO  -> false; // estado terminal
         };
+    }
+
+    /** El retroceso requiere una definición anterior y se ejecuta sobre el flujo completo. */
+    public static boolean puedeRetroceder(EstadoPaso estado, boolean tieneAnterior) {
+        return estado != null && tieneAnterior;
     }
 
     /**

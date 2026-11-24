@@ -37,6 +37,14 @@ public class ConsultaService extends DefaultService<Consulta, UUID> implements S
         return consultaDAO.count(filtroGlobal, filtrosPorPaciente(pacienteId));
     }
 
+    public List<Consulta> findRangeRest(int first, int max, FiltroConsultasRest filtro) {
+        return consultaDAO.findRangeRest(first, max, filtro);
+    }
+
+    public long countRest(FiltroConsultasRest filtro) {
+        return consultaDAO.countRest(filtro);
+    }
+
     private List<FiltroConsulta> filtrosPorPaciente(UUID pacienteId) {
         return pacienteId == null ? List.of()
                 : List.of(new FiltroConsulta("idPersonaRol.idPersonaRol", pacienteId, "EQUALS"));

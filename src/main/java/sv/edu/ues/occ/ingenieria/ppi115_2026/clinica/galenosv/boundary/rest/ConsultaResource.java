@@ -43,6 +43,12 @@ public class ConsultaResource extends GenericResource<Consulta, ConsultaDTO, UUI
     @QueryParam("pacienteId")
     String pacienteId;
 
+    @QueryParam("idClinica") String idClinica;
+    @QueryParam("idRol") String idRol;
+    @QueryParam("desde") String desde;
+    @QueryParam("hasta") String hasta;
+
+
     @GET
     @Path("/{id}/ticket")
     @Produces("application/pdf")
@@ -81,11 +87,35 @@ public class ConsultaResource extends GenericResource<Consulta, ConsultaDTO, UUI
     @Override
     @GET
     @PermitAll
-    @Operation(summary = "Lista los recursos de forma paginada con filtro opcional por pacienteId")
+    @Operation(summary = "Lista consultas filtradas antes de paginar",
+            description = "Todos los filtros se combinan con AND. idRol corresponde al paso vigente de cada "
+                    + "procedimiento: EN_CURSO, luego PENDIENTE, o el último completado si no hay abiertos. "
+                    + "total y total-registros contienen el conteo filtrado.")
+    @org.eclipse.microprofile.openapi.annotations.parameters.Parameters({
+        @org.eclipse.microprofile.openapi.annotations.parameters.Parameter(name = "pacienteId", in = org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.QUERY, description = "UUID de la relación paciente persona-rol"),
+        @org.eclipse.microprofile.openapi.annotations.parameters.Parameter(name = "idClinica", in = org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.QUERY, description = "UUID de la clínica de la consulta"),
+        @org.eclipse.microprofile.openapi.annotations.parameters.Parameter(name = "idRol", in = org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.QUERY, description = "UUID del rol responsable del paso vigente"),
+        @org.eclipse.microprofile.openapi.annotations.parameters.Parameter(name = "desde", in = org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.QUERY, description = "Inicio inclusivo de fechaInicio: YYYY-MM-DD en America/El_Salvador o fecha-hora ISO 8601 con zona"),
+        @org.eclipse.microprofile.openapi.annotations.parameters.Parameter(name = "hasta", in = org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.QUERY, description = "Fin inclusivo de fechaInicio; YYYY-MM-DD incluye todo el día en America/El_Salvador, o fecha-hora ISO 8601 con zona")
+    })
     public PageResponse<ConsultaDTO> listar(
             @QueryParam("first") @jakarta.ws.rs.DefaultValue("0") int first,
             @QueryParam("max") @jakarta.ws.rs.DefaultValue("20") int max,
             @QueryParam("q") String q) {
+        if (idClinica != null || idRol != null || desde != null || hasta != null) {
+            if (first < 0 || max < 1) throw new BadRequestException("Paginación inválida.");
+            var inicio = fechaFiltro(desde, false);
+            var fin = fechaFiltro(hasta, true);
+            if (inicio != null && fin != null && inicio.after(fin)) {
+                throw new BadRequestException("desde no puede ser posterior a hasta.");
+            }
+            var filtro = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.FiltroConsultasRest(
+                    uuidFiltro(pacienteId, "pacienteId"), uuidFiltro(idClinica, "idClinica"),
+                    uuidFiltro(idRol, "idRol"), inicio, fin, q);
+            max = Math.min(max, 100);
+            var items = consultaService.findRangeRest(first, max, filtro).stream().map(getMapper()::toDTO).toList();
+            return new PageResponse<>(items, consultaService.countRest(filtro), first, max);
+        }
         if (pacienteId == null) {
             return super.listar(first, max, q);
         }
@@ -111,6 +141,28 @@ public class ConsultaResource extends GenericResource<Consulta, ConsultaDTO, UUI
                 .toList();
         long total = consultaService.count(filtro, id);
         return new PageResponse<>(items, total, first, max);
+    }
+
+    private UUID uuidFiltro(String valor, String nombre) {
+        if (valor == null) return null;
+        try {
+            UUID id = UUID.fromString(valor.trim());
+            if (!id.toString().equalsIgnoreCase(valor.trim())) throw new IllegalArgumentException();
+            return id;
+        } catch (IllegalArgumentException e) { throw new BadRequestException(nombre + " debe ser un UUID válido."); }
+    }
+
+    private java.util.Date fechaFiltro(String valor, boolean fin) {
+        if (valor == null) return null;
+        try {
+            if (valor.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}")) {
+                var fecha = java.time.LocalDate.parse(valor);
+                var zona = java.time.ZoneId.of("America/El_Salvador");
+                var instante = (fin ? fecha.plusDays(1) : fecha).atStartOfDay(zona).toInstant();
+                return java.util.Date.from(fin ? instante.minusMillis(1) : instante);
+            }
+            return java.util.Date.from(java.time.OffsetDateTime.parse(valor).toInstant());
+        } catch (java.time.DateTimeException e) { throw new BadRequestException("Fecha inválida: use YYYY-MM-DD o fecha-hora ISO 8601 con zona."); }
     }
 
     @Override

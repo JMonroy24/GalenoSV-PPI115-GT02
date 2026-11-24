@@ -64,6 +64,7 @@ class EsquemaProfesorTest {
         assertNull(getClass().getResource("/db/migration/V3__fecha_nacimiento_sin_hora.sql"));
         assertNull(getClass().getResource("/db/migration/V4__consulta_procedimiento_paso_valor.sql"));
         assertNull(getClass().getResource("/db/migration/V5__hu4_orden_examen_y_pasos.sql"));
+        assertNull(getClass().getResource("/db/migration/V6__hu3_hu4_regularizar_pasos.sql"));
     }
 
     @Test

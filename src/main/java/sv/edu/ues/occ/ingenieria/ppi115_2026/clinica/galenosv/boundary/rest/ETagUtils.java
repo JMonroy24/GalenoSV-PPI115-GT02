@@ -47,10 +47,7 @@ public final class ETagUtils {
             if ("*".equals(valor)) {
                 return true;
             }
-            if (valor.startsWith("W/")) {
-                continue;
-            }
-            if (actual.equals(valor)) {
+            if (actual.equals(sinDebilidad(valor))) {
                 return true;
             }
         }

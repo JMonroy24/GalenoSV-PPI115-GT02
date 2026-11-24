@@ -374,3 +374,35 @@ Proyecto académico desarrollado para el curso **PPI-115 (2026)** de la
 Facultad Multidisciplinaria de Occidente, Universidad de El Salvador.
 
 Desarrollado por **Melvin Monroy**, **Josue Escobar** y **Benito Palma**.
+
+### Flujo REST HU3/HU4
+
+Antes de desplegar, aplique `src/main/db/migration/V6__hu3_hu4_regularizar_pasos.sql`
+en una transacción después de V4 y V5. Vincula pasos históricos únicamente cuando
+hay un candidato por procedimiento y rol, aproxima las finalizaciones faltantes
+con `COALESCE(paso.fecha_inicio, consulta.fecha_inicio, CURRENT_TIMESTAMP)` y evita
+nuevas definiciones nulas o ejecuciones activas duplicadas. Conserva el historial.
+
+`GET /api/v1/consultas` acepta `idClinica`, `idRol`, `desde`, `hasta`, `pacienteId`,
+`q`, `first` y `max`. Todos los filtros se combinan antes de paginar y el mismo
+predicado calcula `total` / `total-registros`. `pacienteId` identifica la relación
+persona-rol del paciente. Las fechas filtran `consulta.fechaInicio` inclusivamente:
+`YYYY-MM-DD` cubre el día en `America/El_Salvador`; también se aceptan fechas-hora
+ISO 8601 con zona. `idRol` busca el rol del paso vigente por procedimiento
+(EN_CURSO; en su ausencia PENDIENTE; sin abiertos, el último completado).
+
+El PATCH de pasos conserva `estadoPaso`, `valor` e `If-Match` y admite el ETag
+recibido directamente del GET. Completar un paso registra su `fechaFin` una sola
+vez y activa su sucesor con un responsable del rol en la clínica. Un paso con
+`indicaFin=true` finaliza también el procedimiento y la consulta. Los reintentos
+no duplican el sucesor. Para retroceder desde un paso que tiene antecesor:
+
+```json
+{"estadoPaso":"EN_CURSO","valor":"{}","accion":"RETROCEDER"}
+```
+
+El paso solicitado queda PENDIENTE, se reactiva su antecesor y se reabre la
+consulta. Se conservan los formularios y las fechas de finalización históricas.
+El retroceso del primer paso o desde una fila que tiene sucesores vigentes se
+rechaza. Un ETag obsoleto devuelve 412; falta de If-Match, 428; una relación,
+transición, rol, clínica o examen no válido, 422.

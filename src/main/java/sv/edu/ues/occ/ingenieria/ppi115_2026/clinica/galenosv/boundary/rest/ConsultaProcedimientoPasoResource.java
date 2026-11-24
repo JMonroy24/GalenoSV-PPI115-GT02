@@ -35,7 +35,9 @@ public class ConsultaProcedimientoPasoResource
     @PATCH
     @Path("/{id}")
     @PermitAll
-    @Operation(summary = "Actualiza estadoPaso y valor del formulario usando If-Match")
+    @Operation(summary = "Actualiza el paso y ejecuta su transición usando If-Match",
+            description = "Al completar activa el sucesor o cierra la consulta. Para volver al paso anterior, "
+                    + "envíe accion=RETROCEDER manteniendo estadoPaso y valor. Devuelve 412 si el ETag cambió.")
     public Response actualizarFormulario(@PathParam("id") String id,
             @HeaderParam("If-Match") String ifMatch,
             @Valid ConsultaProcedimientoPasoActualizacionDTO dto) {
@@ -43,7 +45,13 @@ public class ConsultaProcedimientoPasoResource
             throw new PreconditionRequiredException(
                     "Debe enviar el encabezado If-Match con el ETag actual del recurso.");
         }
-        ConsultaProcedimientoPaso entidad = consultaProcedimientoPasoService.actualizarFormulario(
+        if (dto.accion() != null && !"RETROCEDER".equals(dto.accion())) {
+            throw new jakarta.ws.rs.BadRequestException("Acción no válida.");
+        }
+        ConsultaProcedimientoPaso entidad = "RETROCEDER".equals(dto.accion())
+                ? consultaProcedimientoPasoService.retroceder(parseId(id),
+                        paso -> ETagUtils.coincide(ifMatch, ETagUtils.calcular(getMapper().toDTO(paso))), dto.valor())
+                : consultaProcedimientoPasoService.actualizarFormulario(
                 parseId(id),
                 paso -> ETagUtils.coincide(ifMatch, ETagUtils.calcular(getMapper().toDTO(paso))),
                 dto.estadoPaso(), dto.valor());

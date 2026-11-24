@@ -75,10 +75,16 @@ class ModelValidacionesTest {
         var rol = new Rol(UUID.randomUUID()); rol.setActivo(true); rol.setNombre("Paciente");
         var paciente = new PersonaRol(UUID.randomUUID()); paciente.setIdClinica(clinica); paciente.setIdRol(rol); consulta.setIdPersonaRol(paciente);
         var cp = new ConsultaProcedimiento(UUID.randomUUID()); cp.setFechaInicio(new Date(100)); cp.setFechaFin(new Date(1));
-        var paso = new ConsultaProcedimientoPaso(UUID.randomUUID()); paso.setFechaInicio(new Date(100)); paso.setFechaFin(new Date(1)); paso.setEstado("Registrado");
+        var paso = sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.FixturesClinicos.pasoValido(); paso.setFechaInicio(new Date(100)); paso.setFechaFin(new Date(1));
         var cs = new ConsultaService(mock(ConsultaDAO.class));
         var cps = new ConsultaProcedimientoService(mock(ConsultaProcedimientoDAO.class));
-        var cpps = new ConsultaProcedimientoPasoService(mock(ConsultaProcedimientoPasoDAO.class));
+        var pasoDao = mock(ConsultaProcedimientoPasoDAO.class);
+        var emPaso = mock(jakarta.persistence.EntityManager.class);
+        var secuenciasPaso = mock(jakarta.persistence.TypedQuery.class, RETURNS_SELF);
+        when(pasoDao.getEntityManager()).thenReturn(emPaso);
+        when(emPaso.createNamedQuery("ProcedimientoPasoSecuencia.findByProcedimiento", ProcedimientoPasoSecuencia.class)).thenReturn(secuenciasPaso);
+        when(secuenciasPaso.getResultList()).thenReturn(java.util.List.of());
+        var cpps = new ConsultaProcedimientoPasoService(pasoDao);
         assertThrows(ValidacionNegocioException.class, () -> cs.crear(consulta));
         assertThrows(ValidacionNegocioException.class, () -> cps.crear(cp));
         assertThrows(ValidacionNegocioException.class, () -> cpps.crear(paso));
@@ -111,7 +117,7 @@ class ModelValidacionesTest {
         assertThrows(ValidacionNegocioException.class, () -> ordenService.crear(orden));
         orden.setIndicaciones(" Tomar muestra ");
         assertThrows(ValidacionNegocioException.class, () -> ordenService.crear(orden));
-        orden.setIdConsultaProcedimientoPaso(new ConsultaProcedimientoPaso(UUID.randomUUID()));
+        orden.setIdConsultaProcedimientoPaso(sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.FixturesClinicos.pasoValido());
         assertDoesNotThrow(() -> ordenService.crear(orden));
         assertEquals("Tomar muestra", orden.getIndicaciones());
         var resultado = new ExamenResultado(UUID.randomUUID());

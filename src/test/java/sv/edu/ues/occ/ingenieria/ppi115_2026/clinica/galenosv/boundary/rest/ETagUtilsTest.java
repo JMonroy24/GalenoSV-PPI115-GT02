@@ -59,7 +59,7 @@ class ETagUtilsTest {
     void noCoincideConEtagDebilDiferenteONulo() {
         String etag = ETagUtils.calcular(new DTO(ID, "Consulta", Boolean.TRUE));
 
-        assertFalse(ETagUtils.coincide(etag, etag));
+        assertTrue(ETagUtils.coincide(etag, etag));
         assertFalse(ETagUtils.coincide("W/\"distinto\"", etag));
         assertFalse(ETagUtils.coincide(null, etag));
         assertFalse(ETagUtils.coincide(etag, null));

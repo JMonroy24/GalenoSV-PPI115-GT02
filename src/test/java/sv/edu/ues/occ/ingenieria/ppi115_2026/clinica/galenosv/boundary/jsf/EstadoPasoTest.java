@@ -11,8 +11,8 @@ class EstadoPasoTest {
         assertFalse(EstadoPaso.transicionValida(null, EstadoPaso.EN_CURSO));
 
         assertTrue(EstadoPaso.transicionValida(EstadoPaso.PENDIENTE, EstadoPaso.EN_CURSO));
-        assertFalse(EstadoPaso.transicionValida(EstadoPaso.PENDIENTE, EstadoPaso.COMPLETADO));
-        assertFalse(EstadoPaso.transicionValida(EstadoPaso.PENDIENTE, EstadoPaso.PENDIENTE));
+        assertTrue(EstadoPaso.transicionValida(EstadoPaso.PENDIENTE, EstadoPaso.COMPLETADO));
+        assertTrue(EstadoPaso.transicionValida(EstadoPaso.PENDIENTE, EstadoPaso.PENDIENTE));
 
         assertTrue(EstadoPaso.transicionValida(EstadoPaso.EN_CURSO, EstadoPaso.COMPLETADO));
         assertFalse(EstadoPaso.transicionValida(EstadoPaso.EN_CURSO, EstadoPaso.PENDIENTE));

@@ -100,4 +100,50 @@ public class ConsultaDAO extends DefaultDAO<Consulta, UUID> implements Serializa
                 .setParameter("patron", patronBusqueda(texto))
                 .setMaxResults(limitarAutocompletado(max)).getResultList();
     }
+    public List<Consulta> findRangeRest(int first, int max, FiltroConsultasRest filtro) {
+        if (first < 0 || max < 1) throw new IllegalArgumentException("Paginación inválida.");
+        return consultaRest(false, Consulta.class, filtro).setFirstResult(first).setMaxResults(max).getResultList();
+    }
+
+    public long countRest(FiltroConsultasRest filtro) {
+        return consultaRest(true, Long.class, filtro).getSingleResult();
+    }
+
+    /** EXISTS conserva una fila por consulta, incluso con varios procedimientos y pasos. */
+    private <T> jakarta.persistence.TypedQuery<T> consultaRest(boolean contar, Class<T> tipo, FiltroConsultasRest f) {
+        StringBuilder jpql = new StringBuilder(contar ? "SELECT COUNT(c) FROM Consulta c WHERE 1=1"
+                : "SELECT c FROM Consulta c WHERE 1=1");
+        java.util.Map<String, Object> parametros = new java.util.LinkedHashMap<>();
+        if (f.pacienteId() != null) {
+            jpql.append(" AND c.idPersonaRol.idPersonaRol = :paciente"); parametros.put("paciente", f.pacienteId());
+        }
+        if (f.idClinica() != null) {
+            jpql.append(" AND c.idPersonaRol.idClinica.idClinica = :clinica"); parametros.put("clinica", f.idClinica());
+        }
+        if (f.desde() != null) { jpql.append(" AND c.fechaInicio >= :desde"); parametros.put("desde", f.desde()); }
+        if (f.hasta() != null) { jpql.append(" AND c.fechaInicio <= :hasta"); parametros.put("hasta", f.hasta()); }
+        if (normalizarFiltro(f.q()) != null) {
+            jpql.append(" AND (LOWER(c.referenciaExterna) LIKE :patron ESCAPE '\\'"
+                    + " OR LOWER(c.observaciones) LIKE :patron ESCAPE '\\')");
+            parametros.put("patron", patronBusqueda(f.q()));
+        }
+        if (f.idRol() != null) {
+            jpql.append(" AND EXISTS (SELECT p FROM ConsultaProcedimientoPaso p"
+                    + " WHERE p.idConsultaProcedimiento.idConsulta = c"
+                    + " AND p.idProcedimientoPaso.idRol.idRol = :rol"
+                    + " AND p.idProcedimientoPaso.idRol.activo = true"
+                    + " AND (p.estado = 'EN_CURSO'"
+                    + " OR (p.estado = 'PENDIENTE' AND NOT EXISTS (SELECT a FROM ConsultaProcedimientoPaso a"
+                    + " WHERE a.idConsultaProcedimiento = p.idConsultaProcedimiento AND a.estado = 'EN_CURSO'))"
+                    + " OR (p.estado = 'COMPLETADO' AND NOT EXISTS (SELECT a FROM ConsultaProcedimientoPaso a"
+                    + " WHERE a.idConsultaProcedimiento = p.idConsultaProcedimiento"
+                    + " AND (a.estado IN ('PENDIENTE', 'EN_CURSO') OR a.fechaInicio > p.fechaInicio)))))");
+            parametros.put("rol", f.idRol());
+        }
+        if (!contar) jpql.append(" ORDER BY c.fechaInicio DESC, c.idConsulta");
+        var query = em.createQuery(jpql.toString(), tipo);
+        parametros.forEach(query::setParameter);
+        return query;
+    }
+
 }

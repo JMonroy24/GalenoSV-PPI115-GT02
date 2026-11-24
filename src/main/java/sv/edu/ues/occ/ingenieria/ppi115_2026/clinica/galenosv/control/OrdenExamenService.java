@@ -35,7 +35,11 @@ public class OrdenExamenService extends DefaultService<OrdenExamen, UUID> implem
         }
         r.setIndicaciones(r.getIndicaciones() == null || r.getIndicaciones().isBlank()
                 ? "" : r.getIndicaciones().trim());
-        ValidadorComun.requerido(r.getIdConsultaProcedimientoPaso(), "Seleccione un paso de la consulta.");
+        var paso = ValidadorComun.requerido(r.getIdConsultaProcedimientoPaso(), "Seleccione un paso de la consulta.");
+        ConsultaProcedimientoPasoService.validarRelaciones(paso);
+        if (r.getIdExamen() != null) {
+            ValidadorComun.activo(r.getIdExamen().getActivo(), "El examen");
+        }
     }
 
     public OrdenExamenDAO getOrdenExamenDAO() {

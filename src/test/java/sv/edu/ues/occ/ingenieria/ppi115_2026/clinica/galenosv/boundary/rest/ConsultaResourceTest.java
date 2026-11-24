@@ -201,4 +201,30 @@ class ConsultaResourceTest {
         assertEquals(204, respuesta.getStatus());
         verify(consultaService).eliminar(entidad);
     }
+    @Test void filtrosClinicosSeCombinanConPacienteYConteo() {
+        UUID clinica = UUID.randomUUID(), rol = UUID.randomUUID(), paciente = UUID.randomUUID();
+        consultaResource.idClinica = clinica.toString(); consultaResource.idRol = rol.toString();
+        consultaResource.pacienteId = paciente.toString(); consultaResource.desde = "2026-11-01"; consultaResource.hasta = "2026-11-24";
+        when(consultaService.findRangeRest(eq(2), eq(10), any())).thenReturn(List.of());
+        when(consultaService.countRest(any())).thenReturn(8L);
+        var respuesta = consultaResource.listar(2, 10, "ref");
+        var captor = org.mockito.ArgumentCaptor.forClass(sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.FiltroConsultasRest.class);
+        verify(consultaService).findRangeRest(eq(2), eq(10), captor.capture());
+        var filtro = captor.getValue(); verify(consultaService).countRest(filtro);
+        assertEquals(clinica, filtro.idClinica()); assertEquals(rol, filtro.idRol()); assertEquals(paciente, filtro.pacienteId());
+        assertEquals(java.time.Instant.parse("2026-11-01T06:00:00Z"), filtro.desde().toInstant());
+        assertEquals(java.time.Instant.parse("2026-11-25T05:59:59.999Z"), filtro.hasta().toInstant());
+        assertEquals(8L, respuesta.total()); assertEquals(2, respuesta.first());
+    }
+
+    @Test void filtrosRechazanFechasRangosYUuidInvalidos() {
+        consultaResource.desde = "2026-02-30";
+        assertThrows(jakarta.ws.rs.BadRequestException.class, () -> consultaResource.listar(0, 20, null));
+        consultaResource.desde = "2026-11-24"; consultaResource.hasta = "2026-11-01";
+        assertThrows(jakarta.ws.rs.BadRequestException.class, () -> consultaResource.listar(0, 20, null));
+        consultaResource.desde = null; consultaResource.hasta = null; consultaResource.idRol = "invalido";
+        assertThrows(jakarta.ws.rs.BadRequestException.class, () -> consultaResource.listar(0, 20, null));
+        verifyNoInteractions(consultaService);
+    }
+
 }

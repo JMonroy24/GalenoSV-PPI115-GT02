@@ -32,7 +32,7 @@ class OrdenExamenServiceTest {
     void crearAsignaFechaDeCreacionCuandoNoViene() {
         OrdenExamen nuevo = new OrdenExamen(UUID.randomUUID());
         nuevo.setIndicaciones("Ayuno de 8 horas");
-        nuevo.setIdConsultaProcedimientoPaso(new ConsultaProcedimientoPaso(UUID.randomUUID()));
+        nuevo.setIdConsultaProcedimientoPaso(FixturesClinicos.pasoValido());
 
         ordenExamenService.crear(nuevo);
 
@@ -43,10 +43,10 @@ class OrdenExamenServiceTest {
     @Test
     void indicacionesVaciasSeNormalizanACadenaVacia() {
         OrdenExamen sinIndicaciones = new OrdenExamen(UUID.randomUUID());
-        sinIndicaciones.setIdConsultaProcedimientoPaso(new ConsultaProcedimientoPaso(UUID.randomUUID()));
+        sinIndicaciones.setIdConsultaProcedimientoPaso(FixturesClinicos.pasoValido());
         OrdenExamen conEspacios = new OrdenExamen(UUID.randomUUID());
         conEspacios.setIndicaciones("   ");
-        conEspacios.setIdConsultaProcedimientoPaso(new ConsultaProcedimientoPaso(UUID.randomUUID()));
+        conEspacios.setIdConsultaProcedimientoPaso(FixturesClinicos.pasoValido());
 
         ordenExamenService.crear(sinIndicaciones);
         ordenExamenService.crear(conEspacios);
@@ -62,11 +62,24 @@ class OrdenExamenServiceTest {
         OrdenExamen existente = new OrdenExamen(UUID.randomUUID());
         existente.setFechaCreacion(fechaOriginal);
         existente.setIndicaciones("Ayuno de 8 horas");
-        existente.setIdConsultaProcedimientoPaso(new ConsultaProcedimientoPaso(UUID.randomUUID()));
+        existente.setIdConsultaProcedimientoPaso(FixturesClinicos.pasoValido());
 
         ordenExamenService.actualizar(existente);
 
         assertEquals(fechaOriginal, existente.getFechaCreacion());
         verify(ordenExamenDAO).update(existente);
     }
+    @Test void rechazaExamenInactivoYRolOClinicaInactivos() {
+        var orden = new OrdenExamen(UUID.randomUUID()); var paso = FixturesClinicos.pasoValido();
+        orden.setIdConsultaProcedimientoPaso(paso);
+        var examen = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Examen(UUID.randomUUID());
+        examen.setActivo(false); orden.setIdExamen(examen);
+        assertThrows(ValidacionNegocioException.class, () -> ordenExamenService.crear(orden));
+        examen.setActivo(true); paso.getIdPersonaRol().getIdRol().setActivo(false);
+        assertThrows(ValidacionNegocioException.class, () -> ordenExamenService.crear(orden));
+        paso.getIdPersonaRol().getIdRol().setActivo(true); paso.getIdPersonaRol().getIdClinica().setActivo(false);
+        assertThrows(ValidacionNegocioException.class, () -> ordenExamenService.crear(orden));
+        verify(ordenExamenDAO, never()).create(any());
+    }
+
 }

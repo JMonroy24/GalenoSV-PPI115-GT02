@@ -151,6 +151,16 @@ public class AsignacionService {
         procedimiento.setIdProcedimiento(definicion);
         paso.setIdPersonaRol(responsable);
         paso.setIdConsultaProcedimiento(procedimiento);
+        var inicio = new ProcedimientoPasoDAO(em).findPasoInicial(definicion.getIdProcedimiento());
+        ValidadorComun.requerido(inicio, "El procedimiento no tiene paso inicial.");
+        if (paso.getIdProcedimientoPaso() != null
+                && !inicio.equals(paso.getIdProcedimientoPaso())) {
+            throw new ValidacionNegocioException("Debe asignar el paso inicial del procedimiento.");
+        }
+        paso.setIdProcedimientoPaso(inicio);
+        ConsultaProcedimientoPasoService.validarRelaciones(paso);
+        paso.setEstado("PENDIENTE");
+        if (paso.getFechaInicio() == null) paso.setFechaInicio(new java.util.Date());
         if (consulta.getConsultaProcedimientoList() == null) {
             consulta.setConsultaProcedimientoList(new ArrayList<>());
         }

@@ -76,4 +76,38 @@ public class ConsultaProcedimientoPasoDAO extends DefaultDAO<ConsultaProcedimien
                 .orderBy(cb.asc(root.get("fechaInicio")));
         return em.createQuery(cq).getResultList();
     }
+    /** Bloquea primero el padre y refresca el paso para comparar el ETag con datos actuales. */
+    public ConsultaProcedimientoPaso findByIdParaFlujo(UUID id) {
+        var paso = em.find(ConsultaProcedimientoPaso.class, id);
+        if (paso == null) return null;
+        bloquearConsulta(paso);
+        em.refresh(paso, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        return paso;
+    }
+
+    public void bloquearConsulta(ConsultaProcedimientoPaso paso) {
+        var referencia = ValidadorComun.requerido(paso.getIdConsultaProcedimiento(), "Seleccione un procedimiento de consulta.");
+        // Los mappers REST resuelven relaciones antes de entrar en la transacción: pueden estar detached.
+        var asignado = ValidadorComun.requerido(em.find(
+                sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ConsultaProcedimiento.class,
+                referencia.getIdConsultaProcedimiento()), "El procedimiento de consulta ya no existe.");
+        var consulta = ValidadorComun.requerido(asignado.getIdConsulta(), "El procedimiento debe pertenecer a una consulta.");
+        consulta = em.find(sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta.class,
+                consulta.getIdConsulta(), jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        em.refresh(consulta, jakarta.persistence.LockModeType.PESSIMISTIC_WRITE);
+        em.refresh(asignado);
+        paso.setIdConsultaProcedimiento(asignado);
+    }
+
+    public ConsultaProcedimientoPaso findRegistro(UUID asignado, UUID definicion) {
+        var resultados = em.createQuery("SELECT p FROM ConsultaProcedimientoPaso p"
+                + " WHERE p.idConsultaProcedimiento.idConsultaProcedimiento = :asignado"
+                + " AND p.idProcedimientoPaso.idProcedimientoPaso = :definicion"
+                + " ORDER BY CASE WHEN p.estado = 'EN_CURSO' THEN 0 WHEN p.estado = 'PENDIENTE' THEN 1 ELSE 2 END,"
+                + " p.fechaInicio DESC, p.idConsultaProcedimientoPaso", ConsultaProcedimientoPaso.class)
+                .setParameter("asignado", asignado).setParameter("definicion", definicion)
+                .setHint("eclipselink.refresh", true).getResultList();
+        return resultados.isEmpty() ? null : resultados.getFirst();
+    }
+
 }

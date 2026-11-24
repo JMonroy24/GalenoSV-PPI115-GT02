@@ -176,6 +176,7 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
             return;
         }
         final PersonaRol responsable;
+        final sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.ProcedimientoPaso definicionInicial;
         try {
             validarPaciente(getRegistroActual());
             ValidadorComun.activo(procedimientoNuevo.getIdProcedimiento().getActivo(), "El procedimiento");
@@ -183,6 +184,7 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
                     getRegistroActual().getFechaInicio(), getRegistroActual().getFechaFin());
             var inicio = ValidadorComun.requerido(procedimientoPasoService.findPasoInicial(
                     procedimientoNuevo.getIdProcedimiento().getIdProcedimiento()), "El procedimiento no tiene pasos definidos.");
+            definicionInicial = inicio;
             var rol = ValidadorComun.requerido(inicio.getIdRol(), "El paso inicial debe tener un rol responsable.");
             ValidadorComun.activo(rol.getActivo(), "El rol del paso inicial");
             responsable = ValidadorComun.requerido(personaRolService.findResponsable(idClinicaActual(), rol.getIdRol()),
@@ -201,6 +203,7 @@ public class ConsultaModel extends ModelTransaccional<Consulta, UUID> implements
             inicio.setEstado(EstadoPaso.PENDIENTE.name());
             inicio.setFechaInicio(procedimientoNuevo.getFechaInicio());
             inicio.setIdPersonaRol(responsable);
+            inicio.setIdProcedimientoPaso(definicionInicial);
             inicio.setIdConsultaProcedimiento(procedimientoNuevo);
             asignacionService.crearProcedimientoConPaso(procedimientoNuevo, inicio);
             procedimientoActivo = procedimientoNuevo;

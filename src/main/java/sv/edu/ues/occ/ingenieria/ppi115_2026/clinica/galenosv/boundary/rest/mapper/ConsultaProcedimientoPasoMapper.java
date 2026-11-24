@@ -65,7 +65,7 @@ public class ConsultaProcedimientoPasoMapper
             return;
         }
         destino.setFechaInicio(dto.fechaInicio());
-        destino.setFechaFin(dto.fechaFin());
+        if (destino.getFechaFin() == null) destino.setFechaFin(dto.fechaFin());
         destino.setEstado(dto.estado());
         destino.setValor(dto.valor());
         destino.setIdConsultaProcedimiento(resolverConsultaProcedimiento(dto.idConsultaProcedimiento()));
@@ -75,7 +75,8 @@ public class ConsultaProcedimientoPasoMapper
 
     private ProcedimientoPaso resolverProcedimientoPaso(UUID id) {
         if (id == null) {
-            return null;
+            throw new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ValidacionNegocioException(
+                    "El paso de procedimiento es obligatorio.");
         }
         ProcedimientoPaso paso = procedimientoPasoService.findById(id);
         if (paso == null) {

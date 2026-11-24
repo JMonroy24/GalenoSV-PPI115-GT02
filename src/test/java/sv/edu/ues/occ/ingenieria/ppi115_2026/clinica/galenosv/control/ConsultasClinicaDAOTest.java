@@ -112,7 +112,13 @@ class ConsultasClinicaDAOTest {
         Consulta consultaSeparada = new Consulta(UUID.randomUUID());
         Consulta consultaAdministrada = new Consulta(consultaSeparada.getIdConsulta());
         Procedimiento definicion = new Procedimiento(UUID.randomUUID()); definicion.setActivo(true);
-        PersonaRol responsable = new PersonaRol(UUID.randomUUID());
+        var fixture = FixturesClinicos.pasoValido();
+        PersonaRol responsable = fixture.getIdPersonaRol();
+        consultaAdministrada.setIdPersonaRol(responsable);
+        var inicio = fixture.getIdProcedimientoPaso(); inicio.setIdProcedimiento(definicion);
+        var queryInicio = mock(TypedQuery.class, RETURNS_SELF);
+        when(servicio.em.createNamedQuery("ProcedimientoPaso.findPasoInicial", ProcedimientoPaso.class)).thenReturn(queryInicio);
+        when(queryInicio.getResultList()).thenReturn(List.of(inicio));
         cp.setIdConsulta(consultaSeparada); cp.setIdProcedimiento(definicion); paso.setIdPersonaRol(responsable);
         when(servicio.em.find(Consulta.class, consultaSeparada.getIdConsulta())).thenReturn(consultaAdministrada);
         when(servicio.em.find(Procedimiento.class, definicion.getIdProcedimiento())).thenReturn(definicion);

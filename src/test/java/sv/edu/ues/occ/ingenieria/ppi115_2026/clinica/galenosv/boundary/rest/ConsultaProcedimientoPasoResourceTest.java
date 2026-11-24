@@ -145,4 +145,18 @@ class ConsultaProcedimientoPasoResourceTest {
                 consultaProcedimientoPasoResource.actualizarFormulario(UUID.randomUUID().toString(), null, cambios));
         verifyNoInteractions(consultaProcedimientoPasoService);
     }
+    @Test void patchRetrocesoAceptaElEtagDevueltoPorGet() {
+        var paso = new ConsultaProcedimientoPaso(UUID.randomUUID());
+        var dto = new ConsultaProcedimientoPasoDTO(paso.getIdConsultaProcedimientoPaso(), null, null, "EN_CURSO", null, null, "");
+        when(consultaProcedimientoPasoMapper.toDTO(paso)).thenReturn(dto);
+        when(consultaProcedimientoPasoService.retroceder(eq(dto.id()), any(), eq(""))).thenAnswer(inv -> {
+            java.util.function.Predicate<ConsultaProcedimientoPaso> precondicion = inv.getArgument(1);
+            assertTrue(precondicion.test(paso)); return paso;
+        });
+        var respuesta = consultaProcedimientoPasoResource.actualizarFormulario(dto.id().toString(), ETagUtils.calcular(dto),
+                new ConsultaProcedimientoPasoActualizacionDTO("EN_CURSO", "", "RETROCEDER"));
+        assertEquals(200, respuesta.getStatus());
+        verify(consultaProcedimientoPasoService).retroceder(eq(dto.id()), any(), eq(""));
+    }
+
 }
