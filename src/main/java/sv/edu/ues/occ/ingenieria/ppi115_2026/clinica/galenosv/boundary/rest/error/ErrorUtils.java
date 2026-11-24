@@ -1,12 +1,17 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error;
 
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.LockTimeoutException;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
+import jakarta.persistence.PessimisticLockException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Path;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.sql.SQLException;
+import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -89,7 +94,36 @@ public final class ErrorUtils {
         if (ErroresConexion.esConexion(exception)) {
             return respuestaConexion(exception);
         }
-        return respuesta(ApiErrorCode.CONFLICT, null, Map.of());
+        if (esConflictoPersistencia(exception)) {
+            return respuesta(ApiErrorCode.CONFLICT, null, Map.of());
+        }
+        // Un SELECT inválido o un esquema desactualizado es un error del servidor.
+        return respuestaInterna(exception, LOG);
+    }
+
+    private static boolean esConflictoPersistencia(Throwable exception) {
+        Set<Throwable> visitados = Collections.newSetFromMap(new IdentityHashMap<>());
+        var pendientes = new ArrayDeque<Throwable>();
+        pendientes.add(exception);
+        while (!pendientes.isEmpty()) {
+            Throwable causa = pendientes.removeFirst();
+            if (!visitados.add(causa)) continue;
+            if (causa instanceof EntityExistsException || causa instanceof OptimisticLockException
+                    || causa instanceof PessimisticLockException || causa instanceof LockTimeoutException) {
+                return true;
+            }
+            if (causa instanceof SQLException sql) {
+                String estado = sql.getSQLState();
+                // Integridad, concurrencia y bloqueo: conflictos con el estado de los datos.
+                if (estado != null && (estado.startsWith("23") || estado.startsWith("40")
+                        || "55P03".equals(estado))) {
+                    return true;
+                }
+                if (sql.getNextException() != null) pendientes.add(sql.getNextException());
+            }
+            if (causa.getCause() != null) pendientes.add(causa.getCause());
+        }
+        return false;
     }
 
     static Response respuestaConexion(Throwable exception) {

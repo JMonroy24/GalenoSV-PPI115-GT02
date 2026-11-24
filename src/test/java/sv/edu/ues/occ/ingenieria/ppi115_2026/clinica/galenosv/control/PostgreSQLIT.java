@@ -49,6 +49,8 @@ class PostgreSQLIT {
         try (var c = DriverManager.getConnection(url, usuario, password); var s = c.createStatement()) {
             s.execute(java.nio.file.Files.readString(java.nio.file.Path.of(
                     "src/main/db/migration/V4__consulta_procedimiento_paso_valor.sql")));
+            s.execute(java.nio.file.Files.readString(java.nio.file.Path.of(
+                    "src/main/db/migration/V5__hu4_orden_examen_y_pasos.sql")));
         }
         factory = Persistence.createEntityManagerFactory("GalenoSV_TEST", Map.of(
                 "jakarta.persistence.jdbc.url", url,
@@ -65,6 +67,52 @@ class PostgreSQLIT {
 
     private Connection conexion() throws SQLException {
         return DriverManager.getConnection(url, usuario, password);
+    }
+
+    @Test
+    void detalleConsultaLeePasosConRelacionOpcionalDespuesDeV5() {
+        EntityManager em = factory.createEntityManager();
+        try {
+            em.getTransaction().begin();
+            var consulta = new Consulta(UUID.randomUUID());
+            var procedimiento = new Procedimiento(UUID.randomUUID());
+            procedimiento.setNombre("Atención");
+            var definicion = new ProcedimientoPaso(UUID.randomUUID());
+            definicion.setNombre("Triaje");
+            definicion.setIdProcedimiento(procedimiento);
+            var asignado = new ConsultaProcedimiento(UUID.randomUUID());
+            asignado.setIdConsulta(consulta);
+            asignado.setIdProcedimiento(procedimiento);
+            var registrado = new ConsultaProcedimientoPaso(UUID.randomUUID());
+            registrado.setIdConsultaProcedimiento(asignado);
+            registrado.setIdProcedimientoPaso(definicion);
+            registrado.setEstado("PENDIENTE");
+            registrado.setValor("{\"temperatura\":36.5}");
+            var anteriorAV5 = new ConsultaProcedimientoPaso(UUID.randomUUID());
+            anteriorAV5.setIdConsultaProcedimiento(asignado);
+            anteriorAV5.setEstado("COMPLETADO");
+            for (Object entidad : List.of(consulta, procedimiento, definicion, asignado, registrado, anteriorAV5)) {
+                em.persist(entidad);
+            }
+            em.flush();
+            em.clear();
+
+            var encontrada = new ConsultaService(new ConsultaDAO(em)).findById(consulta.getIdConsulta());
+            assertNotNull(encontrada);
+            var procedimientos = new ConsultaProcedimientoService(new ConsultaProcedimientoDAO(em))
+                    .findByConsulta(encontrada.getIdConsulta());
+            assertEquals(List.of(asignado), procedimientos);
+            var pasos = new ConsultaProcedimientoPasoService(new ConsultaProcedimientoPasoDAO(em))
+                    .findByConsultaProcedimiento(procedimientos.getFirst().getIdConsultaProcedimiento());
+            assertEquals(2, pasos.size());
+            var paso = pasos.stream().filter(registrado::equals).findFirst().orElseThrow();
+            assertEquals("Triaje", paso.getIdProcedimientoPaso().getNombre());
+            assertEquals(registrado.getValor(), paso.getValor());
+            assertNull(pasos.stream().filter(anteriorAV5::equals).findFirst().orElseThrow().getIdProcedimientoPaso());
+        } finally {
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
+            em.close();
+        }
     }
 
     @Test

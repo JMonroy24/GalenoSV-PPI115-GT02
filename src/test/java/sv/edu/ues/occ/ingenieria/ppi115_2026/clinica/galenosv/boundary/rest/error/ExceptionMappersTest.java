@@ -1,6 +1,8 @@
 package sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.error;
 
 import jakarta.persistence.PersistenceException;
+import jakarta.persistence.NonUniqueResultException;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.RollbackException;
 import jakarta.transaction.TransactionalException;
 import jakarta.validation.ConstraintViolation;
@@ -84,14 +86,15 @@ class ExceptionMappersTest {
     }
 
     @Test
-    void persistenceMapperDevuelve409SinFiltrarDetallesTecnicos() {
+    void persistenceMapperDevuelve500SinFiltrarDetallesTecnicos() {
         PersistenceException excepcion = new PersistenceException(
                 "SELECT * FROM clinica WHERE password = 'secreto'");
         Response respuesta = new PersistenceMapper().toResponse(excepcion);
 
-        assertEquals(409, respuesta.getStatus());
+        assertEquals(500, respuesta.getStatus());
         ApiErrorResponse cuerpo = cuerpo(respuesta);
-        assertEquals("CONFLICT", cuerpo.getErrorCode());
+        assertEquals("INTERNAL_ERROR", cuerpo.getErrorCode());
+        assertNotNull(cuerpo.getDetails().get("correlationId"));
         assertFalse(cuerpo.getMessage().contains("SELECT"));
         assertFalse(cuerpo.getMessage().contains("clinica"));
         assertFalse(cuerpo.getMessage().contains("secreto"));
@@ -173,13 +176,46 @@ class ExceptionMappersTest {
     }
 
     @Test
-    void persistenceMapperTraduceOtroSqlStateA409Generico() {
+    void persistenceMapperTraduceConflictoDeSerializacionA409() {
         Response respuesta = new PersistenceMapper().toResponse(
                 persistenciaConSqlState("40001"));
 
         assertEquals(409, respuesta.getStatus());
         assertEquals("CONFLICT", cuerpo(respuesta).getErrorCode());
         assertMensajeSeguro(cuerpo(respuesta).getMessage());
+    }
+
+    @Test
+    void columnaInexistenteEnLecturaDevuelve500ConCorrelationId() {
+        Response respuesta = new PersistenceMapper().toResponse(persistenciaConSqlState("42703"));
+
+        assertEquals(500, respuesta.getStatus());
+        assertEquals("INTERNAL_ERROR", cuerpo(respuesta).getErrorCode());
+        assertNotNull(UUID.fromString(cuerpo(respuesta).getDetails().get("correlationId").toString()));
+        assertMensajeSeguro(cuerpo(respuesta).getMessage());
+    }
+
+    @Test
+    void transactionalMapperNoOcultaColumnaInexistenteComoConflicto() {
+        Response respuesta = new TransactionalMapper().toResponse(
+                new TransactionalException("tx", persistenciaConSqlState("42703")));
+
+        assertEquals(500, respuesta.getStatus());
+        assertEquals("INTERNAL_ERROR", cuerpo(respuesta).getErrorCode());
+        assertNotNull(cuerpo(respuesta).getDetails().get("correlationId"));
+    }
+
+    @Test
+    void resultadosNoUnicosSonUnErrorInternoYBloqueoOptimistaSigueSiendoConflicto() {
+        assertEquals(500, new PersistenceMapper().toResponse(new NonUniqueResultException()).getStatus());
+        assertEquals(409, new PersistenceMapper().toResponse(new OptimisticLockException()).getStatus());
+    }
+
+    @Test
+    void detectaConflictoSqlEncadenadoSinConfundirloConErrorGenerico() {
+        SQLException batch = new SQLException("batch", "HY000");
+        batch.setNextException(new SQLException("duplicado", "23505"));
+        assertEquals(409, new PersistenceMapper().toResponse(new PersistenceException(batch)).getStatus());
     }
 
     @Test

@@ -291,6 +291,15 @@ Scripts de evolución del esquema, que deben ejecutarse **manualmente y en orden
 | `src/main/db/migration/V2__validaciones_integridad_y_version.sql` | Columna `version`, restricciones `NOT NULL` y validaciones de integridad (secuencias de pasos sin ciclos ni cruces entre procedimientos). |
 | `src/main/db/migration/V3__fecha_nacimiento_sin_hora.sql` | `persona.fecha_nacimiento` pasa a tipo `date`. |
 | `src/main/db/migration/V4__consulta_procedimiento_paso_valor.sql` | Agrega o amplía `consulta_procedimiento_paso.valor` como `TEXT` para el formulario médico JSON (micro-tarea 6.1.3). |
+| `src/main/db/migration/V5__hu4_orden_examen_y_pasos.sql` | Agrega las relaciones opcionales `consulta_procedimiento_paso.id_procedimiento_paso` y `orden_examen.id_examen`, con sus claves foráneas; permite indicaciones opcionales. |
+
+El detalle `GET /consultas/{id}` requiere V4 y V5, aunque el listado funcione sin V5.
+La lectura de los pasos selecciona `id_procedimiento_paso` por su mapeo JPA;
+si falta V5, PostgreSQL devuelve SQLState `42703` (columna inexistente).
+Ejecute las migraciones antes de desplegar el WAR: no se aplican automáticamente
+ni se debe alterar el esquema desde un GET. Los errores internos de persistencia
+devuelven `500 INTERNAL_ERROR` con `details.correlationId` y el stacktrace en el log;
+`409 CONFLICT` se conserva para integridad de datos y concurrencia.
 
 Para la micro-tarea 6.1.3, ejecute V4 sobre la base existente antes de desplegar
 el WAR actualizado. El script es idempotente y también se puede aplicar sobre

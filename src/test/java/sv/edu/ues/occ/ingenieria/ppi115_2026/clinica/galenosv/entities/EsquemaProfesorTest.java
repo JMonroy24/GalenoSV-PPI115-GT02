@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class EsquemaProfesorTest {
     @Test
-    void todosLosCamposJpaExistenEnElEsquemaConMigracionValorSinVersion() throws Exception {
+    void todosLosCamposJpaExistenEnElEsquemaConMigracionesV4YV5SinVersion() throws Exception {
         String sql;
         try (var recurso = getClass().getResourceAsStream("/db/clinica_ppi115_2026_08_20.sql")) {
             sql = new String(java.util.Objects.requireNonNull(recurso).readAllBytes(), StandardCharsets.UTF_8);
@@ -31,9 +31,10 @@ class EsquemaProfesorTest {
             while (campos.find()) columnas.add(campos.group(1)); tablas.put(matcher.group(1), columnas);
         }
         String migracion = Files.readString(Path.of(
-                "src/main/db/migration/V4__consulta_procedimiento_paso_valor.sql"));
+                "src/main/db/migration/V4__consulta_procedimiento_paso_valor.sql"))
+                + Files.readString(Path.of("src/main/db/migration/V5__hu4_orden_examen_y_pasos.sql"));
         var columnasNuevas = Pattern.compile(
-                "ALTER TABLE public\\.(\\w+)\\s+ADD COLUMN IF NOT EXISTS (\\w+) TEXT;",
+                "ALTER TABLE public\\.(\\w+)\\s+ADD COLUMN IF NOT EXISTS (\\w+) (?:TEXT|uuid);",
                 Pattern.CASE_INSENSITIVE).matcher(migracion);
         while (columnasNuevas.find()) {
             tablas.get(columnasNuevas.group(1)).add(columnasNuevas.group(2));
