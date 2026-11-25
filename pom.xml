@@ -40,12 +40,13 @@
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
             <version>3.0.7</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>core</artifactId>
             <version>3.5.4</version>
+            <scope>provided</scope>
         </dependency>
         
         <dependency>
@@ -100,7 +101,7 @@
             <groupId>org.primefaces</groupId>
             <artifactId>primefaces</artifactId>
             <version>15.0.17</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
             <classifier>jakarta</classifier>
         </dependency>
         
@@ -151,7 +152,7 @@
     </dependencies>
 
     <build>
-        <finalName>GalenoSV</finalName>
+        <finalName>galeno</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
