@@ -95,7 +95,7 @@
             <groupId>org.primefaces</groupId>
             <artifactId>primefaces</artifactId>
             <version>15.0.17</version>
-            <scope>provided</scope>
+            <scope>compile</scope>
             <classifier>jakarta</classifier>
         </dependency>
         

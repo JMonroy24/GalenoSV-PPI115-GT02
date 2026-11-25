@@ -13,6 +13,11 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
 import java.util.UUID;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.enums.ParameterIn;
+import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameters;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.ConsultaDTO;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.dto.ConsultaDetalleDTO;
@@ -91,12 +96,18 @@ public class ConsultaResource extends GenericResource<Consulta, ConsultaDTO, UUI
             description = "Todos los filtros se combinan con AND. idRol corresponde al paso vigente de cada "
                     + "procedimiento: EN_CURSO, luego PENDIENTE, o el último completado si no hay abiertos. "
                     + "total y total-registros contienen el conteo filtrado.")
-    @org.eclipse.microprofile.openapi.annotations.parameters.Parameters({
-        @org.eclipse.microprofile.openapi.annotations.parameters.Parameter(name = "pacienteId", in = org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.QUERY, description = "UUID de la relación paciente persona-rol"),
-        @org.eclipse.microprofile.openapi.annotations.parameters.Parameter(name = "idClinica", in = org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.QUERY, description = "UUID de la clínica de la consulta"),
-        @org.eclipse.microprofile.openapi.annotations.parameters.Parameter(name = "idRol", in = org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.QUERY, description = "UUID del rol responsable del paso vigente"),
-        @org.eclipse.microprofile.openapi.annotations.parameters.Parameter(name = "desde", in = org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.QUERY, description = "Inicio inclusivo de fechaInicio: YYYY-MM-DD en America/El_Salvador o fecha-hora ISO 8601 con zona"),
-        @org.eclipse.microprofile.openapi.annotations.parameters.Parameter(name = "hasta", in = org.eclipse.microprofile.openapi.annotations.enums.ParameterIn.QUERY, description = "Fin inclusivo de fechaInicio; YYYY-MM-DD incluye todo el día en America/El_Salvador, o fecha-hora ISO 8601 con zona")
+    @Parameters({
+        @Parameter(name = "pacienteId", in = ParameterIn.QUERY, description = "UUID de la relación paciente persona-rol",
+                schema = @Schema(type = SchemaType.STRING, format = "uuid")),
+        @Parameter(name = "idClinica", in = ParameterIn.QUERY, description = "UUID de la clínica de la consulta",
+                schema = @Schema(type = SchemaType.STRING, format = "uuid")),
+        @Parameter(name = "idRol", in = ParameterIn.QUERY, description = "UUID del rol responsable del paso vigente",
+                schema = @Schema(type = SchemaType.STRING, format = "uuid")),
+        // Ambos filtros admiten fecha o fecha-hora; un único format excluiría una variante válida.
+        @Parameter(name = "desde", in = ParameterIn.QUERY, description = "Inicio inclusivo de fechaInicio: YYYY-MM-DD en America/El_Salvador o fecha-hora ISO 8601 con zona",
+                schema = @Schema(type = SchemaType.STRING)),
+        @Parameter(name = "hasta", in = ParameterIn.QUERY, description = "Fin inclusivo de fechaInicio; YYYY-MM-DD incluye todo el día en America/El_Salvador, o fecha-hora ISO 8601 con zona",
+                schema = @Schema(type = SchemaType.STRING))
     })
     public PageResponse<ConsultaDTO> listar(
             @QueryParam("first") @jakarta.ws.rs.DefaultValue("0") int first,
