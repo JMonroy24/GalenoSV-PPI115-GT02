@@ -47,7 +47,7 @@ class CorsFilterTest {
         filter.filter(request, response);
 
         assertEquals("*", headers.getFirst("Access-Control-Allow-Origin"));
-        assertEquals(List.of("total-registros", "ETag", "Location"), tokens("Access-Control-Expose-Headers"));
+        assertEquals(List.of("total-registros", "ETag", "Location", "Content-Disposition"), tokens("Access-Control-Expose-Headers"));
         assertEquals(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"),
                 tokens("Access-Control-Allow-Methods"));
         assertEquals(List.of("origin", "content-type", "accept", "authorization", "if-match", "if-none-match"),
@@ -192,6 +192,21 @@ class CorsFilterTest {
         assertTrue(ContainerRequestFilter.class.isAssignableFrom(CorsFilter.class));
         assertTrue(ContainerResponseFilter.class.isAssignableFrom(CorsFilter.class));
         assertTrue(CorsFilter.class.getAnnotation(Priority.class).value() < Priorities.AUTHENTICATION);
+    }
+
+    @Test
+    void pdfInlineConservaContenidoYCabecerasYExponeLaDisposicion() {
+        byte[] pdf = "%PDF-1.7".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
+        when(request.getMethod()).thenReturn("GET");
+        when(response.getEntity()).thenReturn(pdf);
+        headers.putSingle("Content-Type", "application/pdf");
+        headers.putSingle("Content-Disposition", "inline; filename=\"ticket-consulta.pdf\"");
+        filter.filter(request, response);
+        assertEquals("*", headers.getFirst("Access-Control-Allow-Origin"));
+        assertTrue(tokens("Access-Control-Expose-Headers").contains("Content-Disposition"));
+        assertEquals("application/pdf", headers.getFirst("Content-Type"));
+        assertEquals("inline; filename=\"ticket-consulta.pdf\"", headers.getFirst("Content-Disposition"));
+        verify(response, never()).setEntity(any());
     }
 
     private List<String> tokens(String name) {

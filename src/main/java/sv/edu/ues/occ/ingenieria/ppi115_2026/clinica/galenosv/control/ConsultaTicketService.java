@@ -14,54 +14,37 @@ import java.util.UUID;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.PersonaRol;
 
-/** Genera el comprobante dentro de la transacción para poder leer las relaciones LAZY. */
+/** Genera el comprobante dentro de la transacción para leer las relaciones LAZY. */
 @ApplicationScoped
 public class ConsultaTicketService {
     @Inject protected ConsultaDAO consultaDAO;
     @Inject protected ConsultaProcedimientoDAO procedimientoDAO;
-    @Inject protected ConsultaProcedimientoPasoDAO pasoDAO;
-    @Inject protected DocumentoDAO documentoDAO;
 
     @Transactional
-    public byte[] generar(UUID idConsulta) {
+    public byte[] generar(UUID idConsulta, String detalleUrl) {
         var consulta = consultaDAO.findById(idConsulta);
         if (consulta == null) throw new NotFoundException("No existe la consulta solicitada.");
+        var paciente = consulta.getIdPersonaRol();
+        String clinica = paciente == null || paciente.getIdClinica() == null
+                ? "Clínica sin registrar" : valor(paciente.getIdClinica().getNombre());
+        var procedimientos = procedimientoDAO.findByConsulta(idConsulta).stream()
+                .map(p -> p.getIdProcedimiento() == null ? "Sin registrar" : valor(p.getIdProcedimiento().getNombre()))
+                .distinct().toList();
+        // Resumen acotado: los procedimientos adicionales se consultan mediante el QR.
+        String resumen = procedimientos.isEmpty() ? "Sin procedimientos registrados"
+                : String.join("; ", procedimientos.stream().limit(3).toList())
+                        + (procedimientos.size() > 3 ? "; y " + (procedimientos.size() - 3) + " más" : "");
+        String referencia = consulta.getReferenciaExterna();
+        if (referencia == null || referencia.isBlank()) referencia = idConsulta.toString().substring(0, 8);
         try (var documento = new PDDocument(); var salida = new ByteArrayOutputStream()) {
-            documento.getDocumentInformation().setTitle("GalenoSV - Ticket de Atención Clínica");
+            documento.getDocumentInformation().setTitle("GalenoSV - Ticket de Cita");
             documento.getDocumentInformation().setAuthor("GalenoSV");
-            try (var ticket = new TicketPdf(documento, idConsulta)) {
-                ticket.dato("Paciente", nombre(consulta.getIdPersonaRol()));
-                var paciente = consulta.getIdPersonaRol();
-                if (paciente != null && paciente.getIdPersona() != null) {
-                    for (var identificacion : documentoDAO.findByPersona(paciente.getIdPersona().getIdPersona())) {
-                        var tipo = identificacion.getIdTipoDocumento();
-                        ticket.dato(tipo == null ? "Documento" : valor(tipo.getNombre()), valor(identificacion.getValor()));
-                    }
-                }
-                ticket.dato("Clínica", paciente == null || paciente.getIdClinica() == null
-                        ? "Sin registrar" : valor(paciente.getIdClinica().getNombre()));
-                ticket.dato("Fecha de inicio", fecha(consulta.getFechaInicio()));
-                ticket.dato("Fecha de fin", fecha(consulta.getFechaFin()));
-                ticket.dato("Referencia externa", valor(consulta.getReferenciaExterna()));
-                ticket.dato("Observaciones", valor(consulta.getObservaciones()));
-                ticket.iniciarHistorial();
-                var procedimientos = procedimientoDAO.findByConsulta(idConsulta);
-                if (procedimientos.isEmpty()) ticket.nota("Sin procedimientos registrados.");
-                for (var procedimiento : procedimientos) {
-                    String titulo = procedimiento.getIdProcedimiento() == null
-                            ? "Sin registrar" : valor(procedimiento.getIdProcedimiento().getNombre());
-                    var pasos = pasoDAO.findByConsultaProcedimiento(procedimiento.getIdConsultaProcedimiento());
-                    if (pasos.isEmpty()) ticket.procedimiento(titulo, "Sin asignar", "Sin pasos registrados.",
-                            periodo(procedimiento.getFechaInicio(), procedimiento.getFechaFin()));
-                    int numeroPaso = 1;
-                    for (var paso : pasos) {
-                        ticket.procedimiento(titulo + "\nPaso " + numeroPaso++, nombre(paso.getIdPersonaRol()),
-                                valor(paso.getEstado()), periodo(paso.getFechaInicio(), paso.getFechaFin()));
-                    }
-                    ticket.nota("Período del procedimiento: " + fecha(procedimiento.getFechaInicio())
-                            + " a " + fecha(procedimiento.getFechaFin())
-                            + "\nObservaciones: " + valor(procedimiento.getObservaciones()));
-                }
+            try (var ticket = new TicketPdf(documento, clinica)) {
+                ticket.dato("Paciente", nombre(paciente), 2);
+                ticket.dato("Fecha y hora", fecha(consulta.getFechaInicio()), 1);
+                ticket.dato("Procedimientos", resumen, 4);
+                ticket.dato("Referencia", referencia, 1);
+                ticket.qr(detalleUrl);
             }
             documento.save(salida);
             return salida.toByteArray();
@@ -86,9 +69,5 @@ public class ConsultaTicketService {
         var formato = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         formato.setTimeZone(TimeZone.getTimeZone("America/El_Salvador"));
         return formato.format(fecha);
-    }
-
-    private static String periodo(Date inicio, Date fin) {
-        return "Inicio:\n" + fecha(inicio) + "\nFin:\n" + fecha(fin);
     }
 }

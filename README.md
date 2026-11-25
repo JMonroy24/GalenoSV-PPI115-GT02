@@ -320,11 +320,21 @@ y en el esquema; una consulta abierta no necesita fecha de cierre.
 ### Ticket PDF de consulta
 
 `GET /galenoSV/api/v1/consultas/{id}/ticket` devuelve `application/pdf` con
-`Content-Disposition: attachment`. Es la ruta que utiliza el botón del frontend
+`Content-Disposition: inline; filename="ticket-consulta.pdf"`. Es la ruta que utiliza el botón del frontend
 **Descargar Ticket PDF**; también está disponible al editar una consulta en JSF.
-Incluye paciente, documentos, clínica, fechas en `America/El_Salvador`, observaciones,
-procedimientos y estados de sus pasos. Retorna 400 para un UUID inválido y 404 si la
-consulta no existe. Requiere desplegar el WAR actualizado y aplicar V4.
+El ticket ocupa una página A5: clínica, paciente, fecha y hora en `DD/MM/YYYY HH:mm`
+(`America/El_Salvador`), procedimientos principales y referencia corta. El QR abre
+`{baseUrl}/#consulta/{id}` con el detalle completo. La base se elige en este orden:
+query param `frontendUrl`, cabecera `Origin`, variable de entorno
+`GALENOSV_FRONTEND_URL` y `http://localhost:3000`. Se admiten HTTP(S), puertos locales
+y subrutas; las URL explícitas con credenciales, query, fragmento o esquema inválido
+devuelven 400. Un Origin o una variable de entorno no utilizables pasan al siguiente
+respaldo. Codifique `frontendUrl` como parámetro URL, por ejemplo
+`?frontendUrl=https%3A%2F%2Fpares.example%2Fgaleno`.
+No incluye documentos personales, observaciones ni historial interno de pasos.
+La respuesta conserva `Cache-Control: no-store`; CORS expone también
+`Content-Disposition`. Retorna 400 para un UUID inválido y 404 si la consulta no
+existe. PDFBox y ZXing se empaquetan en `WEB-INF/lib` del WAR.
 
 `PUT /consultas-procedimientos-pasos/{id}` incluye ahora `valor` en el DTO completo
 y conserva el nombre `estado`. Para guardar únicamente el estado y el formulario,

@@ -5,6 +5,7 @@ import jakarta.enterprise.context.RequestScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -25,6 +26,7 @@ import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.mapp
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.boundary.rest.mapper.ConsultaMapper;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaTicketService;
+import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaPublicaUrl;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.DefaultService;
 import sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.entities.Consulta;
 
@@ -58,8 +60,12 @@ public class ConsultaResource extends GenericResource<Consulta, ConsultaDTO, UUI
     @Path("/{id}/ticket")
     @Produces("application/pdf")
     @PermitAll
-    @Operation(summary = "Descarga el ticket PDF de una consulta con procedimientos y pasos")
-    public Response descargarTicket(@PathParam("id") String id) {
+    @Operation(summary = "Visualiza el ticket PDF de cita con QR al detalle completo")
+    public Response descargarTicket(@PathParam("id") String id,
+            @QueryParam("frontendUrl")
+            @Parameter(description = "Base HTTP(S) del frontend; tiene prioridad sobre Origin y GALENOSV_FRONTEND_URL",
+                    schema = @Schema(type = SchemaType.STRING, format = "uri")) String frontendUrl,
+            @HeaderParam("Origin") String origin) {
         final UUID clave;
         try {
             clave = UUID.fromString(id);
@@ -67,8 +73,9 @@ public class ConsultaResource extends GenericResource<Consulta, ConsultaDTO, UUI
         } catch (IllegalArgumentException e) {
             throw new BadRequestException("El identificador de consulta debe ser un UUID válido.", e);
         }
-        return Response.ok(consultaTicketService.generar(clave), "application/pdf")
-                .header("Content-Disposition", "attachment; filename=\"ticket-cita-" + clave + ".pdf\"")
+        String detalleUrl = ConsultaPublicaUrl.resolver(clave, frontendUrl, origin);
+        return Response.ok(consultaTicketService.generar(clave, detalleUrl), "application/pdf")
+                .header("Content-Disposition", "inline; filename=\"ticket-consulta.pdf\"")
                 .header("Cache-Control", "no-store")
                 .build();
     }

@@ -39,27 +39,58 @@ class ConsultaResourceTest {
     ConsultaResource consultaResource;
 
     @Test
-    void ticketDevuelvePdfComoArchivoAdjuntoSinCache() {
+    void ticketDevuelvePdfInlineSinCacheYUsaElFrontendIndicado() {
         UUID id = UUID.randomUUID();
         byte[] pdf = "%PDF-1.7".getBytes(java.nio.charset.StandardCharsets.US_ASCII);
-        when(consultaTicketService.generar(id)).thenReturn(pdf);
-        try (var respuesta = consultaResource.descargarTicket(id.toString())) {
+        when(consultaTicketService.generar(id, "https://pares.example/galeno/#consulta/" + id)).thenReturn(pdf);
+        try (var respuesta = consultaResource.descargarTicket(id.toString(), "https://pares.example/galeno/", "http://localhost:3000")) {
             assertEquals(200, respuesta.getStatus());
             assertEquals("application/pdf", respuesta.getMediaType().toString());
             assertSame(pdf, respuesta.getEntity());
-            assertEquals("attachment; filename=\"ticket-cita-" + id + ".pdf\"",
+            assertEquals("inline; filename=\"ticket-consulta.pdf\"",
                     respuesta.getHeaderString("Content-Disposition"));
             assertEquals("no-store", respuesta.getHeaderString("Cache-Control"));
         }
+        verify(consultaTicketService).generar(id, "https://pares.example/galeno/#consulta/" + id);
     }
 
     @Test
     void ticketRechazaUuidInvalidoYPropagaConsultaInexistente() {
-        assertThrows(jakarta.ws.rs.BadRequestException.class, () -> consultaResource.descargarTicket("1-1-1-1-1"));
+        assertThrows(jakarta.ws.rs.BadRequestException.class, () -> consultaResource.descargarTicket("1-1-1-1-1", null, null));
         verifyNoInteractions(consultaTicketService);
         UUID id = UUID.randomUUID();
-        when(consultaTicketService.generar(id)).thenThrow(new NotFoundException());
-        assertThrows(NotFoundException.class, () -> consultaResource.descargarTicket(id.toString()));
+        when(consultaTicketService.generar(eq(id), anyString())).thenThrow(new NotFoundException());
+        assertThrows(NotFoundException.class, () -> consultaResource.descargarTicket(id.toString(), null, null));
+    }
+
+    @Test
+    void ticketUsaOriginYRechazaFrontendInseguroAntesDeGenerar() {
+        UUID id = UUID.randomUUID();
+        assertThrows(jakarta.ws.rs.BadRequestException.class,
+                () -> consultaResource.descargarTicket(id.toString(), "javascript:alert(1)", "http://localhost:3000"));
+        verifyNoInteractions(consultaTicketService);
+        consultaResource.descargarTicket(id.toString(), null, "https://pares.example").close();
+        verify(consultaTicketService).generar(id, "https://pares.example/#consulta/" + id);
+    }
+
+    @Test
+    void ticketDelRecursoContienePdfValidoYQrEscaneable() throws Exception {
+        UUID id = UUID.randomUUID();
+        var dao = mock(sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaDAO.class);
+        var procedimientos = mock(sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaProcedimientoDAO.class);
+        when(dao.findById(id)).thenReturn(new Consulta(id));
+        consultaResource.consultaTicketService = new sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.ConsultaTicketService() {
+            { consultaDAO = dao; procedimientoDAO = procedimientos; }
+        };
+        try (var respuesta = consultaResource.descargarTicket(id.toString(), "http://localhost:3000", null);
+             var pdf = org.apache.pdfbox.Loader.loadPDF((byte[]) respuesta.getEntity())) {
+            assertEquals(200, respuesta.getStatus());
+            assertEquals("application/pdf", respuesta.getMediaType().toString());
+            assertEquals("inline; filename=\"ticket-consulta.pdf\"", respuesta.getHeaderString("Content-Disposition"));
+            assertEquals(1, pdf.getNumberOfPages());
+            assertEquals("http://localhost:3000/#consulta/" + id,
+                    sv.edu.ues.occ.ingenieria.ppi115_2026.clinica.galenosv.control.TicketPdfAssertions.leerQr(pdf));
+        }
     }
 
     @Test

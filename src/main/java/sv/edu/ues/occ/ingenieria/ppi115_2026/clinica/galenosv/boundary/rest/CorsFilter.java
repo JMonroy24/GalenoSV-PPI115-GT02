@@ -33,7 +33,7 @@ public class CorsFilter implements ContainerRequestFilter, ContainerResponseFilt
         headers.putSingle("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD, PATCH");
         headers.putSingle("Access-Control-Allow-Headers",
                 "origin, content-type, accept, authorization, if-match, if-none-match");
-        headers.putSingle("Access-Control-Expose-Headers", "total-registros, ETag, Location");
+        headers.putSingle("Access-Control-Expose-Headers", "total-registros, ETag, Location, Content-Disposition");
         if (response.getEntity() instanceof PageResponse<?> pagina) {
             headers.putSingle("total-registros", Long.toString(pagina.total()));
         }
